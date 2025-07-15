@@ -48,8 +48,20 @@ const langfuse = new Langfuse({
 });
 
 let globalStreamContext: ResumableStreamContext | null = null;
+let cachedPrompt: any = null;
 
-const fetchedPrompt = await langfuse.getPrompt('laura_system_prompt');
+async function getFetchedPrompt() {
+  if (!cachedPrompt) {
+    try {
+      cachedPrompt = await langfuse.getPrompt('laura_system_prompt');
+    } catch (error) {
+      console.error('Failed to fetch prompt:', error);
+      // Provide a fallback prompt if fetch fails
+      cachedPrompt = { toJSON: () => 'You are a helpful assistant.' };
+    }
+  }
+  return cachedPrompt;
+}
 
 export function getStreamContext() {
   if (!globalStreamContext) {
@@ -159,10 +171,13 @@ export async function POST(request: Request) {
     await createStreamId({ streamId, chatId: id });
 
     const stream = createUIMessageStream({
-      execute: ({ writer: dataStream }) => {
+      execute: async ({ writer: dataStream }) => {
+        // Get the prompt first
+        const prompt = await getFetchedPrompt();
+        
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: fetchedPrompt.toJSON(),
+          system: prompt?.toJSON() || null,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
@@ -187,7 +202,7 @@ export async function POST(request: Request) {
           experimental_telemetry: {
             isEnabled: true,
             metadata: {
-              langfusePrompt: fetchedPrompt.toJSON(),
+              langfusePrompt: prompt?.toJSON() || null,
             },
           },
         });

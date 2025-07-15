@@ -1,9 +1,19 @@
-import { NextResponse, type NextRequest } from 'next/server';
-import { getToken } from 'next-auth/jwt';
-import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
-import { onboardingMiddleware } from './middleware/onboarding';
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
+import { getOnboardingByUserId, createOnboarding } from '@/lib/db/onboarding-queries';
 
-export async function middleware(request: NextRequest) {
+// Define public routes that don't require authentication
+const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)']);
+
+// Define paths that don't require onboarding check
+const isOnboardingExemptPath = createRouteMatcher([
+  '/onboarding/(.*)',
+  '/api/onboarding/(.*)',
+  '/_next/(.*)',
+  '/favicon.ico',
+]);
+
+export default clerkMiddleware(async (auth, request) => {
   const { pathname } = request.nextUrl;
 
   /*
@@ -14,61 +24,60 @@ export async function middleware(request: NextRequest) {
     return new Response('pong', { status: 200 });
   }
 
-  if (pathname.startsWith('/api/auth')) {
+  // Allow public routes to pass through
+  if (isPublicRoute(request)) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-    secureCookie: !isDevelopmentEnvironment,
-  });
-
-  if (!token) {
-    const redirectUrl = encodeURIComponent(request.url);
-
-    return NextResponse.redirect(
-      new URL(`/api/auth/guest?redirectUrl=${redirectUrl}`, request.url),
-    );
+  // Protect all other routes
+  const { userId } = await auth();
+  
+  if (!userId) {
+    // Redirect to sign-in if not authenticated
+    const signInUrl = new URL('/login', request.url);
+    signInUrl.searchParams.set('redirect_url', request.url);
+    return NextResponse.redirect(signInUrl);
   }
 
-  const isGuest = guestRegex.test(token?.email ?? '');
-
-  if (token && !isGuest && ['/login', '/register'].includes(pathname)) {
+  // If authenticated and trying to access login/register, redirect to home
+  if (userId && ['/login', '/register'].includes(pathname)) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
   // Skip onboarding check for API routes except onboarding API
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/onboarding')) {
+  // and for paths that are exempt from onboarding check
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/onboarding') || isOnboardingExemptPath(request)) {
     return NextResponse.next();
   }
 
   // Check if user has completed onboarding
-  if (token && !isGuest && !pathname.startsWith('/onboarding/')) {
-    const onboardingResponse = await onboardingMiddleware(request);
-    if (onboardingResponse instanceof NextResponse) {
-      return onboardingResponse;
+  try {
+    // Get the user's onboarding status or create one if it doesn't exist
+    let onboardingStatus = await getOnboardingByUserId(userId);
+    
+    if (!onboardingStatus) {
+      onboardingStatus = await createOnboarding(userId);
     }
+
+    // If onboarding is not completed, redirect to the current onboarding step
+    if (!onboardingStatus.completed) {
+      const url = request.nextUrl.clone();
+      url.pathname = `/onboarding/${onboardingStatus.currentStep}`;
+      return NextResponse.redirect(url);
+    }
+  } catch (error) {
+    console.error('Error checking onboarding status:', error);
+    // In case of error, allow the request to proceed to avoid blocking users
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
   matcher: [
-    '/',
-    '/chat/:id',
-    '/api/:path*',
-    '/login',
-    '/register',
-    '/onboarding/:path*',
-
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
-     */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    // Skip Next.js internals and all static files, unless found in search params
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Always run for API routes
+    '/(api|trpc)(.*)',
   ],
 };

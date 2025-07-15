@@ -11,7 +11,12 @@ import { useSidebar } from './ui/sidebar';
 import { memo } from 'react';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { type VisibilityType, VisibilitySelector } from './visibility-selector';
-import type { Session } from 'next-auth';
+interface Session {
+  user: {
+    id: string;
+    type: 'regular';
+  };
+}
 
 function PureChatHeader({
   chatId,

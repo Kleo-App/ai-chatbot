@@ -1,4 +1,4 @@
-import { pgTable, uuid, varchar, boolean, timestamp, foreignKey } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, boolean, timestamp, foreignKey, text } from 'drizzle-orm/pg-core';
 import type { InferSelectModel } from 'drizzle-orm';
 import { user } from './schema';
 
@@ -6,7 +6,7 @@ export const onboarding = pgTable(
   'Onboarding',
   {
     id: uuid('id').primaryKey().notNull().defaultRandom(),
-    userId: uuid('userId')
+    userId: text('userId')
       .notNull()
       .references(() => user.id),
     currentStep: varchar('currentStep', { length: 64 }).notNull().default('welcome'),

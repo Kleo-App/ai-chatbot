@@ -2,7 +2,8 @@ import { cookies } from 'next/headers';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { auth } from '../(auth)/auth';
+import { auth } from '@clerk/nextjs/server';
+
 import Script from 'next/script';
 import { DataStreamProvider } from '@/components/data-stream-provider';
 import { Background } from '@/components/background';
@@ -14,9 +15,24 @@ export default async function Layout({
 }: {
   children: React.ReactNode;
 }) {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+  const { userId } = await auth();
+  const cookieStore = await cookies();
   const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
 
+  // For unauthenticated users, show full-width layout without sidebar or header
+  // (header is now integrated into the Greeting component)
+  if (!userId) {
+    return (
+      <>
+        <Background />
+        <DataStreamProvider>
+          {children}
+        </DataStreamProvider>
+      </>
+    );
+  }
+
+  // For authenticated users, show the sidebar layout
   return (
     <>
       <Background />
@@ -26,7 +42,7 @@ export default async function Layout({
       />
       <DataStreamProvider>
         <SidebarProvider defaultOpen={!isCollapsed}>
-          <AppSidebar user={session?.user} />
+          <AppSidebar />
           <SidebarInset>{children}</SidebarInset>
         </SidebarProvider>
       </DataStreamProvider>

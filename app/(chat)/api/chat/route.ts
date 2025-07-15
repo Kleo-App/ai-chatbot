@@ -6,7 +6,7 @@ import {
   stepCountIs,
   streamText,
 } from 'ai';
-import { auth, type UserType } from '@/app/(auth)/auth';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
 import {
   createStreamId,
@@ -16,6 +16,7 @@ import {
   getMessagesByChatId,
   saveChat,
   saveMessages,
+  getOrCreateUser,
 } from '@/lib/db/queries';
 import { convertToUIMessages, generateUUID } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
@@ -35,7 +36,7 @@ import {
 } from 'resumable-stream';
 import { after } from 'next/server';
 import { ChatSDKError } from '@/lib/errors';
-import type { ChatMessage } from '@/lib/types';
+import type { ChatMessage, UserType } from '@/lib/types';
 import type { ChatModel } from '@/lib/ai/models';
 import type { VisibilityType } from '@/components/visibility-selector';
 
@@ -106,16 +107,36 @@ export async function POST(request: Request) {
       selectedVisibilityType: VisibilityType;
     } = requestBody;
 
-    const session = await auth();
+    const { userId } = await auth();
 
-    if (!session?.user) {
+    if (!userId) {
       return new ChatSDKError('unauthorized:chat').toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    // Get the current user from Clerk to access email
+    const user = await currentUser();
+    if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+      return new ChatSDKError('unauthorized:chat').toResponse();
+    }
+
+    // Ensure user exists in local database
+    await getOrCreateUser({
+      id: userId,
+      email: user.emailAddresses[0].emailAddress,
+    });
+
+    // Create a session-like object for compatibility with existing tools
+    const session = {
+      user: {
+        id: userId,
+        type: 'regular' as UserType,
+      },
+    };
+
+    const userType: UserType = 'regular';
 
     const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
+      id: userId,
       differenceInHours: 24,
     });
 
@@ -132,12 +153,12 @@ export async function POST(request: Request) {
 
       await saveChat({
         id,
-        userId: session.user.id,
+        userId: userId,
         title,
         visibility: selectedVisibilityType,
       });
     } else {
-      if (chat.userId !== session.user.id) {
+      if (chat.userId !== userId) {
         return new ChatSDKError('forbidden:chat').toResponse();
       }
     }
@@ -259,15 +280,15 @@ export async function DELETE(request: Request) {
     return new ChatSDKError('bad_request:api').toResponse();
   }
 
-  const session = await auth();
+  const { userId } = await auth();
 
-  if (!session?.user) {
+  if (!userId) {
     return new ChatSDKError('unauthorized:chat').toResponse();
   }
 
   const chat = await getChatById({ id });
 
-  if (chat.userId !== session.user.id) {
+  if (chat.userId !== userId) {
     return new ChatSDKError('forbidden:chat').toResponse();
   }
 

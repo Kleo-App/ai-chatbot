@@ -8,6 +8,8 @@ import type { InferUITool, UIMessage } from 'ai';
 import type { ArtifactKind } from '@/components/artifact';
 import type { Suggestion } from './db/schema';
 
+export type UserType = 'guest' | 'regular';
+
 export type DataPart = { type: 'append-message'; message: string };
 
 export const messageMetadataSchema = z.object({

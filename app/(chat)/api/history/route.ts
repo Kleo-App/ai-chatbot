@@ -1,6 +1,6 @@
-import { auth } from '@/app/(auth)/auth';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import type { NextRequest } from 'next/server';
-import { getChatsByUserId } from '@/lib/db/queries';
+import { getChatsByUserId, getOrCreateUser } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';
 
 export async function GET(request: NextRequest) {
@@ -17,14 +17,26 @@ export async function GET(request: NextRequest) {
     ).toResponse();
   }
 
-  const session = await auth();
+  const { userId } = await auth();
 
-  if (!session?.user) {
+  if (!userId) {
     return new ChatSDKError('unauthorized:chat').toResponse();
   }
 
+  // Get the current user from Clerk to access email
+  const user = await currentUser();
+  if (!user || !user.emailAddresses?.[0]?.emailAddress) {
+    return new ChatSDKError('unauthorized:chat').toResponse();
+  }
+
+  // Ensure user exists in local database
+  await getOrCreateUser({
+    id: userId,
+    email: user.emailAddresses[0].emailAddress,
+  });
+
   const chats = await getChatsByUserId({
-    id: session.user.id,
+    id: userId,
     limit,
     startingAfter,
     endingBefore,

@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import { guestRegex, isDevelopmentEnvironment } from './lib/constants';
+import { onboardingMiddleware } from './middleware/onboarding';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -37,6 +38,19 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
+  // Skip onboarding check for API routes except onboarding API
+  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/onboarding')) {
+    return NextResponse.next();
+  }
+
+  // Check if user has completed onboarding
+  if (token && !isGuest && !pathname.startsWith('/onboarding/')) {
+    const onboardingResponse = await onboardingMiddleware(request);
+    if (onboardingResponse instanceof NextResponse) {
+      return onboardingResponse;
+    }
+  }
+
   return NextResponse.next();
 }
 
@@ -47,6 +61,7 @@ export const config = {
     '/api/:path*',
     '/login',
     '/register',
+    '/onboarding/:path*',
 
     /*
      * Match all request paths except for the ones starting with:

@@ -168,3 +168,7 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Re-export onboarding schema
+export { onboarding } from './schema-onboarding';
+export type { Onboarding } from './schema-onboarding';

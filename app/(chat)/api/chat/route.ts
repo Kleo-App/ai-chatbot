@@ -28,6 +28,7 @@ import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
+import { Langfuse } from 'langfuse';
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
@@ -40,7 +41,27 @@ import type { VisibilityType } from '@/components/visibility-selector';
 
 export const maxDuration = 60;
 
+const langfuse = new Langfuse({
+  secretKey: process.env.LANGFUSE_SECRET_KEY,
+  publicKey: process.env.LANGFUSE_PUBLIC_KEY,
+  baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
+});
+
 let globalStreamContext: ResumableStreamContext | null = null;
+let cachedPrompt: any = null;
+
+async function getFetchedPrompt() {
+  if (!cachedPrompt) {
+    try {
+      cachedPrompt = await langfuse.getPrompt('laura_system_prompt');
+    } catch (error) {
+      console.error('Failed to fetch prompt:', error);
+      // Provide a fallback prompt if fetch fails
+      cachedPrompt = { toJSON: () => 'You are a helpful assistant.' };
+    }
+  }
+  return cachedPrompt;
+}
 
 export function getStreamContext() {
   if (!globalStreamContext) {
@@ -150,10 +171,13 @@ export async function POST(request: Request) {
     await createStreamId({ streamId, chatId: id });
 
     const stream = createUIMessageStream({
-      execute: ({ writer: dataStream }) => {
+      execute: async ({ writer: dataStream }) => {
+        // Get the prompt first
+        const prompt = await getFetchedPrompt();
+        
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: prompt?.toJSON() || null,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
@@ -176,8 +200,10 @@ export async function POST(request: Request) {
             }),
           },
           experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
-            functionId: 'stream-text',
+            isEnabled: true,
+            metadata: {
+              langfusePrompt: prompt?.toJSON() || null,
+            },
           },
         });
 

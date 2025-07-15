@@ -12,6 +12,8 @@ export default function RegisterPage() {
         }}
         routing="hash"
         signInUrl="/login"
+        redirectUrl="/onboarding/welcome"
+        afterSignUpUrl="/onboarding/welcome"
       />
     </div>
   );

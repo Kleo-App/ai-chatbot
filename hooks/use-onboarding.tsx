@@ -1,6 +1,8 @@
+"use client";
+
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useAuth } from '@clerk/nextjs';
 
 // Define the onboarding steps
 export type OnboardingStep = 'welcome' | 'profile' | 'topics' | 'content' | 'details' | 'style' | 'hook' | 'review' | 'complete';
@@ -19,13 +21,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>('welcome');
   const [isCompleted, setIsCompleted] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { data: session } = useSession();
+  const { userId, isSignedIn } = useAuth();
   const router = useRouter();
 
-  // Fetch the current onboarding status when the session changes
+  // Fetch the current onboarding status when the user ID changes
   useEffect(() => {
     const fetchOnboardingStatus = async () => {
-      if (!session?.user?.id) {
+      if (!userId || !isSignedIn) {
         setIsLoading(false);
         return;
       }
@@ -49,7 +51,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
     };
 
     fetchOnboardingStatus();
-  }, [session?.user?.id]);
+  }, [userId, isSignedIn]);
 
   // Navigate to a specific onboarding step
   const goToStep = async (step: OnboardingStep) => {

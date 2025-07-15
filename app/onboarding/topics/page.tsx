@@ -6,6 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus } from "lucide-react"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
+import { UserButton } from "@clerk/nextjs"
+import { useAuth } from "@clerk/nextjs"
+import { useRouter } from "next/navigation"
 
 const sampleTopics = [
   {
@@ -52,9 +55,11 @@ const sampleTopics = [
 
 export default function TopicSelector() {
   const [selectedTopics, setSelectedTopics] = useState<number[]>([])
-  const [currentStep] = useState(2)
-  const totalSteps = 3
+  const [currentStep] = useState(3)
+  const totalSteps = 4
   const { goToStep, completeOnboarding } = useOnboarding()
+  const { userId } = useAuth()
+  const router = useRouter()
 
   const toggleTopic = (topicId: number) => {
     setSelectedTopics((prev) =>
@@ -63,7 +68,17 @@ export default function TopicSelector() {
   }
 
   const handleBack = async () => {
-    await goToStep('profile')
+    try {
+      console.log('Navigating back to profile page');
+      // Try both navigation methods to ensure it works
+      await goToStep('profile');
+      // As a fallback, use direct router navigation
+      router.push('/onboarding/profile');
+    } catch (error) {
+      console.error('Error navigating back:', error);
+      // If the goToStep fails, try direct navigation
+      router.push('/onboarding/profile');
+    }
   }
 
   const handleNext = async () => {
@@ -75,105 +90,100 @@ export default function TopicSelector() {
   const progressPercentage = (currentStep / totalSteps) * 100
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        {/* Header with Logo */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <Image src="/kleo-logo.avif" alt="Kleo" width={40} height={40} className="object-contain" />
-            <span className="text-2xl font-bold text-gray-900">Kleo</span>
-          </div>
-        </div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
+      {/* User button for logout in top-right corner */}
+      <div className="absolute top-6 right-6 z-10">
+        <UserButton afterSignOutUrl="/login" />
+      </div>
+      
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
 
-        {/* Progress Indicator */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-sm font-medium text-gray-600">Step {currentStep}:</span>
-            <span className="text-sm font-semibold text-gray-900">Topics</span>
-            <div className="flex gap-1 ml-4">
-              {Array.from({ length: totalSteps }).map((_, index) => (
-                <div
-                  key={index}
-                  className={`h-2 w-8 rounded-full ${index < currentStep ? "bg-orange-400" : "bg-gray-200"}`}
-                />
-              ))}
+        {/* Progress Header */}
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <span className="text-gray-700 font-medium">Step 3:</span>
+            <span className="text-gray-900 font-semibold">Topics</span>
+            <div className="flex gap-2 ml-4">
+              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
             </div>
           </div>
         </div>
 
         {/* Main Content */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-6 leading-tight">
-            Select between 1 to 10 big themes you want to talk about on social media
-          </h1>
-          <p className="text-lg text-gray-600 mb-4">These will be used to generate your content ideas every week.</p>
-          <p className="text-sm text-gray-500">Don't worry, you can always change it later.</p>
-        </div>
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 10 topics</h2>
+          </div>
 
-        {/* Topic Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {sampleTopics.map((topic) => (
-            <Card
-              key={topic.id}
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                selectedTopics.includes(topic.id)
-                  ? "ring-2 ring-orange-400 bg-orange-50 border-orange-200"
-                  : "hover:border-orange-200 bg-white"
-              }`}
-              onClick={() => toggleTopic(topic.id)}
-            >
-              <CardContent className="p-6">
-                <h3 className="font-semibold text-gray-900 mb-3 leading-snug">{topic.title}</h3>
-                <p className="text-sm text-gray-500">{topic.subtitle}</p>
+          <p className="text-gray-600 mb-6">
+            Choose between 1 to 10 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don't worry, you can change these later.
+          </p>
+
+          {/* Topic Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {sampleTopics.map((topic) => (
+              <Card
+                key={topic.id}
+                className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
+                  selectedTopics.includes(topic.id)
+                    ? "ring-2 ring-teal-400 bg-teal-50 border-teal-200"
+                    : "hover:border-teal-200 bg-white"
+                }`}
+                onClick={() => toggleTopic(topic.id)}
+              >
+                <CardContent className="p-5">
+                  <h3 className="font-semibold text-gray-900 mb-2 leading-snug">{topic.title}</h3>
+                  <p className="text-sm text-gray-500">{topic.subtitle}</p>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* Add Custom Topic Card */}
+            <Card className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-teal-200 bg-white border-2 border-dashed border-gray-300">
+              <CardContent className="p-5 flex flex-col items-center justify-center text-center min-h-[120px]">
+                <Plus className="h-8 w-8 text-teal-500 mb-2" />
+                <h3 className="font-semibold text-gray-900">Add custom topic</h3>
               </CardContent>
             </Card>
-          ))}
-
-          {/* Add Custom Topic Card */}
-          <Card className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-orange-200 bg-white border-2 border-dashed border-gray-300">
-            <CardContent className="p-6 flex flex-col items-center justify-center text-center min-h-[140px]">
-              <Plus className="h-8 w-8 text-orange-400 mb-3" />
-              <h3 className="font-semibold text-gray-900">Add custom topic</h3>
-            </CardContent>
-          </Card>
+          </div>
+          
+          {/* Selection Counter */}
+          {selectedTopics.length > 0 && (
+            <div className="text-center mb-4">
+              <p className="text-sm text-gray-600 font-medium">{selectedTopics.length} of 10 topics selected</p>
+            </div>
+          )}
         </div>
 
-        {/* Progress Dots */}
-        <div className="flex justify-center gap-2 mb-8">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-              key={index}
-              className={`h-2 w-2 rounded-full ${index === currentStep - 1 ? "bg-orange-400" : "bg-gray-300"}`}
-            />
-          ))}
+        {/* Progress Indicator */}
+        <div className="flex justify-center mb-6">
+          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
-        <div className="flex justify-center gap-4">
+        <div className="flex justify-center gap-4 mt-4">
           <Button
-            variant="outline"
-            size="lg"
-            className="px-8 py-3 text-gray-700 border-gray-300 hover:bg-gray-50 bg-transparent"
             onClick={handleBack}
+            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
+            size="lg"
           >
             Back
           </Button>
           <Button
-            size="lg"
-            className="px-8 py-3 bg-orange-400 hover:bg-orange-500 text-white"
-            disabled={selectedTopics.length === 0}
             onClick={handleNext}
+            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            size="lg"
+            disabled={selectedTopics.length === 0}
           >
-            Continue
+            Next
           </Button>
         </div>
-
-        {/* Selection Counter */}
-        {selectedTopics.length > 0 && (
-          <div className="text-center mt-4">
-            <p className="text-sm text-gray-600">{selectedTopics.length} of 10 topics selected</p>
-          </div>
-        )}
       </div>
     </div>
   )

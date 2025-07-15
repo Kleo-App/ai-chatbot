@@ -3,12 +3,13 @@ import { NextResponse } from 'next/server';
 import { getOnboardingByUserId, createOnboarding } from '@/lib/db/onboarding-queries';
 
 // Define public routes that don't require authentication
-const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)']);
+const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
 
 // Define paths that don't require onboarding check
 const isOnboardingExemptPath = createRouteMatcher([
   '/onboarding/(.*)',
   '/api/onboarding/(.*)',
+  '/api/clerk-webhooks(.*)',
   '/_next/(.*)',
   '/favicon.ico',
 ]);
@@ -56,7 +57,13 @@ export default clerkMiddleware(async (auth, request) => {
     let onboardingStatus = await getOnboardingByUserId(userId);
     
     if (!onboardingStatus) {
+      console.log(`Creating new onboarding record for user ${userId}`);
       onboardingStatus = await createOnboarding(userId);
+      
+      // Immediately redirect new users to the welcome step
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding/welcome';
+      return NextResponse.redirect(url);
     }
 
     // If onboarding is not completed, redirect to the current onboarding step

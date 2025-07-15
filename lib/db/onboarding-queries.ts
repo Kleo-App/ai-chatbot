@@ -2,7 +2,7 @@ import 'server-only';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { onboarding, type Onboarding } from './schema';
+import { onboarding, type Onboarding } from './schema-onboarding';
 import { ChatSDKError } from '../errors';
 
 // biome-ignore lint: Forbidden non-null assertion.

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/app/(auth)/auth';
+import { auth } from '@clerk/nextjs/server';
 import { 
   getOnboardingByUserId, 
   createOnboarding, 
@@ -9,9 +9,9 @@ import {
 // GET /api/onboarding - Get the current onboarding status
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const { userId } = await auth();
     
-    if (!session || !session.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Get the user's onboarding status or create one if it doesn't exist
-    let onboardingStatus = await getOnboardingByUserId(session.user.id);
+    let onboardingStatus = await getOnboardingByUserId(userId);
     
     if (!onboardingStatus) {
-      onboardingStatus = await createOnboarding(session.user.id);
+      onboardingStatus = await createOnboarding(userId);
     }
 
     return NextResponse.json(onboardingStatus);
@@ -38,9 +38,9 @@ export async function GET(request: NextRequest) {
 // PUT /api/onboarding - Update the current onboarding step
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
+    const { userId } = await auth();
     
-    if (!session || !session.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -58,14 +58,14 @@ export async function PUT(request: NextRequest) {
     }
 
     // Check if the user has an onboarding record, create one if not
-    let onboardingStatus = await getOnboardingByUserId(session.user.id);
+    let onboardingStatus = await getOnboardingByUserId(userId);
     
     if (!onboardingStatus) {
-      onboardingStatus = await createOnboarding(session.user.id);
+      onboardingStatus = await createOnboarding(userId);
     }
 
     // Update the onboarding step
-    const updatedOnboarding = await updateOnboardingStep(session.user.id, step);
+    const updatedOnboarding = await updateOnboardingStep(userId, step);
 
     return NextResponse.json(updatedOnboarding);
   } catch (error) {

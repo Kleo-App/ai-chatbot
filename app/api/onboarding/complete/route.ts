@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@/app/(auth)/auth';
+import { auth } from '@clerk/nextjs/server';
 import { 
   getOnboardingByUserId, 
   createOnboarding, 
@@ -9,9 +9,9 @@ import {
 // POST /api/onboarding/complete - Mark the onboarding process as complete
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const { userId } = await auth();
     
-    if (!session || !session.user?.id) {
+    if (!userId) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -19,14 +19,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if the user has an onboarding record, create one if not
-    let onboardingStatus = await getOnboardingByUserId(session.user.id);
+    let onboardingStatus = await getOnboardingByUserId(userId);
     
     if (!onboardingStatus) {
-      onboardingStatus = await createOnboarding(session.user.id);
+      onboardingStatus = await createOnboarding(userId);
     }
 
     // Mark the onboarding as complete
-    const completedOnboarding = await completeOnboarding(session.user.id);
+    const completedOnboarding = await completeOnboarding(userId);
 
     return NextResponse.json(completedOnboarding);
   } catch (error) {

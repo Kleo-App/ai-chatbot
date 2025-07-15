@@ -126,15 +126,32 @@ export function Chat({
     setMessages,
   });
 
+  const formElement = !isReadonly ? (
+    <MultimodalInput
+      chatId={id}
+      input={input}
+      setInput={setInput}
+      status={status}
+      stop={stop}
+      attachments={attachments}
+      setAttachments={setAttachments}
+      messages={messages}
+      setMessages={setMessages}
+      sendMessage={sendMessage}
+      selectedVisibilityType={visibilityType}
+    />
+  ) : null;
+
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh bg-background">
+      <div className="flex flex-col min-w-0 h-dvh">
         <ChatHeader
           chatId={id}
           selectedModelId={initialChatModel}
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
           session={session}
+          hasMessages={messages.length > 0}
         />
 
         <Messages
@@ -146,25 +163,14 @@ export function Chat({
           regenerate={regenerate}
           isReadonly={isReadonly}
           isArtifactVisible={isArtifactVisible}
+          formElement={messages.length === 0 ? formElement : undefined}
         />
 
-        <form className="flex mx-auto px-4 bg-background pb-4 md:pb-6 gap-2 w-full md:max-w-3xl">
-          {!isReadonly && (
-            <MultimodalInput
-              chatId={id}
-              input={input}
-              setInput={setInput}
-              status={status}
-              stop={stop}
-              attachments={attachments}
-              setAttachments={setAttachments}
-              messages={messages}
-              setMessages={setMessages}
-              sendMessage={sendMessage}
-              selectedVisibilityType={visibilityType}
-            />
-          )}
-        </form>
+        {messages.length > 0 && (
+          <form className="flex mx-auto px-4 gap-2 w-full md:max-w-3xl pb-4 md:pb-6">
+            {formElement}
+          </form>
+        )}
       </div>
 
       <Artifact

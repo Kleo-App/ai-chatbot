@@ -5,7 +5,7 @@ export function register() {
   registerOTel({
     serviceName: 'ai-chatbot',
     traceExporter: new LangfuseExporter({
-      debug: process.env.NODE_ENV === 'development',
+      //debug: process.env.NODE_ENV === 'development',
     }),
   });
 }

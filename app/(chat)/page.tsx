@@ -4,15 +4,24 @@ import { Chat } from '@/components/chat';
 import { DEFAULT_CHAT_MODEL } from '@/lib/ai/models';
 import { generateUUID } from '@/lib/utils';
 import { DataStreamHandler } from '@/components/data-stream-handler';
-import { auth } from '../(auth)/auth';
-import { redirect } from 'next/navigation';
+import { auth } from '@clerk/nextjs/server';
+import { Greeting } from '@/components/greeting';
 
 export default async function Page() {
-  const session = await auth();
+  const { userId } = await auth();
 
-  if (!session) {
-    redirect('/api/auth/guest');
+  // If user is not logged in, show the greeting/landing page
+  if (!userId) {
+    return <Greeting />;
   }
+
+  // Create a session-like object for compatibility
+  const session = {
+    user: {
+      id: userId,
+      type: 'regular' as const,
+    },
+  };
 
   const id = generateUUID();
 

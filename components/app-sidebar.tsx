@@ -1,8 +1,9 @@
 'use client';
 
-import type { User } from 'next-auth';
+import { useUser } from '@clerk/nextjs';
 import { useRouter } from 'next/navigation';
 import { Search, MessageSquare, History, ChevronRight, BookOpen, FileText } from 'lucide-react';
+import Link from 'next/link';
 
 import { PlusIcon } from '@/components/icons';
 import { SidebarHistory } from '@/components/sidebar-history';
@@ -21,15 +22,15 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useState } from 'react';
 
-export function AppSidebar({ user }: { user: User | undefined }) {
+export function AppSidebar() {
   const router = useRouter();
   const { setOpenMobile, open } = useSidebar();
   const [historyExpanded, setHistoryExpanded] = useState(true);
+  const { user } = useUser();
 
   return (
     <Sidebar collapsible="icon" className="group-data-[side=left]:border-r-0 bg-sidebar border-r border-border">
@@ -144,7 +145,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     <div className="border-l border-border h-full ms-[10px] me-[4px]"></div>
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-0">
-                    <SidebarHistory user={user} />
+                    <SidebarHistory />
                   </div>
                 </div>
               )}
@@ -156,7 +157,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         {user && (
           <div className={`transition-all duration-200 ease-linear ${open ? 'flex items-start justify-between w-full' : 'flex flex-col gap-2'}`}>
             <div className={`transform transition-all duration-200 ease-linear ${open ? 'translate-y-1' : 'translate-y-0'} ${open ? 'self-start' : ''}`}>
-              <SidebarUserNav user={user} />
+              <SidebarUserNav />
             </div>
             <div className={`transform transition-all duration-200 ease-linear ${open ? 'translate-x-1' : 'translate-x-0'} ${open ? 'self-start' : ''}`}>
               <SidebarToggle />
@@ -164,7 +165,15 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           </div>
         )}
         {!user && (
-          <div className="">
+          <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 px-2">
+              <Button asChild size="sm" className="w-full">
+                <Link href="/login">Sign In</Link>
+              </Button>
+              <Button asChild variant="outline" size="sm" className="w-full">
+                <Link href="/register">Sign Up</Link>
+              </Button>
+            </div>
             <SidebarToggle />
           </div>
         )}

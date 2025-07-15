@@ -15,14 +15,19 @@ import { cn } from '@/lib/utils';
 
 import { CheckCircleFillIcon, ChevronDownIcon } from './icons';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
-import type { Session } from 'next-auth';
+import type { UserType } from '@/lib/types';
 
 export function ModelSelector({
   session,
   selectedModelId,
   className,
 }: {
-  session: Session;
+  session: {
+    user: {
+      id: string;
+      type: UserType;
+    };
+  };
   selectedModelId: string;
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);

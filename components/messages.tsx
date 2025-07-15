@@ -53,18 +53,18 @@ function PureMessages({
     >
       {messages.length === 0 && (
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
-          <Greeting />
-          {formElement && (
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.6 }}
-              className="w-full px-4"
-            >
-              {formElement}
-            </motion.div>
-          )}
+          <Greeting>
+            {formElement && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+                className="w-full"
+              >
+                {formElement}
+              </motion.div>
+            )}
+          </Greeting>
         </div>
       )}
 

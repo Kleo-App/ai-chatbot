@@ -18,6 +18,7 @@ interface MessagesProps {
   regenerate: UseChatHelpers<ChatMessage>['regenerate'];
   isReadonly: boolean;
   isArtifactVisible: boolean;
+  formElement?: React.ReactNode;
 }
 
 function PureMessages({
@@ -28,6 +29,7 @@ function PureMessages({
   setMessages,
   regenerate,
   isReadonly,
+  formElement,
 }: MessagesProps) {
   const {
     containerRef: messagesContainerRef,
@@ -45,9 +47,26 @@ function PureMessages({
   return (
     <div
       ref={messagesContainerRef}
-      className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4 relative"
+      className={`flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4 relative ${
+        messages.length === 0 ? 'items-center justify-center' : ''
+      }`}
     >
-      {messages.length === 0 && <Greeting />}
+      {messages.length === 0 && (
+        <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+          <Greeting />
+          {formElement && (
+            <motion.div 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ delay: 0.6 }}
+              className="w-full px-4"
+            >
+              {formElement}
+            </motion.div>
+          )}
+        </div>
+      )}
 
       {messages.map((message, index) => (
         <PreviewMessage

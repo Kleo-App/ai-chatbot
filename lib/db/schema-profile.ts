@@ -18,6 +18,8 @@ export const userProfile = pgTable(
     linkedInServices: text('linkedInServices'),
     // Topics (as string instead of array)
     selectedTopics: text('selectedTopics'),
+    // AI-generated topics stored as JSON string
+    generatedTopics: text('generatedTopics'),
     // Content preferences
     contentType: text('contentType'),
     contentDetails: text('contentDetails'),

@@ -20,7 +20,6 @@ import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
-import { SuggestedActions } from './suggested-actions';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -210,7 +209,7 @@ function PureMultimodalInput({
   return (
     <div className="relative w-full flex flex-col gap-4">
       <AnimatePresence>
-        {!isAtBottom && (
+        {!isAtBottom && messages.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -233,16 +232,6 @@ function PureMultimodalInput({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* {messages.length === 0 &&
-        attachments.length === 0 &&
-        uploadQueue.length === 0 && (
-          <SuggestedActions
-            sendMessage={sendMessage}
-            chatId={chatId}
-            selectedVisibilityType={selectedVisibilityType}
-          />
-        )} */}
 
       <input
         type="file"
@@ -322,6 +311,36 @@ function PureMultimodalInput({
           )}
         </div>
       </div>
+
+      {/* Suggested actions */}
+      {messages.length === 0 &&
+        attachments.length === 0 &&
+        uploadQueue.length === 0 && (
+          <div className="flex flex-wrap gap-2 justify-center">
+            {[
+              'Career update post',
+              'Industry insights',
+              'Professional tips',
+              'Company announcement'
+            ].map((suggestion, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                size="sm"
+                className="h-8 rounded-full px-3 text-sm bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-colors"
+                onClick={() => {
+                  window.history.replaceState({}, '', `/chat/${chatId}`);
+                  sendMessage({
+                    role: 'user',
+                    parts: [{ type: 'text', text: `Write a ${suggestion.toLowerCase()}` }],
+                  });
+                }}
+              >
+                {suggestion}
+              </Button>
+            ))}
+          </div>
+        )}
     </div>
   );
 }

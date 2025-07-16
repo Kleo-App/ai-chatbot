@@ -78,13 +78,15 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 
 export function getChatHistoryPaginationKey(
   pageIndex: number,
-  previousPageData: ChatHistory,
+  previousPageData: ChatHistory | null,
 ) {
   if (previousPageData && previousPageData.hasMore === false) {
     return null;
   }
 
   if (pageIndex === 0) return `/api/history?limit=${PAGE_SIZE}`;
+
+  if (!previousPageData) return null;
 
   const firstChatFromPage = previousPageData.chats.at(-1);
 
@@ -93,7 +95,16 @@ export function getChatHistoryPaginationKey(
   return `/api/history?ending_before=${firstChatFromPage.id}&limit=${PAGE_SIZE}`;
 }
 
-export function SidebarHistory() {
+interface SidebarHistoryProps {
+  commandMenu: {
+    open: boolean;
+    setOpen: (open: boolean) => void;
+    toggle: () => void;
+    close: () => void;
+  };
+}
+
+export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
   const { setOpenMobile } = useSidebar();
   const { id } = useParams();
   const { user } = useUser();
@@ -150,21 +161,13 @@ export function SidebarHistory() {
   };
 
   if (!user) {
-    return (
-      <SidebarGroup>
-        <SidebarGroupContent>
-          <div className="px-2 text-zinc-500 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Login to save and revisit previous chats!
-          </div>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    );
+    return null;
   }
 
   if (isLoading) {
     return (
       <SidebarGroup className="group-data-[collapsible=icon]:hidden py-2">
-        <div className="px-2 py-1 text-xs text-sidebar-foreground/50">
+        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
           Today
         </div>
         <SidebarGroupContent>
@@ -219,7 +222,7 @@ export function SidebarHistory() {
                   <div className="flex flex-col gap-4">
                     {groupedChats.today.length > 0 && (
                       <div>
-                        <div className="px-3 py-1 text-xs text-sidebar-foreground/50">
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
                           Today
                         </div>
                         <div className="flex flex-col gap-1">
@@ -241,7 +244,7 @@ export function SidebarHistory() {
 
                     {groupedChats.yesterday.length > 0 && (
                       <div>
-                        <div className="px-3 py-1 text-xs text-sidebar-foreground/50">
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
                           Yesterday
                         </div>
                         <div className="flex flex-col gap-1">
@@ -263,7 +266,7 @@ export function SidebarHistory() {
 
                     {groupedChats.lastWeek.length > 0 && (
                       <div>
-                        <div className="px-3 py-1 text-xs text-sidebar-foreground/50">
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
                           Last 7 days
                         </div>
                         <div className="flex flex-col gap-1">
@@ -285,7 +288,7 @@ export function SidebarHistory() {
 
                     {groupedChats.lastMonth.length > 0 && (
                       <div>
-                        <div className="px-3 py-1 text-xs text-sidebar-foreground/50">
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
                           Last 30 days
                         </div>
                         <div className="flex flex-col gap-1">
@@ -307,7 +310,7 @@ export function SidebarHistory() {
 
                     {groupedChats.older.length > 0 && (
                       <div>
-                        <div className="px-3 py-1 text-xs text-sidebar-foreground/50">
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
                           Older than last month
                         </div>
                         <div className="flex flex-col gap-1">
@@ -326,6 +329,18 @@ export function SidebarHistory() {
                         </div>
                       </div>
                     )}
+                    {/* See all button */}
+                    <button
+                      className="inline-flex items-center gap-2 whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground bg-transparent hover:text-foreground disabled:hover:text-muted-foreground w-full justify-start px-3 text-xs font-semibold no-wrap pb-2 mt-1"
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        commandMenu.toggle();
+                      }}
+                    >
+                      See all
+                    </button>
                   </div>
                 );
               })()}

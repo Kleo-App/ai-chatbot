@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Plus, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -9,12 +9,26 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { updateContentType } from "@/app/actions/profile-actions"
 
 export default function KleoContentCreator() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
-  const { goToStep, completeOnboarding } = useOnboarding()
+  const [isLoading, setIsLoading] = useState(false)
+  const { goToStep, completeOnboarding, userProfile } = useOnboarding()
   const { userId } = useAuth()
   const router = useRouter()
+  
+  // Pre-select card if user has already selected a content type
+  useEffect(() => {
+    if (userProfile?.contentType) {
+      const index = contentIdeas.findIndex(idea => 
+        idea.category.toLowerCase() === userProfile.contentType?.toLowerCase()
+      );
+      if (index !== -1) {
+        setSelectedCard(index);
+      }
+    }
+  }, [userProfile]);
 
   const contentIdeas = [
     {
@@ -51,25 +65,49 @@ export default function KleoContentCreator() {
   }
 
   const handleNext = async () => {
-    // Save selected topics if needed
-    // Then proceed to the next step
+    if (selectedCard === null) return;
+    
+    setIsLoading(true);
     try {
-      await goToStep('details')
-      router.push('/onboarding/details')
+      // Save the selected content type
+      const contentType = contentIdeas[selectedCard].category;
+      const result = await updateContentType(contentType);
+      
+      if (!result.success) {
+        throw new Error('Failed to update content type');
+      }
+      
+      // Proceed to the next step
+      await goToStep('details');
+      router.push('/onboarding/details');
     } catch (error) {
-      console.error('Error navigating to details:', error)
-      router.push('/onboarding/details')
+      console.error('Error updating content type or navigating:', error);
+      router.push('/onboarding/details');
+    } finally {
+      setIsLoading(false);
     }
   }
 
   const handleComplete = async () => {
-    // Complete the onboarding process
+    setIsLoading(true);
     try {
-      await completeOnboarding()
-      router.push('/dashboard')
+      // Save a default content type if none selected
+      if (selectedCard === null) {
+        const result = await updateContentType("Custom");
+        
+        if (!result.success) {
+          throw new Error('Failed to update content type');
+        }
+      }
+      
+      // Proceed to the next step instead of completing onboarding
+      await goToStep('details');
+      router.push('/onboarding/details');
     } catch (error) {
-      console.error('Error completing onboarding:', error)
-      router.push('/dashboard')
+      console.error('Error updating content type or navigating:', error);
+      router.push('/onboarding/details');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -178,9 +216,9 @@ export default function KleoContentCreator() {
             onClick={handleNext}
             className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
-            disabled={selectedCard === null}
+            disabled={selectedCard === null || isLoading}
           >
-            Next
+            {isLoading ? 'Saving...' : 'Next'}
           </Button>
         </div>
       </div>

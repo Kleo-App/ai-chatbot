@@ -11,7 +11,8 @@ import {
   document, 
   suggestion, 
   stream,
-  onboarding 
+  onboarding,
+  userProfile,
 } from '@/lib/db/schema';
 
 // Connect to the database

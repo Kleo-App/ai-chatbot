@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { 
-  getOnboardingByUserId, 
-  createOnboarding, 
-  updateOnboardingStep 
-} from '@/lib/db/onboarding-queries';
+  getUserProfile,
+  updateOnboardingStep
+} from '@/app/actions/profile-actions';
 
 // GET /api/onboarding - Get the current onboarding status
 export async function GET(request: NextRequest) {
@@ -18,14 +17,31 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get the user's onboarding status or create one if it doesn't exist
-    let onboardingStatus = await getOnboardingByUserId(userId);
+    // Get the user's profile which contains onboarding status
+    const result = await getUserProfile();
     
-    if (!onboardingStatus) {
-      onboardingStatus = await createOnboarding(userId);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Failed to get user profile' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json(onboardingStatus);
+    const profile = result.profile;
+    
+    if (!profile) {
+      return NextResponse.json(
+        { error: 'User profile not found' },
+        { status: 404 }
+      );
+    }
+    
+    // Format the response to match the expected structure
+    return NextResponse.json({
+      currentStep: profile.lastCompletedStep || 'welcome',
+      completed: !!profile.onboardingCompleted,
+      profile: profile
+    });
   } catch (error) {
     console.error('Error getting onboarding status:', error);
     return NextResponse.json(
@@ -57,17 +73,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Check if the user has an onboarding record, create one if not
-    let onboardingStatus = await getOnboardingByUserId(userId);
-    
-    if (!onboardingStatus) {
-      onboardingStatus = await createOnboarding(userId);
+    // Update the onboarding step using the new profile actions
+    const result = await updateOnboardingStep(step);
+
+    if (!result.success) {
+      return NextResponse.json(
+        { error: 'Failed to update onboarding step' },
+        { status: 500 }
+      );
     }
 
-    // Update the onboarding step
-    const updatedOnboarding = await updateOnboardingStep(userId, step);
-
-    return NextResponse.json(updatedOnboarding);
+    // Format the response to match the expected structure
+    return NextResponse.json({
+      currentStep: step,
+      profile: result.profile
+    });
   } catch (error) {
     console.error('Error updating onboarding step:', error);
     return NextResponse.json(

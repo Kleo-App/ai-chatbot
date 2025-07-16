@@ -123,6 +123,8 @@ export async function POST(request: Request) {
     await getOrCreateUser({
       id: userId,
       email: user.emailAddresses[0].emailAddress,
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
     });
 
     // Create a session-like object for compatibility with existing tools

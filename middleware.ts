@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOnboardingByUserId, createOnboarding } from '@/lib/db/onboarding-queries';
+import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Define public routes that don't require authentication
 const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
@@ -9,7 +9,6 @@ const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth
 const isOnboardingExemptPath = createRouteMatcher([
   '/onboarding/(.*)',
   '/api/onboarding/(.*)',
-  '/api/clerk-webhooks(.*)',
   '/_next/(.*)',
   '/favicon.ico',
 ]);
@@ -53,24 +52,24 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Check if user has completed onboarding
   try {
-    // Get the user's onboarding status or create one if it doesn't exist
-    let onboardingStatus = await getOnboardingByUserId(userId);
+    // Get the user's profile or create one if it doesn't exist
+    const userProfile = await getOrCreateUserProfile(userId);
     
-    if (!onboardingStatus) {
-      console.log(`Creating new onboarding record for user ${userId}`);
-      onboardingStatus = await createOnboarding(userId);
+    // Always create a user profile when a user first signs up
+    if (userProfile) {
+      console.log(`User profile found or created for user ${userId}`);
       
-      // Immediately redirect new users to the welcome step
-      const url = request.nextUrl.clone();
-      url.pathname = '/onboarding/welcome';
-      return NextResponse.redirect(url);
-    }
-
-    // If onboarding is not completed, redirect to the current onboarding step
-    if (!onboardingStatus.completed) {
-      const url = request.nextUrl.clone();
-      url.pathname = `/onboarding/${onboardingStatus.currentStep}`;
-      return NextResponse.redirect(url);
+      // If onboarding is not completed, redirect to the appropriate step
+      if (!userProfile.onboardingCompleted) {
+        // Determine which page to redirect to based on lastCompletedStep
+        const lastStep = userProfile.lastCompletedStep || 'welcome';
+        const url = request.nextUrl.clone();
+        url.pathname = `/onboarding/${lastStep}`;
+        return NextResponse.redirect(url);
+      }
+    } else {
+      // This should never happen since getOrCreateUserProfile always creates a profile
+      console.error(`Failed to create user profile for user ${userId}`);
     }
   } catch (error) {
     console.error('Error checking onboarding status:', error);

@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { TrendingUp, Smile, Sparkles, BookOpen, Briefcase, Megaphone } from "lucide-react"
+import { TrendingUp, Smile, Sparkles, BookOpen, Briefcase, Megaphone, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,21 +10,43 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+import { saveStylePreference, getStylePreference } from "@/app/actions/style-actions"
 
 export default function KleoStyleSelector() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null)
-  const { goToStep } = useOnboarding()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingStyle, setIsLoadingStyle] = useState(true)
+  const { goToStep, userProfile } = useOnboarding()
   const { userId } = useAuth()
   const router = useRouter()
-
-  const styleOptions = [
-    { id: "analyse", label: "Analyse", icon: TrendingUp },
-    { id: "friendly", label: "Friendly", icon: Smile },
-    { id: "inspirational", label: "Inspirational", icon: Sparkles },
-    { id: "narrative", label: "Narrative", icon: BookOpen },
-    { id: "professional", label: "Professional", icon: Briefcase },
-    { id: "promotional", label: "Promotional", icon: Megaphone },
-  ]
+  
+  // Load style preference from database on initial render
+  useEffect(() => {
+    async function loadStylePreference() {
+      try {
+        setIsLoadingStyle(true)
+        console.log('Loading style preference...')
+        
+        // Get style preference from the database
+        const result = await getStylePreference()
+        console.log('Style preference result:', result)
+        
+        if (result.style) {
+          console.log('Setting selected style to:', result.style)
+          setSelectedStyle(result.style)
+        } else {
+          console.log('No style preference found in database')
+        }
+      } catch (error) {
+        console.error('Error loading style preference:', error)
+      } finally {
+        setIsLoadingStyle(false)
+      }
+    }
+    
+    loadStylePreference()
+  }, [])
 
   const handleBack = async () => {
     try {
@@ -37,14 +59,36 @@ export default function KleoStyleSelector() {
   }
 
   const handleNext = async () => {
-    // Save selected style if needed
-    // Then proceed to the next step
+    if (!selectedStyle) {
+      toast.error("Please select a style before proceeding")
+      return
+    }
+    
+    setIsLoading(true)
+    console.log('Saving style preference:', selectedStyle)
+    
     try {
+      // First, save the style preference to the user profile without advancing the step
+      console.log('Calling saveStylePreference with:', selectedStyle)
+      const saveResult = await saveStylePreference(selectedStyle)
+      console.log('Save result:', saveResult)
+      
+      if (!saveResult.success) {
+        console.error('Failed to save style preference:', saveResult.error)
+        throw new Error(saveResult.error || 'Failed to save style preference')
+      }
+      
+      console.log('Style preference saved successfully')
+      
+      // Now, update the step and navigate to the next page
+      console.log('Updating step to hook and navigating')
       await goToStep('hook')
       router.push('/onboarding/hook')
     } catch (error) {
-      console.error('Error navigating to hook:', error)
-      router.push('/onboarding/hook')
+      console.error('Error saving style or navigating:', error)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -86,91 +130,81 @@ export default function KleoStyleSelector() {
           </p>
 
           {/* Style Selection Cards */}
-          <div className="grid lg:grid-cols-3 gap-6 mb-12">
-            {/* Personal Style Card */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Kleo Generated Style Card */}
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "personal"
+                selectedStyle === "kleo-generated"
                   ? "border-teal-400 bg-teal-50"
                   : "border-gray-200 hover:border-teal-200"
               }`}
-              onClick={() => setSelectedStyle(selectedStyle === "personal" ? null : "personal")}
-            >
-              <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-gray-900 text-lg mb-6">Your personal style</h3>
-
-                <div className="flex justify-center gap-2 mb-6">
-                  <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-                </div>
-
-                <div className="bg-teal-100 border border-teal-200 rounded-lg p-4 mb-4">
-                  <p className="font-semibold text-teal-800 text-sm mb-2">
-                    You need to have at least 15 published posts to use your own style.
-                  </p>
-                  <p className="text-teal-600 text-xs">WARNING: You must already have a good style to use it.</p>
-                </div>
-
-                <p className="text-gray-600 text-sm">
-                  Kleo AI will analyze your last posts to imitate your writing style
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Another Creator's Style Card */}
-            <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "creator" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
-              }`}
-              onClick={() => setSelectedStyle(selectedStyle === "creator" ? null : "creator")}
-            >
-              <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-gray-900 text-lg mb-6">Another creator's style</h3>
-
-                <div className="flex justify-center gap-2 mb-6">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-12 h-12 bg-gray-300 rounded-full"></div>
-                  ))}
-                </div>
-
-                <p className="font-semibold text-gray-800 mb-4">You can choose any creator you want.</p>
-
-                <p className="text-gray-600 text-sm">
-                  Kleo AI will analyze the last posts of another creator of your choice.
-                </p>
-              </CardContent>
-            </Card>
-
-            {/* Predefined Styles Card */}
-            <Card
-              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "predefined"
-                  ? "border-teal-400 bg-teal-50"
-                  : "border-gray-200 hover:border-teal-200"
-              }`}
-              onClick={() => setSelectedStyle(selectedStyle === "predefined" ? null : "predefined")}
+              onClick={() => setSelectedStyle(selectedStyle === "kleo-generated" ? null : "kleo-generated")}
             >
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="font-bold text-gray-900 text-lg">From our list of styles</h3>
-                  <Badge variant="secondary" className="bg-teal-100 text-teal-700 hover:bg-teal-200">
-                    Kleo AI
-                  </Badge>
+                <div className="flex items-center mb-4">
+                  <h3 className="font-bold text-gray-900 text-lg">Kleo-generated style</h3>
                 </div>
 
-                <div className="space-y-3">
-                  {styleOptions.map((style) => {
-                    const IconComponent = style.icon
-                    return (
-                      <div
-                        key={style.id}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-teal-50 transition-colors"
-                      >
-                        <IconComponent className="w-5 h-5 text-teal-600" />
-                        <span className="text-gray-700 font-medium">{style.label}</span>
-                      </div>
-                    )
-                  })}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/kleo_square.svg" alt="Kleo" width={48} height={48} className="object-cover w-full h-full" />
+                  </div>
+                  <p className="font-semibold text-gray-800">
+                    Based on your selections
+                  </p>
                 </div>
+
+                <p className="text-gray-600 text-sm">
+                  Kleo AI will generate content based on your profile and topic selections.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Jake's Style Card */}
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+                selectedStyle === "jake" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+              }`}
+              onClick={() => setSelectedStyle(selectedStyle === "jake" ? null : "jake")}
+            >
+              <CardContent className="p-6 text-center">
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Jake's style</h3>
+
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/jake_headshot.png" alt="Jake" width={64} height={64} className="object-cover w-full h-full" />
+                  </div>
+                </div>
+
+                <p className="font-semibold text-gray-800 mb-2">Tech Influencer</p>
+
+                <p className="text-gray-600 text-sm">
+                  Kleo AI will analyze Jake's writing style for your content.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Laura's Style Card */}
+            <Card
+              className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+                selectedStyle === "laura" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+              }`}
+              onClick={() => setSelectedStyle(selectedStyle === "laura" ? null : "laura")}
+            >
+              <CardContent className="p-6 text-center">
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Laura's style</h3>
+
+                <div className="flex justify-center mb-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/laura_headshot.png" alt="Laura" width={64} height={64} className="object-cover w-full h-full" />
+                  </div>
+                </div>
+
+                <p className="font-semibold text-gray-800 mb-2">Marketing Expert</p>
+
+                <p className="text-gray-600 text-sm">
+                  Kleo AI will analyze Laura's writing style for your content.
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -193,9 +227,16 @@ export default function KleoStyleSelector() {
               onClick={handleNext}
               className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
-              disabled={!selectedStyle}
+              disabled={!selectedStyle || isLoading || isLoadingStyle}
             >
-              Next
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Next'
+              )}
             </Button>
           </div>
         </div>

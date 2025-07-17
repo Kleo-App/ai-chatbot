@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Mic, HelpCircle } from "lucide-react"
+import { HelpCircle, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -10,14 +10,53 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { VoiceRecorder } from "@/components/voice-recorder"
+import { toast } from "sonner"
+import { saveContentDetails } from "@/app/actions/details-actions"
 
 export default function KleoContentDetails() {
-  const [content, setContent] = useState(
-    "",
-  )
-  const { goToStep } = useOnboarding()
-  const { userId } = useAuth()
-  const router = useRouter()
+  const [content, setContent] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const { goToStep, userProfile } = useOnboarding();
+  const router = useRouter();
+  
+  // Load content from database on initial render
+  useEffect(() => {
+    async function loadContentFromProfile() {
+      if (!userProfile) return;
+      
+      try {
+        setIsLoadingContent(true);
+        
+        // Check if we have content details saved in the user profile
+        if (userProfile.contentDetails) {
+          setContent(userProfile.contentDetails);
+        }
+      } catch (error) {
+        console.error('Error loading content details:', error);
+        toast.error('Failed to load your saved content');
+      } finally {
+        setIsLoadingContent(false);
+      }
+    }
+    
+    loadContentFromProfile();
+  }, [userProfile]);
+  
+  // Handle transcription from voice recorder
+  const handleTranscription = (text: string) => {
+    if (text) {
+      // Append the transcribed text to the current content
+      setContent(prev => {
+        const newContent = prev ? `${prev}\n${text}` : text;
+        return newContent;
+      });
+      
+      // Show success toast
+      toast.success("Voice transcription added!");
+    }
+  };
 
   const handleBack = async () => {
     try {
@@ -30,14 +69,29 @@ export default function KleoContentDetails() {
   }
 
   const handleNext = async () => {
-    // Save content if needed
-    // Then proceed to the next step
+    if (!content.trim()) {
+      toast.error("Please enter some content before proceeding");
+      return;
+    }
+    
+    setIsLoading(true);
+    
     try {
-      await goToStep('style')
-      router.push('/onboarding/style')
+      // Save the content to the user profile using our server action
+      const result = await saveContentDetails(content);
+      
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to save content');
+      }
+      
+      // Update the step and navigate
+      await goToStep('style');
+      router.push('/onboarding/style');
     } catch (error) {
-      console.error('Error navigating to style:', error)
-      router.push('/onboarding/style')
+      console.error('Error saving content or navigating:', error);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -84,59 +138,16 @@ export default function KleoContentDetails() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 className="min-h-[200px] p-6 text-lg leading-relaxed border-2 border-gray-200 rounded-2xl bg-white shadow-sm focus:border-teal-300 focus:ring-2 focus:ring-teal-100 resize-none"
-                placeholder="Enter your content ideas here..."
+                placeholder={isLoadingContent ? "Loading your content..." : "Enter your content ideas here..."}
+                disabled={isLoadingContent}
               />
               <div className="absolute top-4 right-4 flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-teal-500 hover:text-teal-600 hover:bg-teal-50"
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 text-gray-400 hover:text-gray-600 hover:bg-gray-50"
-                >
-                  <HelpCircle className="h-4 w-4" />
-                </Button>
+                <VoiceRecorder 
+                  onTranscriptionComplete={handleTranscription} 
+                  className="flex items-center"
+                />
               </div>
             </div>
-          </div>
-
-          {/* Language Selector */}
-          <div className="flex justify-center mb-12">
-            <Select defaultValue="english">
-              <SelectTrigger className="w-48 bg-white border-2 border-gray-200 rounded-full px-4 py-2 shadow-sm hover:border-teal-200">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">🇺🇸</span>
-                  </div>
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="english">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🇺🇸</span>
-                    English
-                  </div>
-                </SelectItem>
-                <SelectItem value="spanish">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🇪🇸</span>
-                    Spanish
-                  </div>
-                </SelectItem>
-                <SelectItem value="french">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">🇫🇷</span>
-                    French
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
@@ -158,9 +169,16 @@ export default function KleoContentDetails() {
             onClick={handleNext}
             className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
-            disabled={!content.trim()}
+            disabled={!content.trim() || isLoading || isLoadingContent}
           >
-            Next
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              'Next'
+            )}
           </Button>
         </div>
       </div>

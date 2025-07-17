@@ -1,3 +1,5 @@
+ALWAYS USE PNPM TO INSTALL PACKAGES
+
 # Database Migration Notes
 
 ## How to Run Migrations for the AI Chatbot Project
@@ -5,18 +7,23 @@
 The proper way to run migrations for this project is to use the built-in npm scripts:
 
 1. **Generate migrations** based on schema changes:
+
    ```bash
    npm run db:generate
    ```
+
    This creates SQL migration files in `lib/db/migrations/`.
 
 2. **Push migrations** to the database:
+
    ```bash
    npm run db:push
    ```
+
    This applies the schema changes directly to the database.
 
 3. If you need to check the database schema:
+
    ```bash
    npm run db:check
    ```
@@ -29,6 +36,7 @@ The proper way to run migrations for this project is to use the built-in npm scr
 ## UserProfile Migration
 
 The UserProfile table was successfully created by running:
+
 ```bash
 npm run db:generate  # Generated the migration file
 npm run db:push      # Applied the changes to the database

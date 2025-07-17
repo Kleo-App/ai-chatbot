@@ -25,6 +25,8 @@ export const userProfile = pgTable(
     contentDetails: text('contentDetails'),
     stylePreference: text('stylePreference'),
     preferredHook: text('preferredHook'),
+    // AI-generated hooks stored as JSON string
+    generatedHooks: text('generatedHooks'),
     // Metadata
     onboardingCompleted: boolean('onboardingCompleted').notNull().default(false),
     lastCompletedStep: text('lastCompletedStep').notNull().default('welcome'),

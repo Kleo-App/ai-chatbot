@@ -1,8 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
-import { ArrowLeft, Plus, Sparkles } from "lucide-react"
+import { ArrowLeft, Plus, Sparkles, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,35 +10,96 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
+import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
+import { HookIdea } from "@/lib/ai/hook-generator"
+import { toast } from "sonner"
 
 export default function KleoHookSelector() {
   const [selectedHook, setSelectedHook] = useState<number | null>(null)
-  const { goToStep } = useOnboarding()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingHook, setIsLoadingHook] = useState(true)
+  const [showCustomHookInput, setShowCustomHookInput] = useState(false)
+  const [hookOptions, setHookOptions] = useState<Array<{
+    id: number
+    source: string
+    badgeColor: string
+    content: string
+  }>>([]);
+  const [customHook, setCustomHook] = useState<string>("");
+  
+  const { goToStep, userProfile } = useOnboarding()
   const { userId } = useAuth()
   const router = useRouter()
-
-  const hookOptions = [
-    {
-      id: 1,
-      source: "From your writing style",
-      badgeColor: "bg-teal-500",
-      content: "Burnout nearly destroyed my team — until AI became our secret weapon.",
-    },
-    {
-      id: 2,
-      source: "From your topic",
-      badgeColor: "bg-teal-500",
-      content:
-        "From Burnout to Brilliance: My Journey Coaching a Team from Skeptical to Supercharged with Automated AI Agents",
-    },
-    {
-      id: 3,
-      source: "From Kleo AI",
-      badgeColor: "bg-teal-500",
-      content:
-        "The moment I realized my team was burning out wasn't when they started missing deadlines—it was when they stopped complaining about them.",
-    },
-  ]
+  
+  // Load hooks when the component mounts
+  useEffect(() => {
+    async function loadHooks() {
+      try {
+        setIsLoadingHook(true)
+        console.log('Loading hooks...')
+        
+        // First check if user has a saved preferred hook
+        const savedHookResult = await getPreferredHook()
+        console.log('Saved hook result:', savedHookResult)
+        
+        // Get or generate hooks based on user profile
+        const result = await getOrGenerateHooks()
+        console.log('Hooks result:', result)
+        
+        if (result.success && result.hooks) {
+          // Format the hooks with badge colors
+          const formattedHooks = result.hooks.map((hook: HookIdea) => ({
+            id: hook.id,
+            source: hook.source,
+            badgeColor: "bg-teal-500",
+            content: hook.content
+          }))
+          
+          setHookOptions(formattedHooks)
+          
+          // If user has a saved hook, select it
+          if (savedHookResult.hook) {
+            const hookIndex = formattedHooks.findIndex((hook) => hook.content === savedHookResult.hook)
+            if (hookIndex !== -1) {
+              setSelectedHook(formattedHooks[hookIndex].id)
+            }
+          }
+        } else {
+          toast.error("Failed to get hooks. Using default options.")
+          // Set default hooks if retrieval fails
+          setHookOptions([
+            {
+              id: 1,
+              source: "From your writing style",
+              badgeColor: "bg-teal-500",
+              content: "Burnout nearly destroyed my team — until AI became our secret weapon.",
+            },
+            {
+              id: 2,
+              source: "From your topic",
+              badgeColor: "bg-teal-500",
+              content:
+                "From Burnout to Brilliance: My Journey Coaching a Team from Skeptical to Supercharged with Automated AI Agents",
+            },
+            {
+              id: 3,
+              source: "From Kleo AI",
+              badgeColor: "bg-teal-500",
+              content:
+                "The moment I realized my team was burning out wasn't when they started missing deadlines—it was when they stopped complaining about them.",
+            },
+          ])
+        }
+      } catch (error) {
+        console.error('Error loading hooks:', error)
+        toast.error("Something went wrong loading hooks. Using default options.")
+      } finally {
+        setIsLoadingHook(false)
+      }
+    }
+    
+    loadHooks()
+  }, [])
 
   const handleBack = async () => {
     try {
@@ -51,14 +112,69 @@ export default function KleoHookSelector() {
   }
 
   const handleNext = async () => {
-    // Save selected hook if needed
-    // Then proceed to the next step
+    if (!selectedHook && !customHook) {
+      toast.error("Please select a hook or enter a custom hook before proceeding")
+      return
+    }
+    
+    setIsLoading(true)
+    console.log('Saving preferred hook...')
+    
     try {
+      let hookToSave = ""
+      
+      if (customHook) {
+        // Use the custom hook if provided
+        hookToSave = customHook
+      } else {
+        // Find the selected hook content
+        const selectedHookContent = hookOptions.find((hook) => hook.id === selectedHook)?.content
+        
+        if (!selectedHookContent) {
+          throw new Error('Selected hook not found')
+        }
+        
+        hookToSave = selectedHookContent
+      }
+      
+      // Save the preferred hook
+      console.log('Saving hook:', hookToSave)
+      const saveResult = await savePreferredHook(hookToSave)
+      console.log('Save result:', saveResult)
+      
+      if (!saveResult.success) {
+        console.error('Failed to save hook:', saveResult.error)
+        throw new Error(saveResult.error || 'Failed to save hook')
+      }
+      
+      console.log('Hook saved successfully')
+      
+      // Update the step and navigate
       await goToStep('review')
       router.push('/onboarding/review')
     } catch (error) {
-      console.error('Error navigating to review:', error)
-      router.push('/onboarding/review')
+      console.error('Error saving hook or navigating:', error)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  // Handle custom hook input change
+  const handleCustomHookChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setCustomHook(e.target.value)
+    // Deselect any selected hook when entering a custom one
+    if (e.target.value) {
+      setSelectedHook(null)
+    }
+  }
+  
+  // Toggle custom hook input visibility
+  const toggleCustomHookInput = () => {
+    setShowCustomHookInput(!showCustomHookInput)
+    if (!showCustomHookInput) {
+      // When opening the custom hook input, deselect any selected hook
+      setSelectedHook(null)
     }
   }
 
@@ -102,42 +218,85 @@ export default function KleoHookSelector() {
 
           {/* Hook Options */}
           <div className="grid md:grid-cols-3 gap-5 mb-8">
-            {hookOptions.map((hook) => (
-              <Card
-                key={hook.id}
-                className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                  selectedHook === hook.id ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
-                }`}
-                onClick={() => setSelectedHook(selectedHook === hook.id ? null : hook.id)}
-              >
-                <CardContent className="p-5">
-                  <div className="mb-3">
-                    <Badge className={`bg-teal-500 text-white hover:bg-teal-600`}>{hook.source}</Badge>
-                  </div>
+            {isLoadingHook ? (
+              // Loading state - show skeleton cards
+              <>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="border-2 border-gray-200 animate-pulse">
+                    <CardContent className="p-5">
+                      <div className="mb-3">
+                        <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                      </div>
+                      <div className="h-20 bg-gray-200 rounded"></div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </>
+            ) : (
+              // Show actual hook options
+              hookOptions.map((hook) => (
+                <Card
+                  key={hook.id}
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
+                    selectedHook === hook.id ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                  }`}
+                  onClick={() => setSelectedHook(selectedHook === hook.id ? null : hook.id)}
+                >
+                  <CardContent className="p-5">
+                    <div className="mb-3">
+                      <Badge className={`bg-teal-500 text-white hover:bg-teal-600`}>{hook.source}</Badge>
+                    </div>
 
-                  <p className="text-gray-800 font-medium leading-relaxed text-center">{hook.content}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Show More Button */}
-          <div className="text-center mt-4 mb-2">
-            <Button variant="ghost" className="text-gray-700 hover:text-teal-600 hover:bg-teal-50 font-medium">
-              <Plus className="w-4 h-4 mr-2" />
-              Show more hooks
-            </Button>
+                    <p className="text-gray-800 font-medium leading-relaxed text-center">{hook.content}</p>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
           
-          {/* Custom Hook Button */}
+
+          
+          {/* Custom Hook Button/Input */}
           <div className="text-center mt-6 border-t border-gray-100 pt-6">
-            <Button
-              variant="outline"
-              className="bg-white border border-gray-200 hover:border-teal-300 hover:bg-teal-50 text-gray-700 hover:text-teal-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add a custom hook
-            </Button>
+            {!showCustomHookInput ? (
+              <Button
+                variant="outline"
+                className="bg-white border border-gray-200 hover:border-teal-300 hover:bg-teal-50 text-gray-700 hover:text-teal-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
+                onClick={toggleCustomHookInput}
+                disabled={isLoading}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add a custom hook
+              </Button>
+            ) : (
+              <div className="max-w-2xl mx-auto">
+                <div className="mb-3 text-center">
+                  <h3 className="font-semibold text-gray-800">Your custom hook:</h3>
+                </div>
+                <textarea
+                  value={customHook}
+                  onChange={handleCustomHookChange}
+                  placeholder="Enter your own hook here..."
+                  className={`w-full p-4 border-2 rounded-lg ${customHook ? 'border-teal-400 bg-teal-50' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-teal-300`}
+                  rows={3}
+                  disabled={isLoading}
+                  autoFocus
+                />
+                <div className="mt-3 flex justify-end">
+                  <Button
+                    variant="ghost"
+                    className="text-gray-600 hover:text-gray-800 mr-2"
+                    onClick={() => {
+                      setShowCustomHookInput(false)
+                      setCustomHook('')
+                    }}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         
@@ -159,9 +318,16 @@ export default function KleoHookSelector() {
             onClick={handleNext}
             className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
-            disabled={!selectedHook}
+            disabled={(!selectedHook && !customHook) || isLoading}
           >
-            Next
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              "Next"
+            )}
           </Button>
         </div>
       </div>

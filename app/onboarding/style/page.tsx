@@ -184,19 +184,19 @@ export default function KleoStyleSelector() {
               </CardContent>
             </Card>
 
-            {/* Laura's Style Card */}
+            {/* Lara's Style Card */}
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "laura" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                selectedStyle === "lara" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
               }`}
-              onClick={() => setSelectedStyle(selectedStyle === "laura" ? null : "laura")}
+              onClick={() => setSelectedStyle(selectedStyle === "lara" ? null : "lara")}
             >
               <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-gray-900 text-lg mb-4">Laura's style</h3>
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Lara's style</h3>
 
                 <div className="flex justify-center mb-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-200">
-                    <Image src="/images/laura_headshot.png" alt="Laura" width={64} height={64} className="object-cover w-full h-full" />
+                    <Image src="/images/laura_headshot.png" alt="Lara" width={64} height={64} className="object-cover w-full h-full" />
                   </div>
                 </div>
 

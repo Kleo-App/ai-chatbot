@@ -40,7 +40,8 @@ function PureChatHeader({
 
   return (
     <header className="flex sticky top-0 py-1.5 items-center px-2 md:px-2 gap-2">
-      {!isReadonly && hasMessages && (
+      {/* Model and visibility selectors hidden as requested */}
+      {false && (
         <ModelSelector
           session={session}
           selectedModelId={selectedModelId}
@@ -48,7 +49,7 @@ function PureChatHeader({
         />
       )}
 
-      {!isReadonly && hasMessages && (
+      {false && (
         <VisibilitySelector
           chatId={chatId}
           selectedVisibilityType={selectedVisibilityType}

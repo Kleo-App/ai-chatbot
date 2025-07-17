@@ -1,7 +1,7 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, MessageSquare, History, ChevronRight, BookOpen, FileText } from 'lucide-react';
 import Link from 'next/link';
 
@@ -9,6 +9,7 @@ import { PlusIcon } from '@/components/icons';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
+import { CommandMenu } from '@/components/command-menu';
 import { Button } from '@/components/ui/button';
 import {
   Sidebar,
@@ -25,16 +26,23 @@ import {
 import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useState } from 'react';
+import { useCommandMenu } from '@/hooks/use-command-menu';
 
 export function AppSidebar() {
   const router = useRouter();
+  const pathname = usePathname();
   const { setOpenMobile, open } = useSidebar();
   const [historyExpanded, setHistoryExpanded] = useState(true);
+  const [historyHovered, setHistoryHovered] = useState(false);
   const { user } = useUser();
+  const commandMenu = useCommandMenu();
+
+  // Check if we're on a chat-related page (homepage or chat pages)
+  const isChatActive = pathname === '/' || pathname.startsWith('/chat');
 
   return (
     <Sidebar collapsible="icon" className="group-data-[side=left]:border-r-0 bg-sidebar border-r border-border">
-      <SidebarHeader className="h-12 flex flex-row items-center shrink-0 group-data-[collapsible=icon]:pt-2 relative">
+      <SidebarHeader className="h-12 flex flex-row items-center shrink-0 group-data-[collapsible=icon]:pt-2 relative mb-4 z-10 pointer-events-none [&>*]:pointer-events-auto">
         <Link
           href="/"
           onClick={() => {
@@ -51,134 +59,152 @@ export function AppSidebar() {
           />
         </Link>
       </SidebarHeader>
-      <SidebarContent className="flex min-h-0 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden px-1.5">
-        <SidebarGroup className="px-0 py-1">
-          <SidebarMenuButton
-            asChild
-            className="flex-1 ps-[10px] pe-[10px] rounded-full border border-border bg-muted/50 justify-start text-muted-foreground h-[2.5rem] mx-[.125rem] hover:bg-muted/70 hover:text-foreground transition-colors"
-          >
-            <button aria-label="Search">
-              <Search className="h-4 w-4" />
-              <span className="space-x-1 align-baseline group-data-[collapsible=icon]:hidden">
-                <span>Search</span>
-                <span className="text-xs text-muted-foreground">⌘K</span>
-              </span>
-            </button>
-          </SidebarMenuButton>
-        </SidebarGroup>
-
-        <SidebarGroup className="px-0 py-[2px]">
-          <SidebarMenu>
-            <SidebarMenuItem className="mx-1">
+      <SidebarContent className="flex min-h-0 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden relative z-10 pointer-events-none [&>*]:pointer-events-auto">
+        <SidebarGroup className="px-1.5 py-0">
+          <SidebarMenu className="space-y-0.5">
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className="w-full flex flex-row gap-1 p-[0.375rem] text-sm text-muted-foreground bg-muted/30 hover:bg-muted/50 hover:text-foreground transition-colors rounded-xl h-[36px] border-transparent"
+                className="w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-full h-[36px] border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+              >
+                <button aria-label="Search" onClick={commandMenu.toggle}>
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
+                    <Search className="h-4 w-4" />
+                  </div>
+                  <span className="group-data-[collapsible=icon]:hidden space-x-1 align-baseline">
+                    <span>Search</span>
+                    <span className="text-xs text-muted-foreground">⌘K</span>
+                  </span>
+                </button>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <SidebarGroup className="px-1.5 py-0">
+          <SidebarMenu className="space-y-0.5">
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
+              <SidebarMenuButton
+                asChild
+                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                  isChatActive 
+                    ? 'bg-muted text-foreground' 
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                }`}
               >
                 <Link href="/" onClick={() => setOpenMobile(false)}>
-                  <div className="size-6 flex items-center justify-center shrink-0">
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
                     <MessageSquare className="h-4 w-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Chat</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
 
-        <SidebarGroup className="px-0 py-[2px]">
-          <SidebarMenu>
-            <SidebarMenuItem className="mx-1">
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className="w-full flex flex-row gap-1 p-[0.375rem] text-sm text-muted-foreground bg-muted/30 hover:bg-muted/50 hover:text-foreground transition-colors rounded-xl h-[36px] border-transparent"
+                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                  pathname.startsWith('/posts')
+                    ? 'bg-muted text-foreground' 
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                }`}
               >
                 <Link href="/posts" onClick={() => setOpenMobile(false)}>
-                  <div className="size-6 flex items-center justify-center shrink-0">
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
                     <FileText className="h-4 w-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Posts</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
 
-        <SidebarGroup className="px-0 py-[2px]">
-          <SidebarMenu>
-            <SidebarMenuItem className="mx-1">
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className="w-full flex flex-row gap-1 p-[0.375rem] text-sm text-muted-foreground bg-muted/30 hover:bg-muted/50 hover:text-foreground transition-colors rounded-xl h-[36px] border-transparent"
+                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                  pathname.startsWith('/knowledgebase')
+                    ? 'bg-muted text-foreground' 
+                    : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                }`}
               >
                 <Link href="/knowledgebase" onClick={() => setOpenMobile(false)}>
-                  <div className="size-6 flex items-center justify-center shrink-0">
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
                     <BookOpen className="h-4 w-4" />
                   </div>
-                  <span className="group-data-[collapsible=icon]:hidden">Knowledgebase</span>
+                  <span className="group-data-[collapsible=icon]:hidden">Knowledge</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
 
-        <SidebarGroup className="px-0 py-[2px]">
-          <SidebarMenu>
-            <SidebarMenuItem className="mx-1">
-              <div className="w-full flex flex-row justify-start gap-1 bg-background text-muted-foreground text-sm rounded-xl p-[0.375rem] h-[36px] border-transparent">
-                <div className="size-6 flex items-center justify-center shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
-                    onClick={() => setHistoryExpanded(!historyExpanded)}
-                    aria-label="Toggle History"
+            <SidebarMenuItem className="group/menu-item whitespace-nowrap font-semibold mx-1 relative">
+              <div 
+                role="button" 
+                tabIndex={0} 
+                aria-label="History"
+                className="peer/menu-button flex items-center gap-2 overflow-hidden rounded-xl text-left outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-1 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 [&>span:last-child]:truncate [&>svg]:shrink-0 text-sm h-[36px] border-transparent data-[state=open]:hover:bg-muted/50 data-[active=true]:bg-muted aria-expanded:bg-muted/50 hover:bg-transparent active:bg-transparent cursor-default hover:text-muted-foreground w-full flex flex-row justify-start bg-background text-muted-foreground rounded-xl p-[0.375rem]"
+                data-sidebar="menu-button"
+                data-active="false"
+                onClick={() => setHistoryExpanded(!historyExpanded)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setHistoryExpanded(!historyExpanded);
+                  }
+                }}
+              >
+                <div data-sidebar="icon" className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0 group-data-[collapsible=icon]:ml-0.5">
+                  <button
+                    className="inline-flex items-center justify-center gap-2 group-data-[collapsible=icon]:gap-0 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:hover:text-muted-foreground disabled:hover:bg-transparent [&_svg]:hover:text-foreground h-6 w-6 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:w-4 rounded-full"
+                    type="button"
+                    aria-label="Toggle Menu"
+                    onMouseEnter={() => setHistoryHovered(true)}
+                    onMouseLeave={() => setHistoryHovered(false)}
                   >
-                    <History className="h-4 w-4 group-hover:hidden" />
-                    <ChevronRight className={`h-3 w-3 hidden group-hover:block transition-transform duration-100 ${historyExpanded ? 'rotate-90' : ''}`} />
-                  </Button>
+                    <History className={`h-4 w-4 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:hidden' : ''}`} />
+                    <ChevronRight className={`h-3 w-3 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:block' : 'hidden'} transition-[transform] duration-100 ${historyExpanded ? 'rotate-90' : ''}`} />
+                  </button>
                 </div>
-                <span className="group-data-[collapsible=icon]:hidden">History</span>
+                <span className="group-data-[collapsible=icon]:hidden" style={{ opacity: 1 }}>History</span>
               </div>
-              {historyExpanded && (
-                <div className="mt-1 mx-1">
+              <div style={{ overflow: 'hidden', height: historyExpanded ? 'auto' : '0', opacity: historyExpanded ? 1 : 0 }}>
+                <div className="flex flex-row mt-1 mx-1">
                   <div className="cursor-pointer ms-[8px] me-[2px] py-1">
                     <div className="border-l border-border h-full ms-[10px] me-[4px]"></div>
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-0">
-                    <SidebarHistory />
+                    <SidebarHistory commandMenu={commandMenu} />
                   </div>
                 </div>
-              )}
+              </div>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="flex flex-col gap-2 mt-auto relative shrink-0 px-2 pb-3">
+      <SidebarFooter className={`flex flex-col gap-2 mt-auto relative shrink-0 z-10 ${open ? 'h-[56px]' : 'h-[96px]'}`}>
         {user && (
-          <div className={`transition-all duration-200 ease-linear ${open ? 'flex items-start justify-between w-full' : 'flex flex-col gap-2'}`}>
-            <div className={`transform transition-all duration-200 ease-linear ${open ? 'translate-y-1' : 'translate-y-0'} ${open ? 'self-start' : ''}`}>
+          <>
+            <div 
+              className="absolute bottom-3 start-[.5rem]" 
+              style={{ 
+                transform: open ? 'translateY(0px)' : 'translateY(-44px)', 
+                transitionProperty: 'transform', 
+                transitionDuration: '300ms' 
+              }}
+            >
               <SidebarUserNav />
             </div>
-            <div className={`transform transition-all duration-200 ease-linear ${open ? 'translate-x-1' : 'translate-x-0'} ${open ? 'self-start' : ''}`}>
-              <SidebarToggle />
+            <div className={open ? "cursor-w-resize grow" : "cursor-e-resize grow"}>
+              <SidebarToggle className="absolute end-2 bottom-3" />
             </div>
-          </div>
-        )}
-        {!user && (
-          <div className="flex flex-col gap-2">
-            <div className="flex flex-col gap-2 px-2">
-              <Button asChild size="sm" className="w-full">
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <Button asChild variant="outline" size="sm" className="w-full">
-                <Link href="/register">Sign Up</Link>
-              </Button>
-            </div>
-            <SidebarToggle />
-          </div>
+          </>
         )}
       </SidebarFooter>
-      <SidebarRail />
+      <SidebarRail className="bg-transparent hover:bg-transparent w-[calc(var(--sidebar-width)+12px)] group-data-[collapsible=icon]:w-[calc(var(--sidebar-width-icon)+12px)] group-data-[state=collapsed]:w-[calc(var(--sidebar-width-icon)+12px)] left-0 right-auto translate-x-0 group-data-[collapsible=icon]:left-0 group-data-[collapsible=icon]:right-auto group-data-[collapsible=icon]:translate-x-0 group-data-[state=collapsed]:left-0 group-data-[state=collapsed]:right-auto group-data-[state=collapsed]:translate-x-0 after:hidden z-0 pointer-events-auto" />
+      <CommandMenu 
+        open={commandMenu.open} 
+        onOpenChange={commandMenu.setOpen} 
+      />
     </Sidebar>
   );
 }

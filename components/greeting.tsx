@@ -22,7 +22,7 @@ export const Greeting = ({ children }: GreetingProps) => {
 
   return (
     <>
-      <div className="flex flex-col h-screen">
+      <div className={`flex flex-col ${children ? 'h-full' : 'h-screen'}`}>
         {/* Header - only show for unauthenticated users */}
         {showHeader && (
           <header className="flex-shrink-0 w-full px-8 py-4">
@@ -53,54 +53,78 @@ export const Greeting = ({ children }: GreetingProps) => {
         )}
 
         {/* Hero Section */}
-        <div className="flex-1 flex items-center justify-center px-8 py-12">
-          <div className="max-w-3xl mx-auto text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.2 }}
-              className="mb-6"
-            >
-              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-green-100 text-green-800 text-sm font-medium">
-                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                Over 70k users
-              </div>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.3 }}
-              className="text-4xl md:text-5xl font-medium text-gray-900 mb-2"
-            >
-              Post engaging content
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 10 }}
-              transition={{ delay: 0.4 }}
-              className="text-xl text-gray-600 flex items-center gap-2 flex-wrap justify-center mb-4"
-            >
-              <span>Create the best content for</span>
-              <span className="inline-flex items-center gap-1 relative top-px bg-blue-100 px-1.5 py-1 rounded font-medium">
-                <Image
-                  src="/images/LI-In-Bug.png"
-                  alt="LinkedIn"
-                  width={20}
-                  height={20}
-                  className="inline-block"
-                />
-                LinkedIn
-              </span>
-              <span>in minutes by chatting with AI</span>
-            </motion.div>
+        <div className={`flex-1 flex items-start justify-center px-8 ${user ? 'pt-0' : 'pt-16'} pb-12`}>
+          <div className="w-full mx-auto text-center">
+            <div className="max-w-3xl mx-auto">
+              {showHeader && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ delay: 0.2 }}
+                  className="mb-6"
+                >
+                  <div className="inline-flex items-center px-3 py-1.5 rounded-full text-gray-600 text-sm font-medium" style={{ backgroundColor: '#157DFF20' }}>
+                    Over 70k users
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Show Kleo logo when authenticated, otherwise show title and subtitle */}
+              {user ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-8"
+                >
+                  <Image
+                    src="/images/kleo.svg"
+                    alt="Kleo"
+                    width={107}
+                    height={32}
+                    className="h-8 w-auto mx-auto"
+                  />
+                </motion.div>
+              ) : (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-4xl md:text-5xl font-medium text-gray-900 mb-2"
+                  >
+                    Post engaging content
+                  </motion.div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    transition={{ delay: 0.4 }}
+                    className="text-xl text-gray-600 flex items-center gap-2 flex-wrap justify-center mb-4"
+                  >
+                    <span>Create the best content for</span>
+                    <span className="inline-flex items-center gap-1 relative top-px bg-blue-100 px-1.5 py-1 rounded font-medium">
+                      <Image
+                        src="/images/LI-In-Bug.png"
+                        alt="LinkedIn"
+                        width={20}
+                        height={20}
+                        className="inline-block"
+                      />
+                      LinkedIn
+                    </span>
+                    <span>in minutes by chatting with AI</span>
+                  </motion.div>
+                </>
+              )}
+            </div>
 
             {/* Input Section - now part of hero */}
-            <div className="max-w-2xl mx-auto mt-8">
+            <div className="w-full md:max-w-3xl mx-auto px-4 mt-8">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

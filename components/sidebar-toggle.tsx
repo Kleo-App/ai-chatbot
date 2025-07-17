@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react';
-import { ChevronsRight, ChevronsLeft } from 'lucide-react';
+import { ChevronsRight } from 'lucide-react';
 
 import { useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -22,15 +22,14 @@ export function SidebarToggle({
           data-sidebar="trigger"
           variant="ghost"
           size="icon"
-          className={cn('h-12 w-12 p-0 rounded-full hover:bg-muted/50 flex items-center justify-center -ml-1.5', className)}
+          className={cn('inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground hover:text-foreground hover:bg-muted disabled:hover:text-muted-foreground disabled:hover:bg-transparent [&_svg]:hover:text-foreground h-10 w-10 rounded-full', className)}
           onClick={toggleSidebar}
           data-testid="sidebar-toggle-button"
         >
-          {open ? (
-            <ChevronsLeft size={20} style={{ width: '20px', height: '20px' }} />
-          ) : (
-            <ChevronsRight size={20} style={{ width: '20px', height: '20px' }} />
-          )}
+          <ChevronsRight 
+            size={18} 
+            className={cn('transition-transform duration-200', open && 'rotate-180')}
+          />
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
       </TooltipTrigger>

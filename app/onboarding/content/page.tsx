@@ -1,11 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
-import { ArrowLeft, ArrowRight, Plus, Loader2 } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { UserButton } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -13,17 +12,16 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { updateContentType } from "@/app/actions/profile-actions"
 import { generateContent, saveSelectedContent } from "@/app/actions/content-actions"
 import { ContentIdea } from "@/lib/ai/content-generator"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function KleoContentCreator() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [contentIdeas, setContentIdeas] = useState<ContentIdea[]>([])
-  // Don't set a default content type initially to prevent auto-generation
   const [selectedContentType, setSelectedContentType] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const { goToStep, completeOnboarding, userProfile } = useOnboarding()
-  const { userId } = useAuth()
+  const { goToStep, userProfile } = useOnboarding()
   const router = useRouter()
   
   // Content types from the mindmap
@@ -34,11 +32,103 @@ export default function KleoContentCreator() {
     { id: 'engaging', name: 'Highly Engaging' }
   ]
   
-  // Initialize content type from user profile once on component mount
-  useEffect(() => {
-    if (!userProfile) return;
+  // Track generation status for each content type
+  const [generationStatus, setGenerationStatus] = useState<Record<string, 'idle' | 'loading' | 'complete' | 'error'>>({})  
+  
+  // Track if we've initialized from the user profile
+  const hasInitialized = useRef(false);
+
+  // Function to check if content exists in user profile for a content type
+  const checkExistingContent = useCallback((contentType: string): ContentIdea[] | null => {
+    if (!userProfile) return null;
     
-    // Set the content type from the user profile if available, otherwise default to 'educational'
+    // Check for stored content in the user profile
+    const storedContentKey = `generatedContent_${contentType.toLowerCase().replace(/\s+/g, '_')}`;
+    const storedContent = (userProfile as any)[storedContentKey];
+    
+    if (storedContent) {
+      try {
+        const parsedContent = JSON.parse(storedContent);
+        if (Array.isArray(parsedContent) && parsedContent.length > 0) {
+          console.log(`Found existing content for ${contentType} in database`);
+          return parsedContent;
+        }
+      } catch (e) {
+        console.warn(`Failed to parse stored content for ${contentType}:`, e);
+      }
+    }
+    
+    console.log(`No existing content found for ${contentType} in database`);
+    return null;
+  }, [userProfile]);
+  
+  // Load existing content from database for all content types
+  const loadExistingContent = useCallback(() => {
+    if (!userProfile) return false;
+    
+    console.log('Loading existing content from database');
+    const loadedContentByType: Record<string, ContentIdea[]> = {};
+    const updatedGenerationStatus: Record<string, 'idle' | 'loading' | 'complete' | 'error'> = {};
+    let hasAnyContent = false;
+    let contentForSelectedType: ContentIdea[] | null = null;
+    
+    // Check for existing content for each type
+    contentTypes.forEach(type => {
+      const existingContent = checkExistingContent(type.name);
+      if (existingContent) {
+        console.log(`Found existing content for ${type.name}`);
+        loadedContentByType[type.id] = existingContent;
+        updatedGenerationStatus[type.id] = 'complete';
+        hasAnyContent = true;
+        
+        // If we have content for the currently selected type, store it to update later
+        if (selectedContentType === type.id) {
+          contentForSelectedType = existingContent;
+        }
+      } else {
+        console.log(`No existing content found for ${type.name}`);
+      }
+    });
+    
+    if (hasAnyContent) {
+      // Batch all state updates together to avoid infinite loops
+      if (Object.keys(updatedGenerationStatus).length > 0) {
+        setGenerationStatus(prev => ({
+          ...prev,
+          ...updatedGenerationStatus
+        }));
+      }
+      
+      // Update the state with all loaded content at once
+      setContentIdeasByType(prev => ({
+        ...prev,
+        ...loadedContentByType
+      }));
+      
+      // Update selected content if we found it
+      if (contentForSelectedType && selectedContentType) {
+        setContentIdeas(contentForSelectedType);
+      }
+      
+      // Mark that we've loaded all types to prevent regeneration
+      hasLoadedAllTypes.current = true;
+      return true;
+    }
+    
+    return false;
+  }, [userProfile, contentTypes, checkExistingContent, selectedContentType]);
+
+  // Initialize content type from user profile and trigger content generation for all types
+  useEffect(() => {
+    // Only run this once when userProfile is available
+    if (!userProfile || hasInitialized.current) return;
+    
+    // Mark as initialized to prevent future runs
+    hasInitialized.current = true;
+    
+    // Set default content type from user profile if available, otherwise default to 'educational'
+    let defaultType = 'educational';
+    
     if (userProfile.contentType) {
       // Find matching content type
       const matchingType = contentTypes.find(type => 
@@ -46,16 +136,25 @@ export default function KleoContentCreator() {
       );
       
       if (matchingType) {
-        setSelectedContentType(matchingType.id);
-      } else {
-        // Default to educational if no match found
-        setSelectedContentType('educational');
+        defaultType = matchingType.id;
       }
-    } else {
-      // Default to educational if no content type in profile
-      setSelectedContentType('educational');
     }
-  }, [userProfile]); // Only depend on userProfile, not contentIdeas
+    
+    // Initialize generation status for all content types
+    const initialStatus: Record<string, 'idle' | 'loading' | 'complete' | 'error'> = {};
+    contentTypes.forEach(type => {
+      initialStatus[type.id] = 'idle';
+    });
+    
+    setGenerationStatus(initialStatus);
+    
+    // IMPORTANT: Always try to load ALL existing content from the database first
+    // This ensures we don't regenerate content when returning to this page
+    const loadedContent = loadExistingContent();
+    
+    // Set the selected content type after loading content
+    setSelectedContentType(defaultType);
+  }, [userProfile, contentTypes, loadExistingContent]);
   
   // Set selected card when content ideas change
   useEffect(() => {
@@ -72,99 +171,331 @@ export default function KleoContentCreator() {
     } catch (err) {
       console.error('Error parsing saved content details:', err);
     }
-  }, [userProfile, contentIdeas]);
+  }, [contentIdeas]);
   
   // Store all generated content ideas by content type
   const [contentIdeasByType, setContentIdeasByType] = useState<Record<string, ContentIdea[]>>({});
-  const [contentTypeInitialized, setContentTypeInitialized] = useState(false);
+  
+  // Function to generate content for a specific type
+  // Using useCallback to prevent recreation on each render
+  const generateContentForType = useCallback(async (typeId: string, isPriority = true) => {
+    // Skip if we already have content for this type in state
+    if (contentIdeasByType[typeId] && contentIdeasByType[typeId].length > 0) {
+      // If this is the priority type, update the current content ideas
+      if (isPriority) {
+        setContentIdeas(contentIdeasByType[typeId]);
+        setGenerationStatus(prev => ({ ...prev, [typeId]: 'complete' }));
+      }
+      return;
+    }
+    
+    // Find the content type name
+    let contentTypeName = 'Educational';
+    for (const type of contentTypes) {
+      if (type.id === typeId) {
+        contentTypeName = type.name;
+        break;
+      }
+    }
+    
+    // Check if we have existing content in the database first
+    const existingContent = checkExistingContent(contentTypeName);
+    if (existingContent) {
+      // Use existing content from database
+      setContentIdeasByType(prev => ({
+        ...prev,
+        [typeId]: existingContent
+      }));
+      
+      // If this is the priority type, update the current content ideas
+      if (isPriority) {
+        setContentIdeas(existingContent);
+      }
+      
+      // Update generation status
+      setGenerationStatus(prev => ({ ...prev, [typeId]: 'complete' }));
+      
+      // No need to show loading state if we found existing content
+      if (isPriority) {
+        setIsGenerating(false);
+      }
+      
+      return;
+    }
+    
+    // If no existing content, proceed with generation
+    // Update generation status
+    setGenerationStatus(prev => ({ ...prev, [typeId]: 'loading' }));
+    
+    // If this is the priority type, show the loading state
+    if (isPriority) {
+      setIsGenerating(true);
+      setError(null);
+    }
+    
+    try {      
+      const result = await generateContent(contentTypeName);
+      
+      if (result.success && result.contentIdeas) {
+        // Store the ideas for this content type
+        setContentIdeasByType(prev => ({
+          ...prev,
+          [typeId]: result.contentIdeas || []
+        }));
+        
+        // If this is the priority type, update the current content ideas
+        if (isPriority) {
+          setContentIdeas(result.contentIdeas);
+        }
+        
+        // Update generation status
+        setGenerationStatus(prev => ({ ...prev, [typeId]: 'complete' }));
+      } else {
+        // Update generation status
+        setGenerationStatus(prev => ({ ...prev, [typeId]: 'error' }));
+        
+        if (isPriority) {
+          setError('Failed to generate content ideas');
+        }
+      }
+    } catch (err) {
+      console.error(`Error generating content ideas for ${typeId}:`, err);
+      
+      // Update generation status
+      setGenerationStatus(prev => ({ ...prev, [typeId]: 'error' }));
+      
+      if (isPriority) {
+        setError('An unexpected error occurred');
+      }
+    } finally {
+      // If this is the priority type, hide the loading state
+      if (isPriority) {
+        setIsGenerating(false);
+      }
+    }
+  }, [contentIdeasByType, setContentIdeas, setContentIdeasByType, setGenerationStatus, setIsGenerating, setError, contentTypes, generateContent, checkExistingContent]);
+  
+  // Function to generate content for all types, with priority for the selected type
+  // Using useCallback to prevent recreation on each render
+  const generateAllContentTypes = useCallback(async (priorityType: string) => {
+    // First generate the priority type
+    await generateContentForType(priorityType);
+    
+    // Then generate all other types in parallel
+    // Use a local copy of contentTypes to avoid dependency issues
+    const typesToGenerate = contentTypes.filter(type => type.id !== priorityType);
+    await Promise.all(typesToGenerate.map(type => generateContentForType(type.id, false)));
+  }, [generateContentForType]);
+  
+  // Function to regenerate content ideas for the currently selected type
+  async function regenerateContentIdeas() {
+    setIsGenerating(true);
+    setError(null);
+    
+    try {
+      const contentTypeName = contentTypes.find(t => t.id === selectedContentType)?.name || 'Educational';
+      const result = await generateContent(contentTypeName);
+      
+      if (result.success && result.contentIdeas) {
+        setContentIdeas(result.contentIdeas);
+        
+        // Store the ideas for this content type
+        setContentIdeasByType(prev => ({
+          ...prev,
+          [selectedContentType]: result.contentIdeas || []
+        }));
+      } else {
+        setError('Failed to generate content ideas');
+      }
+    } catch (err) {
+      console.error('Error generating content ideas:', err);
+      setError('An unexpected error occurred');
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
+  
+  // Track if we've generated content for other types
+  const hasGeneratedOtherTypes = useRef(false);
+
+  // Track if we've loaded all content types from the database
+  const hasLoadedAllTypes = useRef(false);
+
+  // Track if we're currently processing a content type change to prevent infinite loops
+  const isProcessingContentChange = useRef(false);
   
   // Handle content type changes and load appropriate content
   useEffect(() => {
     // Skip if no content type is selected
     if (!selectedContentType) return;
     
-    // Mark that we've initialized the content type
-    if (!contentTypeInitialized) {
-      setContentTypeInitialized(true);
-    }
-    
-    // Check if we already have generated ideas for this content type
-    if (contentIdeasByType[selectedContentType] && contentIdeasByType[selectedContentType].length > 0) {
-      setContentIdeas(contentIdeasByType[selectedContentType]);
+    // Prevent infinite loops by avoiding re-entry
+    if (isProcessingContentChange.current) {
+      console.log('Already processing content change, skipping');
       return;
     }
     
-    // Only generate content if we've initialized the content type
-    // This prevents the initial double request
-    if (contentTypeInitialized) {
-      const generateContentIdeas = async () => {
-        setIsGenerating(true);
-        setError(null);
-        
-        try {
-          const contentTypeName = contentTypes.find(t => t.id === selectedContentType)?.name || 'Educational';
-          const result = await generateContent(contentTypeName);
-          
-          if (result.success && result.contentIdeas) {
-            // Store the generated ideas for this content type
-            const newIdeas = result.contentIdeas;
-            setContentIdeas(newIdeas);
-            setContentIdeasByType(prev => ({
-              ...prev,
-              [selectedContentType]: newIdeas
-            }));
-          } else {
-            setError(result.error || 'Failed to generate content ideas');
-            // Set default content ideas as fallback
-            const defaultIdeas = [
-              {
-                category: contentTypeName,
-                title: `The Ultimate Guide to ${contentTypeName}: Building Your Professional Presence in 2025`,
-                description:
-                  "Step-by-step strategies for creating authentic content, from idea generation to execution with actionable frameworks.",
-                tag: "GUIDE",
-              },
-              {
-                category: contentTypeName,
-                title: `From Novice to Expert: How I Built My ${contentTypeName} Strategy`,
-                description:
-                  "Personal journey of developing expertise, including key lessons, mindset shifts, and practical growth strategies.",
-                tag: "SUCCESS STORY",
-              },
-              {
-                category: contentTypeName,
-                title: `Top 5 ${contentTypeName} Approaches That Actually Work in 2025`,
-                description:
-                  "Honest review of strategies that deliver results, optimize workflows, and boost professional credibility without excessive effort.",
-                tag: "STRATEGY",
-              },
-            ];
-            
-            setContentIdeas(defaultIdeas);
-            setContentIdeasByType(prev => ({
-              ...prev,
-              [selectedContentType]: defaultIdeas
-            }));
-          }
-        } catch (err) {
-          console.error('Error generating content ideas:', err);
-          setError('An unexpected error occurred');
-        } finally {
-          setIsGenerating(false);
+    // Set processing flag
+    isProcessingContentChange.current = true;
+    
+    console.log(`Content type changed to ${selectedContentType}`);
+    
+    // Use an async function to handle the content loading/generation
+    const processContentTypeChange = async () => {
+      try {
+        // Check if we already have generated ideas for this content type in state
+        if (contentIdeasByType[selectedContentType] && contentIdeasByType[selectedContentType].length > 0) {
+          console.log(`Using existing content for ${selectedContentType} from state`);
+          setContentIdeas(contentIdeasByType[selectedContentType]);
+          return;
         }
-      };
-      
-      generateContentIdeas();
-    }
-  }, [selectedContentType, contentIdeasByType, contentTypeInitialized]);
+        
+        // Find the content type name for the selected type ID
+        const selectedTypeName = contentTypes.find(type => type.id === selectedContentType)?.name || 'Educational';
+        
+        // Check if content exists in database for the selected type
+        const existingContent = checkExistingContent(selectedTypeName);
+        if (existingContent) {
+          console.log(`Loading existing content for ${selectedTypeName} from database`);
+          // Batch state updates
+          const updates = () => {
+            // Update content ideas by type
+            setContentIdeasByType(prev => ({
+              ...prev,
+              [selectedContentType]: existingContent
+            }));
+            
+            // Update current content ideas
+            setContentIdeas(existingContent);
+            
+            // Update generation status
+            setGenerationStatus(prev => ({ ...prev, [selectedContentType]: 'complete' }));
+          };
+          
+          updates();
+          return;
+        }
+        
+        // Generate content for this type if not already available in state or database
+        console.log(`Generating new content for ${selectedTypeName}`);
+        await generateContentForType(selectedContentType);
+        
+        // Only try to load or generate other content types once
+        if (!hasGeneratedOtherTypes.current && userProfile && !hasLoadedAllTypes.current) {
+          hasGeneratedOtherTypes.current = true;
+          hasLoadedAllTypes.current = true;
+          
+          console.log('Starting background loading/generation for other content types');
+          
+          // Try to load all content types from database first
+          const currentContentTypes = [...contentTypes]; // Create a copy to avoid dependency issues
+          const currentSelectedType = selectedContentType; // Capture current value
+          
+          // Use requestIdleCallback if available, otherwise setTimeout
+          const scheduleBackgroundWork = window.requestIdleCallback || setTimeout;
+          
+          scheduleBackgroundWork(() => {
+            const otherTypes = currentContentTypes.filter(type => type.id !== currentSelectedType);
+            
+            // First try to load all types from database
+            let hasAllContent = true;
+            const missingTypes: typeof otherTypes = [];
+            const batchedUpdates: Record<string, ContentIdea[]> = {};
+            const batchedStatus: Record<string, 'idle' | 'loading' | 'complete' | 'error'> = {};
+            
+            // Check which types need to be generated
+            otherTypes.forEach(type => {
+              // Skip if we already have this type in state
+              if (contentIdeasByType[type.id] && contentIdeasByType[type.id].length > 0) {
+                console.log(`Type ${type.name} already in state, skipping`);
+                return;
+              }
+              
+              // Check if content exists in database
+              const existingContent = checkExistingContent(type.name);
+              if (existingContent) {
+                // Collect updates to batch them
+                batchedUpdates[type.id] = existingContent;
+                batchedStatus[type.id] = 'complete';
+              } else {
+                hasAllContent = false;
+                missingTypes.push(type);
+              }
+            });
+            
+            // Apply batched updates
+            if (Object.keys(batchedUpdates).length > 0) {
+              setContentIdeasByType(prev => ({
+                ...prev,
+                ...batchedUpdates
+              }));
+              
+              setGenerationStatus(prev => ({
+                ...prev,
+                ...batchedStatus
+              }));
+            }
+            
+            // If we're missing any types, generate them sequentially
+            if (!hasAllContent && missingTypes.length > 0) {
+              console.log(`Need to generate content for ${missingTypes.length} missing types`);
+              let index = 0;
+              const processNextType = () => {
+                if (index < missingTypes.length) {
+                  console.log(`Generating content for ${missingTypes[index].name} (${index + 1}/${missingTypes.length})`);
+                  generateContentForType(missingTypes[index].id, false)
+                    .then(() => {
+                      index++;
+                      // Use a small delay between requests
+                      setTimeout(processNextType, 300);
+                    })
+                    .catch(() => {
+                      // Continue even if one fails
+                      index++;
+                      setTimeout(processNextType, 300);
+                    });
+                } else {
+                  console.log('Finished generating all missing content types');
+                }
+              };
+              
+              processNextType();
+            } else {
+              console.log('All content types are already available, no need for generation');
+            }
+          }, { timeout: 1000 });
+        }
+      } finally {
+        // Always reset the processing flag when done
+        isProcessingContentChange.current = false;
+      }
+    };
+    
+    // Start the async process
+    processContentTypeChange();
+    
+  }, [selectedContentType, contentIdeasByType, userProfile, checkExistingContent, contentTypes, generateContentForType]);
 
+  // Reset initialization flags when component unmounts to ensure proper reloading
+  useEffect(() => {
+    return () => {
+      // This cleanup function runs when the component unmounts
+      // We don't reset hasInitialized because we want to keep the initialization state
+      // across page navigations to prevent regeneration
+      console.log('Content page unmounting - preserving initialization state');
+    };
+  }, []);
+  
   const handleBack = async () => {
     try {
-      await goToStep('topics')
-      router.push('/onboarding/topics')
+      // Don't reset the initialization flags when going back
+      // This ensures we don't regenerate content when returning to this page
+      await goToStep('topics');
+      router.push('/onboarding/topics');
     } catch (error) {
-      console.error('Error navigating to topics:', error)
-      router.push('/onboarding/topics')
+      console.error('Error navigating to topics:', error);
+      router.push('/onboarding/topics');
     }
   }
 
@@ -172,34 +503,43 @@ export default function KleoContentCreator() {
     if (selectedCard === null) return;
     
     setIsLoading(true);
+    
     try {
       // Save the selected content type and content details
       const contentType = contentIdeas[selectedCard].category;
       const selectedContent = contentIdeas[selectedCard];
       
-      // Update content type
-      const typeResult = await updateContentType(contentType);
-      if (!typeResult.success) {
-        throw new Error('Failed to update content type');
-      }
-      
-      // Save selected content details
-      const contentResult = await saveSelectedContent(JSON.stringify(selectedContent));
-      if (!contentResult.success) {
-        console.warn('Failed to save content details:', contentResult.error);
-      }
-      
-      // Proceed to the next step
+      // Start navigation immediately
       router.prefetch('/onboarding/details');
-      const stepPromise = goToStep('details');
-      router.push('/onboarding/details');
       
-      // Complete the background operations without blocking navigation
-      stepPromise.catch((error: unknown) => {
-        console.error('Background step operation error:', error);
+      // Perform these operations in the background without blocking navigation
+      Promise.all([
+        // Update content type
+        updateContentType(contentType).then(typeResult => {
+          if (!typeResult.success) {
+            console.warn('Failed to update content type:', typeResult.error);
+          }
+        }),
+        
+        // Save selected content details
+        saveSelectedContent(JSON.stringify(selectedContent)).then(contentResult => {
+          if (!contentResult.success) {
+            console.warn('Failed to save content details:', contentResult.error);
+          }
+        }),
+        
+        // Update step in the background
+        goToStep('details').catch(error => {
+          console.error('Background step operation error:', error);
+        })
+      ]).catch(error => {
+        console.error('Background operations error:', error);
       });
+      
+      // Navigate immediately without waiting for background operations
+      router.push('/onboarding/details');
     } catch (error) {
-      console.error('Error updating content or navigating:', error);
+      console.error('Error preparing navigation:', error);
       router.push('/onboarding/details');
     } finally {
       setIsLoading(false);
@@ -265,22 +605,37 @@ export default function KleoContentCreator() {
           </p>
           
           {/* Content Type Selection */}
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-3">Select content type:</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Tabs 
+            value={selectedContentType} 
+            onValueChange={setSelectedContentType}
+            className="mb-8"
+          >
+            <TabsList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 bg-transparent h-auto">
               {contentTypes.map((type) => (
-                <Button
-                  key={type.id}
-                  variant={selectedContentType === type.id ? "default" : "outline"}
-                  className={`h-auto py-3 px-4 ${selectedContentType === type.id ? "bg-teal-500 hover:bg-teal-600" : "bg-white hover:bg-teal-50"}`}
-                  onClick={() => setSelectedContentType(type.id)}
+                <TabsTrigger 
+                  key={type.id} 
+                  value={type.id}
+                  className={`h-auto py-3 px-4 text-left ${selectedContentType === type.id ? 'data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 data-[state=active]:border-teal-200' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl relative`}
                 >
-                  <span className="text-sm font-medium">{type.name}</span>
-                </Button>
+                  <div className="flex flex-col items-start">
+                    <div className="font-semibold">{type.name}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {type.id === 'monetisable_expertise' && 'Showcase your professional value'}
+                      {type.id === 'strategic_arbitrage' && 'Highlight unique market insights'}
+                      {type.id === 'educational' && 'Teach concepts and share knowledge'}
+                      {type.id === 'engaging' && 'Spark conversation and engagement'}
+                    </div>
+                  </div>
+                  {/* Show loading indicator if this type is being generated */}
+                  {generationStatus[type.id] === 'loading' && (
+                    <div className="absolute top-1 right-1">
+                      <Loader2 className="h-3 w-3 animate-spin text-teal-500" />
+                    </div>
+                  )}
+                </TabsTrigger>
               ))}
-            </div>
-          </div>
-
+            </TabsList>
+          </Tabs>
           {/* Loading State */}
           {isGenerating && (
             <div className="flex flex-col items-center justify-center py-10">
@@ -336,35 +691,7 @@ export default function KleoContentCreator() {
               <Button 
                 variant="ghost" 
                 className="text-gray-700 hover:text-teal-600 hover:bg-teal-50 font-medium"
-                onClick={async () => {
-                  // Regenerate content ideas for the same type
-                  setIsGenerating(true);
-                  setError(null);
-                  
-                  try {
-                    const contentTypeName = contentTypes.find(t => t.id === selectedContentType)?.name || 'Educational';
-                    const result = await generateContent(contentTypeName);
-                    
-                    if (result.success && result.contentIdeas) {
-                      // Add the new ideas to the existing ones
-                      const newIdeas = result.contentIdeas;
-                      setContentIdeas(newIdeas);
-                      
-                      // Update the stored ideas for this content type
-                      setContentIdeasByType(prev => ({
-                        ...prev,
-                        [selectedContentType]: newIdeas
-                      }));
-                    } else {
-                      setError('Failed to generate more content ideas');
-                    }
-                  } catch (err) {
-                    console.error('Error generating more content ideas:', err);
-                    setError('An unexpected error occurred');
-                  } finally {
-                    setIsGenerating(false);
-                  }
-                }}
+                onClick={regenerateContentIdeas}
                 disabled={isGenerating}
               >
                 <Plus className="w-4 h-4 mr-2" />

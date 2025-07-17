@@ -131,16 +131,16 @@ export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecor
         type="button"
         variant={isRecording ? "destructive" : "ghost"}
         size="sm"
-        className={`h-8 w-8 p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-teal-500 hover:text-teal-600 hover:bg-teal-50'}`}
+        className={`size-8 p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-teal-500 hover:text-teal-600 hover:bg-teal-50'}`}
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing}
       >
         {isProcessing ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="size-4 animate-spin" />
         ) : isRecording ? (
-          <Square className="h-4 w-4" />
+          <Square className="size-4" />
         ) : (
-          <Mic className="h-4 w-4" />
+          <Mic className="size-4" />
         )}
       </Button>
     </div>

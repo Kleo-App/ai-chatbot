@@ -5,8 +5,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
+import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateLinkedInServices } from "@/app/actions/profile-actions"
 import { Loader2 } from "lucide-react"
@@ -99,7 +98,7 @@ export default function ProfileSetup() {
       
       {showLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-teal-500" />
+          <Loader2 className="size-12 animate-spin text-teal-500" />
           <p className="mt-4 text-gray-600 font-medium">Loading your profile...</p>
         </div>
       ) : (
@@ -121,8 +120,8 @@ export default function ProfileSetup() {
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
           </div>
@@ -143,7 +142,7 @@ export default function ProfileSetup() {
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -163,7 +162,7 @@ export default function ProfileSetup() {
           >
             {isSaving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Saving...
               </>
             ) : 'Next'}

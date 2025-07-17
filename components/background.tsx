@@ -1,6 +1,6 @@
 export function Background() {
   return (
-    <div className="fixed inset-0 w-full h-full bg-gray-100 transition-none -z-10 overflow-hidden">
+    <div className="fixed inset-0 size-full bg-gray-100 transition-none -z-10 overflow-hidden">
       {/* Diagonal stripes pattern */}
       <div
         className="absolute inset-0 opacity-[0.01]"

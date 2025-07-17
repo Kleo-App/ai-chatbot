@@ -594,8 +594,8 @@ export default function KleoContentCreator() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Let's create your first post</h2>
           </div>
@@ -629,7 +629,7 @@ export default function KleoContentCreator() {
                   {/* Show loading indicator if this type is being generated */}
                   {generationStatus[type.id] === 'loading' && (
                     <div className="absolute top-1 right-1">
-                      <Loader2 className="h-3 w-3 animate-spin text-teal-500" />
+                      <Loader2 className="size-3 animate-spin text-teal-500" />
                     </div>
                   )}
                 </TabsTrigger>
@@ -639,7 +639,7 @@ export default function KleoContentCreator() {
           {/* Loading State */}
           {isGenerating && (
             <div className="flex flex-col items-center justify-center py-10">
-              <Loader2 className="h-10 w-10 text-teal-500 animate-spin mb-4" />
+              <Loader2 className="size-10 text-teal-500 animate-spin mb-4" />
               <p className="text-gray-600">Generating content ideas for {contentTypes.find(t => t.id === selectedContentType)?.name}...</p>
             </div>
           )}
@@ -694,7 +694,7 @@ export default function KleoContentCreator() {
                 onClick={regenerateContentIdeas}
                 disabled={isGenerating}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="size-4 mr-2" />
                 Generate more ideas
               </Button>
             </div>
@@ -703,7 +703,7 @@ export default function KleoContentCreator() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}

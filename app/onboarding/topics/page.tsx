@@ -198,8 +198,8 @@ export default function TopicSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 10 topics</h2>
           </div>
@@ -247,7 +247,7 @@ export default function TopicSelector() {
                 onClick={() => setIsCustomDialogOpen(true)}
               >
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center min-h-[120px]">
-                  <Plus className="h-8 w-8 text-teal-500 mb-2" />
+                  <Plus className="size-8 text-teal-500 mb-2" />
                   <h3 className="font-semibold text-gray-900">Add custom topic</h3>
                 </CardContent>
               </Card>
@@ -264,7 +264,7 @@ export default function TopicSelector() {
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -284,7 +284,7 @@ export default function TopicSelector() {
           >
             {isSaving ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 size-4 animate-spin" />
                 Saving...
               </>
             ) : 'Next'}

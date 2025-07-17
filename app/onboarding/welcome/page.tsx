@@ -5,8 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton } from "@clerk/nextjs"
-import { useAuth, useUser } from "@clerk/nextjs"
+import { UserButton , useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
 import { checkAndCreateUser } from "@/app/actions/user-actions"
@@ -127,7 +126,7 @@ export default function KleoProfileSetup() {
       
       {!isPageReady ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-teal-500"></div>
+          <div className="animate-spin rounded-full size-12 border-y-2 border-teal-500"></div>
           <p className="mt-4 text-gray-600">Loading your profile...</p>
         </div>
       ) : (
@@ -149,8 +148,8 @@ export default function KleoProfileSetup() {
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl">
           <div className="flex items-center gap-3 mb-2 md:mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
               Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')}?
@@ -173,7 +172,7 @@ export default function KleoProfileSetup() {
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-2 md:mb-4">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
         
         {/* Next Button */}

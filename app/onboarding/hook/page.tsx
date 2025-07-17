@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
+import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
 import { HookIdea } from "@/lib/ai/hook-generator"
@@ -206,8 +205,8 @@ export default function KleoHookSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Choose the hook of your post</h2>
           </div>
@@ -265,7 +264,7 @@ export default function KleoHookSelector() {
                 onClick={toggleCustomHookInput}
                 disabled={isLoading}
               >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="size-4 mr-2" />
                 Add a custom hook
               </Button>
             ) : (
@@ -302,7 +301,7 @@ export default function KleoHookSelector() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -322,7 +321,7 @@ export default function KleoHookSelector() {
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                <Loader2 className="size-5 mr-2 animate-spin" />
                 Saving...
               </>
             ) : (

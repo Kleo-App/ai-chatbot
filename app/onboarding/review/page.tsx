@@ -6,8 +6,7 @@ import { ArrowRight, ThumbsUp, Heart, Share, Edit, Clock, Loader2 } from "lucide
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton, useUser } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
+import { UserButton, useUser , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGeneratePosts, savePreferredPost } from "@/app/actions/post-actions"
 import { PostIdea } from "@/lib/ai/post-generator"
@@ -120,8 +119,8 @@ export default function KleoReviewPublish() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-7xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Review & publish your post</h2>
           </div>
@@ -134,7 +133,7 @@ export default function KleoReviewPublish() {
           <div>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 w-full">
-                <Loader2 className="w-12 h-12 text-teal-500 animate-spin mb-4" />
+                <Loader2 className="size-12 text-teal-500 animate-spin mb-4" />
                 <p className="text-gray-600 font-medium">Generating your LinkedIn posts...</p>
                 <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
               </div>
@@ -162,11 +161,11 @@ export default function KleoReviewPublish() {
                     {/* Post Header */}
                     <div className="flex items-center gap-3 mb-4">
                       {isLoaded && user?.imageUrl ? (
-                        <div className="w-10 h-10 rounded-full overflow-hidden">
-                          <Image src={user.imageUrl} alt={user.fullName || "User"} width={40} height={40} className="object-cover w-full h-full" />
+                        <div className="size-10 rounded-full overflow-hidden">
+                          <Image src={user.imageUrl} alt={user.fullName || "User"} width={40} height={40} className="object-cover size-full" />
                         </div>
                       ) : (
-                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+                        <div className="size-10 rounded-full bg-gray-200 flex items-center justify-center">
                           <span className="text-gray-500 font-medium">U</span>
                         </div>
                       )}
@@ -193,7 +192,7 @@ export default function KleoReviewPublish() {
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-sm text-gray-600">{post.wordCount} Words</span>
                       <div className="flex items-center gap-1 text-green-600">
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="size-2 bg-green-500 rounded-full"></div>
                         <span className="text-sm font-medium">Ready to publish</span>
                       </div>
                     </div>
@@ -201,19 +200,19 @@ export default function KleoReviewPublish() {
                     {/* Social Actions */}
                     <div className="flex items-center gap-4 mb-4 text-gray-500">
                       <button className="hover:text-teal-600 transition-colors">
-                        <ThumbsUp className="w-5 h-5" />
+                        <ThumbsUp className="size-5" />
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
-                        <Heart className="w-5 h-5" />
+                        <Heart className="size-5" />
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
-                        <Share className="w-5 h-5" />
+                        <Share className="size-5" />
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
-                        <Edit className="w-5 h-5" />
+                        <Edit className="size-5" />
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
-                        <Clock className="w-5 h-5" />
+                        <Clock className="size-5" />
                       </button>
                     </div>
 
@@ -225,17 +224,17 @@ export default function KleoReviewPublish() {
                     >
                       {isSaving && selectedPost === post.id ? (
                         <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          <Loader2 className="size-4 mr-2 animate-spin" />
                           Saving...
                         </>
                       ) : selectedPost === post.id ? (
                         <>
-                          <ThumbsUp className="w-4 h-4 mr-2" />
+                          <ThumbsUp className="size-4 mr-2" />
                           Selected
                         </>
                       ) : (
                         <>
-                          <Edit className="w-4 h-4 mr-2" />
+                          <Edit className="size-4 mr-2" />
                           Select this post
                         </>
                       )}
@@ -263,13 +262,13 @@ export default function KleoReviewPublish() {
             >
               {isLoading || isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="size-4 mr-2 animate-spin" />
                   Please wait...
                 </>
               ) : (
                 <>
                   Finish and access the app
-                  <ArrowRight className="w-4 h-4 ml-2" />
+                  <ArrowRight className="size-4 ml-2" />
                 </>
               )}
             </Button>
@@ -278,7 +277,7 @@ export default function KleoReviewPublish() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-teal-500 rounded-full"></div>
         </div>
       </div>
     </div>

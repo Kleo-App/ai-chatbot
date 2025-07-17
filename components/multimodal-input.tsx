@@ -368,7 +368,7 @@ function PureAttachmentsButton({
   return (
     <Button
       data-testid="attachments-button"
-      className="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-600 rounded-full p-2 h-8 w-8 border-none"
+      className="bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-600 rounded-full p-2 size-8 border-none"
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
@@ -419,7 +419,7 @@ function PureSendButton({
   return (
     <Button
       data-testid="send-button"
-      className="bg-[#157DFF] text-white hover:bg-[#157DFF]/90 rounded-full p-1.5 h-8 w-8 border-none"
+      className="bg-[#157DFF] text-white hover:bg-[#157DFF]/90 rounded-full p-1.5 size-8 border-none"
       onClick={(event) => {
         event.preventDefault();
         submitForm();

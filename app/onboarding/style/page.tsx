@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
+import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { saveStylePreference, getStylePreference } from "@/app/actions/style-actions"
@@ -119,8 +118,8 @@ export default function KleoStyleSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-teal-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover w-full h-full" />
+            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Choose the style of your post</h2>
           </div>
@@ -146,8 +145,8 @@ export default function KleoStyleSelector() {
                 </div>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-teal-200">
-                    <Image src="/images/kleo_square.svg" alt="Kleo" width={48} height={48} className="object-cover w-full h-full" />
+                  <div className="size-12 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/kleo_square.svg" alt="Kleo" width={48} height={48} className="object-cover size-full" />
                   </div>
                   <p className="font-semibold text-gray-800">
                     Based on your selections
@@ -171,8 +170,8 @@ export default function KleoStyleSelector() {
                 <h3 className="font-bold text-gray-900 text-lg mb-4">Jake's style</h3>
 
                 <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-200">
-                    <Image src="/images/jake_headshot.png" alt="Jake" width={64} height={64} className="object-cover w-full h-full" />
+                  <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/jake_headshot.png" alt="Jake" width={64} height={64} className="object-cover size-full" />
                   </div>
                 </div>
 
@@ -195,8 +194,8 @@ export default function KleoStyleSelector() {
                 <h3 className="font-bold text-gray-900 text-lg mb-4">Lara's style</h3>
 
                 <div className="flex justify-center mb-4">
-                  <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-teal-200">
-                    <Image src="/images/laura_headshot.png" alt="Lara" width={64} height={64} className="object-cover w-full h-full" />
+                  <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
+                    <Image src="/images/laura_headshot.png" alt="Lara" width={64} height={64} className="object-cover size-full" />
                   </div>
                 </div>
 
@@ -211,7 +210,7 @@ export default function KleoStyleSelector() {
 
           {/* Progress Indicator */}
           <div className="flex justify-center mb-6">
-            <div className="w-3 h-3 bg-teal-500 rounded-full"></div>
+            <div className="size-3 bg-teal-500 rounded-full"></div>
           </div>
 
           {/* Navigation Buttons */}
@@ -231,7 +230,7 @@ export default function KleoStyleSelector() {
             >
               {isLoading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="mr-2 size-4 animate-spin" />
                   Processing...
                 </>
               ) : (

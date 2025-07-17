@@ -10,7 +10,7 @@ import {
   MoreHorizontalIcon,
   TrashIcon,
 } from './icons';
-import { memo } from 'react';
+import { memo, useState, useEffect } from 'react';
 
 const PureChatItem = ({
   chat,
@@ -23,6 +23,19 @@ const PureChatItem = ({
   onDelete: (chatId: string) => void;
   setOpenMobile: (open: boolean) => void;
 }) => {
+  const [open, setOpen] = useState(false);
+  const [buttonVisible, setButtonVisible] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setButtonVisible(true);
+    } else {
+      const timer = setTimeout(() => {
+        setButtonVisible(false);
+      }, 150); // Delay to match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [open]);
 
   return (
     <div style={{ opacity: 1 }}>
@@ -42,10 +55,10 @@ const PureChatItem = ({
           {chat.title}
         </span>
         
-        <DropdownMenu modal={true}>
+        <DropdownMenu open={open} onOpenChange={setOpen} modal={true}>
           <DropdownMenuTrigger asChild>
             <button
-              className="items-center justify-center gap-2 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none hover:bg-muted/50 disabled:hover:bg-transparent border border-transparent h-6 w-6 rounded-full hidden group-hover/conversation-item:flex text-muted-foreground"
+              className={`items-center justify-center gap-2 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none hover:bg-muted/50 disabled:hover:bg-transparent border border-transparent h-6 w-6 rounded-full text-muted-foreground ${buttonVisible ? 'flex' : 'hidden group-hover/conversation-item:flex'}`}
               type="button"
               aria-haspopup="menu"
               aria-expanded="false"

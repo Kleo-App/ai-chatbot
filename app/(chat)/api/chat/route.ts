@@ -49,19 +49,25 @@ const langfuse = new Langfuse({
 });
 
 let globalStreamContext: ResumableStreamContext | null = null;
-let cachedPrompt: any = null;
 
 async function getFetchedPrompt() {
-  if (!cachedPrompt) {
-    try {
-      cachedPrompt = await langfuse.getPrompt('laura_system_prompt');
-    } catch (error) {
-      console.error('Failed to fetch prompt:', error);
-      // Provide a fallback prompt if fetch fails
-      cachedPrompt = { toJSON: () => 'You are a helpful assistant.' };
-    }
+  try {
+    const prompt = await langfuse.getPrompt('laura_system_prompt');
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    // Compile the prompt with the date variable
+    return {
+      compile: () => prompt.compile({ date: today }),
+      toJSON: () => prompt.compile({ date: today })
+    };
+  } catch (error) {
+    console.error('Failed to fetch prompt:', error);
+    // Provide a fallback prompt if fetch fails
+    return { 
+      compile: () => 'You are a helpful assistant.',
+      toJSON: () => 'You are a helpful assistant.' 
+    };
   }
-  return cachedPrompt;
 }
 
 export function getStreamContext() {
@@ -198,7 +204,7 @@ export async function POST(request: Request) {
         
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: prompt?.toJSON() || null,
+          system: prompt?.toJSON() || undefined,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
@@ -223,7 +229,7 @@ export async function POST(request: Request) {
           experimental_telemetry: {
             isEnabled: true,
             metadata: {
-              langfusePrompt: prompt?.toJSON() || null,
+              langfusePrompt: prompt?.toJSON() || 'fallback',
             },
           },
         });

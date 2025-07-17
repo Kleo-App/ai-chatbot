@@ -198,7 +198,7 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
       <SidebarGroup className="group-data-[collapsible=icon]:hidden py-2">
         <SidebarGroupContent>
           <div className="px-3 text-sidebar-foreground/60 w-full flex flex-row justify-center items-center text-sm gap-2">
-            Your conversations will appear here once you start chatting!
+            No history
           </div>
         </SidebarGroupContent>
       </SidebarGroup>

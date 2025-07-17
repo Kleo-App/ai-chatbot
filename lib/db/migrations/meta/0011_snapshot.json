@@ -282,14 +282,14 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "'2025-07-16 19:12:55.063'"
+          "default": "now()"
         },
         "updatedAt": {
           "name": "updatedAt",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": true,
-          "default": "'2025-07-16 19:12:55.063'"
+          "default": "now()"
         }
       },
       "indexes": {},

@@ -7,7 +7,6 @@ import { Plus, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton } from "@clerk/nextjs"
-import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { generateTopics, saveSelectedTopics } from "@/app/actions/topic-actions"
 import { TopicSuggestion } from "@/lib/ai/topic-generator"
@@ -18,8 +17,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 
 export default function TopicSelector() {
   const [selectedTopics, setSelectedTopics] = useState<number[]>([])
-  const [currentStep] = useState(3)
-  const totalSteps = 4
   const [topics, setTopics] = useState<TopicSuggestion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -27,7 +24,6 @@ export default function TopicSelector() {
   const [customTopicTitle, setCustomTopicTitle] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const { goToStep, userProfile } = useOnboarding()
-  const { userId } = useAuth()
   const router = useRouter()
   
   // Use a ref to track if topics have already been fetched to prevent multiple fetches
@@ -175,8 +171,6 @@ export default function TopicSelector() {
       setIsSaving(false);
     }
   }
-
-  const progressPercentage = (currentStep / totalSteps) * 100
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">

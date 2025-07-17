@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
+import { getUserProfile } from './profile-actions';
 
 /**
  * Save the style preference selected by the user during onboarding without advancing to the next step
@@ -50,7 +51,6 @@ export async function saveStylePreference(style: string): Promise<{ success: boo
 export async function getStylePreference(): Promise<{ style: string | null; error?: string }> {
   try {
     // Use the existing getUserProfile function from profile-actions.ts
-    const { getUserProfile } = await import('@/app/actions/profile-actions');
     const result = await getUserProfile();
     
     if (!result.success || !result.profile) {

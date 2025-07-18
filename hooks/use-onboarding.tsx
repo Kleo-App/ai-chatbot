@@ -101,6 +101,7 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
   const completeOnboarding = async () => {
     try {
       setIsLoading(true);
+      
       const result = await completeUserOnboarding();
 
       if (!result.success) {
@@ -111,9 +112,13 @@ export function OnboardingProvider({ children }: { children: ReactNode }) {
       if (result.profile) {
         setUserProfile(result.profile);
       }
+      
+      // Add a small delay to ensure database transaction completes
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       router.push('/'); // Redirect to home page after completing onboarding
     } catch (error) {
-      console.error('Error completing onboarding:', error);
+      console.error('[useOnboarding] Error completing onboarding:', error);
     } finally {
       setIsLoading(false);
     }

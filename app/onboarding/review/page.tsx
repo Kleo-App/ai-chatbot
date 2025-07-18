@@ -82,11 +82,13 @@ export default function KleoReviewPublish() {
   const handleComplete = async () => {
     // Complete the onboarding process
     try {
-      await completeOnboarding()
-      router.push('/dashboard')
+      await completeOnboarding();
+      // The completeOnboarding function already handles navigation to '/'
+      // So we don't need to manually redirect here
     } catch (error) {
-      console.error('Error completing onboarding:', error)
-      router.push('/dashboard')
+      console.error('[ReviewPage] Error completing onboarding:', error);
+      // Fallback navigation to home page if completion fails
+      router.push('/');
     }
   }
 

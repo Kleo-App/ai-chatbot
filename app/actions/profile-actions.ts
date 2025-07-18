@@ -4,9 +4,10 @@ import {
   getOrCreateUserProfile, 
   updateUserProfile, 
   updateUserProfileStep,
-  completeUserProfileOnboarding 
+  completeUserProfileOnboarding,
+  getUserProfileByUserId
 } from '@/lib/db/profile-queries';
-import { auth } from '@clerk/nextjs/server';
+import { auth, clerkClient } from '@clerk/nextjs/server';
 import { OnboardingStep } from '@/hooks/use-onboarding';
 
 /**
@@ -217,14 +218,29 @@ export async function completeOnboarding() {
   const { userId } = await auth();
   
   if (!userId) {
+    console.error('[completeOnboarding] No user ID found');
     return { success: false, error: 'User not authenticated' };
   }
   
   try {
     const profile = await completeUserProfileOnboarding(userId);
+    
+    // Update Clerk's publicMetadata to reflect onboarding completion
+    try {
+      const client = await clerkClient();
+      await client.users.updateUserMetadata(userId, {
+        publicMetadata: {
+          onboardingComplete: true
+        }
+      });
+    } catch (metadataError) {
+      console.error(`[completeOnboarding] Failed to update Clerk metadata for user ${userId}:`, metadataError);
+      // Don't fail the entire operation if metadata update fails
+    }
+    
     return { success: true, profile };
   } catch (error) {
-    console.error('Error completing onboarding:', error);
+    console.error(`[completeOnboarding] Error completing onboarding for user ${userId}:`, error);
     return { success: false, error: 'Failed to complete onboarding' };
   }
 }

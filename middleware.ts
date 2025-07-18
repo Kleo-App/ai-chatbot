@@ -1,9 +1,8 @@
-import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Define public routes that don't require authentication
-const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
+const isPublicRoute = createRouteMatcher(['/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
 
 // Define paths that don't require onboarding check
 const isOnboardingExemptPath = createRouteMatcher([
@@ -46,34 +45,28 @@ export default clerkMiddleware(async (auth, request) => {
 
   // Skip onboarding check for API routes except onboarding API
   // and for paths that are exempt from onboarding check
-  if (pathname.startsWith('/api/') && !pathname.startsWith('/api/onboarding') || isOnboardingExemptPath(request)) {
+  const isApiRoute = pathname.startsWith('/api/') && !pathname.startsWith('/api/onboarding');
+  const isExemptPath = isOnboardingExemptPath(request);
+  
+  if (isApiRoute || isExemptPath) {
     return NextResponse.next();
   }
 
-  // Check if user has completed onboarding
+  // Check onboarding status by fetching user data directly from Clerk
   try {
-    // Get the user's profile or create one if it doesn't exist
-    const userProfile = await getOrCreateUserProfile(userId);
-    
-    // Always create a user profile when a user first signs up
-    if (userProfile) {
-      console.log(`User profile found or created for user ${userId}`);
-      
-      // If onboarding is not completed, redirect to the appropriate step
-      if (!userProfile.onboardingCompleted) {
-        // Determine which page to redirect to based on lastCompletedStep
-        const lastStep = userProfile.lastCompletedStep || 'welcome';
-        const url = request.nextUrl.clone();
-        url.pathname = `/onboarding/${lastStep}`;
-        return NextResponse.redirect(url);
-      }
-    } else {
-      // This should never happen since getOrCreateUserProfile always creates a profile
-      console.error(`Failed to create user profile for user ${userId}`);
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    const onboardingComplete = clerkUser.publicMetadata?.onboardingComplete;
+
+    // Check if user has completed onboarding
+    if (userId && !onboardingComplete) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/onboarding/welcome';
+      return NextResponse.redirect(url);
     }
   } catch (error) {
-    console.error('Error checking onboarding status:', error);
-    // In case of error, allow the request to proceed to avoid blocking users
+    console.error(`[Middleware] Error checking onboarding status for user ${userId}:`, error);
+    // In case of error, allow access to avoid blocking users
   }
 
   return NextResponse.next();

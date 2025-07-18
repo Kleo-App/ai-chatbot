@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { userProfile, type UserProfile } from './schema-profile';
+import { getOrCreateUser } from './queries';
 import { ChatSDKError } from '../errors';
 
 // biome-ignore lint: Forbidden non-null assertion.
@@ -69,6 +70,18 @@ export async function getOrCreateUserProfile(userId: string): Promise<UserProfil
       'bad_request:database',
       'Failed to get or create user profile',
     );
+  }
+}
+
+/**
+ * Get user profile without creating one if it doesn't exist
+ */
+export async function getUserProfileOnly(userId: string): Promise<UserProfile | null> {
+  try {
+    return await getUserProfileByUserId(userId);
+  } catch (error) {
+    console.error(`[getUserProfileOnly] Error fetching profile for user ${userId}:`, error);
+    return null;
   }
 }
 

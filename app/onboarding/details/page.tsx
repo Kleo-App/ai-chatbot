@@ -20,7 +20,7 @@ export default function KleoContentDetails() {
   const { goToStep, userProfile } = useOnboarding();
   const router = useRouter();
   
-  // Initialize with empty content - don't load JSON from previous steps
+  // Initialize with content from postDetails field
   useEffect(() => {
     async function initializeContent() {
       if (!userProfile) return;
@@ -28,11 +28,15 @@ export default function KleoContentDetails() {
       try {
         setIsLoadingContent(true);
         
-        // Check if we have content details saved in the user profile
-        if (userProfile.contentDetails) {
-          // Check if it's a JSON object (from content selection step)
+        // Check if we have post details saved in the user profile
+        if (userProfile.postDetails) {
+          // Load content from postDetails field (dedicated for this page)
+          setContent(userProfile.postDetails);
+          console.log('Loaded content from postDetails field');
+        } else if (userProfile.contentDetails) {
+          // For backward compatibility, check contentDetails but filter out JSON
           try {
-            const parsed = JSON.parse(userProfile.contentDetails);
+            JSON.parse(userProfile.contentDetails);
             // If it parsed successfully as an object, it's JSON from the previous step
             // Don't display it - start with empty content instead
             console.log('Found JSON content from previous step, not displaying it');
@@ -40,6 +44,7 @@ export default function KleoContentDetails() {
             // If it's not valid JSON, it's probably plain text that was entered before
             // So we can display it
             setContent(userProfile.contentDetails);
+            console.log('Loaded plain text from contentDetails field');
           }
         }
       } catch (error) {

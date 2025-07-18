@@ -34,10 +34,10 @@ export async function saveContentDetails(content: string): Promise<{ success: bo
     
     // Update the user profile with the content details
     const updatedProfile = await updateUserProfile(userId, {
-      contentDetails: content
+      postDetails: content
     });
     
-    console.log('Profile updated, new contentDetails:', updatedProfile.contentDetails);
+    console.log('Profile updated, new postDetails:', updatedProfile.postDetails);
     
     // Revalidate the path to ensure fresh data
     revalidatePath('/onboarding/details');

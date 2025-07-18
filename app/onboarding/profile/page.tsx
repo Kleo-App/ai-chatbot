@@ -127,7 +127,7 @@ export default function ProfileSetup() {
           </div>
 
           <p className="text-gray-600 mb-6">
-            This will be used as context information when generating content. Don't worry, you can change it later.
+            This will be used as context information when generating content. Don&#39;t worry, you can change it later.
           </p>
 
           <div className="relative">

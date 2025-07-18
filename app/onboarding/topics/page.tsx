@@ -205,7 +205,7 @@ export default function TopicSelector() {
           </div>
 
           <p className="text-gray-600 mb-6">
-            Choose between 1 to 10 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don't worry, you can change these later.
+            Choose between 1 to 10 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don&#39;t worry, you can change these later.
           </p>
 
           {/* Topic Grid */}

@@ -171,7 +171,7 @@ export default function KleoReviewPublish() {
                       )}
                       <div className="flex-1">
                         <h3 className="font-bold text-gray-900">{isLoaded && user?.fullName ? user.fullName : "Creative Professional"}</h3>
-                        <p className="text-sm text-gray-600">{isLoaded && user?.publicMetadata?.jobTitle ? user.publicMetadata.jobTitle : "AI Enthusiast"} | {isLoaded && user?.publicMetadata?.company ? user.publicMetadata.company : "Content Creator"}</p>
+                        <p className="text-sm text-gray-600">{isLoaded && user?.publicMetadata?.jobTitle ? String(user.publicMetadata.jobTitle) : "AI Enthusiast"} | {isLoaded && user?.publicMetadata?.company ? String(user.publicMetadata.company) : "Content Creator"}</p>
                         <p className="text-xs text-gray-500">Just now •</p>
                       </div>
                     </div>

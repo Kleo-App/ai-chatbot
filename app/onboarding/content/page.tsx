@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useRef } from "react"
+import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Plus, Loader2 } from "lucide-react"
@@ -25,12 +25,12 @@ export default function KleoContentCreator() {
   const router = useRouter()
   
   // Content types from the mindmap
-  const contentTypes = [
+  const contentTypes = useMemo(() => [
     { id: 'monetisable_expertise', name: 'Monetisable Expertise' },
     { id: 'strategic_arbitrage', name: 'Strategic Arbitrage' },
     { id: 'educational', name: 'Educational' },
     { id: 'engaging', name: 'Highly Engaging' }
-  ]
+  ], [])
   
   // Track generation status for each content type
   const [generationStatus, setGenerationStatus] = useState<Record<string, 'idle' | 'loading' | 'complete' | 'error'>>({})  
@@ -171,7 +171,7 @@ export default function KleoContentCreator() {
     } catch (err) {
       console.error('Error parsing saved content details:', err);
     }
-  }, [contentIdeas]);
+  }, [contentIdeas, userProfile?.contentDetails]);
   
   // Store all generated content ideas by content type
   const [contentIdeasByType, setContentIdeasByType] = useState<Record<string, ContentIdea[]>>({});
@@ -273,7 +273,7 @@ export default function KleoContentCreator() {
         setIsGenerating(false);
       }
     }
-  }, [contentIdeasByType, setContentIdeas, setContentIdeasByType, setGenerationStatus, setIsGenerating, setError, contentTypes, generateContent, checkExistingContent]);
+  }, [contentIdeasByType, setContentIdeas, setContentIdeasByType, setGenerationStatus, setIsGenerating, setError, contentTypes, checkExistingContent]);
   
   // Function to generate content for all types, with priority for the selected type
   // Using useCallback to prevent recreation on each render
@@ -285,7 +285,7 @@ export default function KleoContentCreator() {
     // Use a local copy of contentTypes to avoid dependency issues
     const typesToGenerate = contentTypes.filter(type => type.id !== priorityType);
     await Promise.all(typesToGenerate.map(type => generateContentForType(type.id, false)));
-  }, [generateContentForType]);
+  }, [generateContentForType, contentTypes]);
   
   // Function to regenerate content ideas for the currently selected type
   async function regenerateContentIdeas() {
@@ -597,11 +597,11 @@ export default function KleoContentCreator() {
             <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Let's create your first post</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Let&apos;s create your first post</h2>
           </div>
 
           <p className="text-gray-600 mb-6">
-            I've found some post ideas based on your profile. Pick a content type and select an idea to create your first post.
+            I&apos;ve found some post ideas based on your profile. Pick a content type and select an idea to create your first post.
           </p>
           
           {/* Content Type Selection */}

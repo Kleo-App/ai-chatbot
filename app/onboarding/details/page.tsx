@@ -127,7 +127,7 @@ export default function KleoContentDetails() {
           </div>
 
           <p className="text-gray-600 mb-6">
-            Please input your ideas and let's create your first post
+            Please input your ideas and let&#39;s create your first post
           </p>
 
           {/* Content Input Area */}

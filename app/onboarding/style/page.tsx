@@ -167,7 +167,7 @@ export default function KleoStyleSelector() {
               onClick={() => setSelectedStyle(selectedStyle === "jake" ? null : "jake")}
             >
               <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-gray-900 text-lg mb-4">Jake's style</h3>
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Jake&#39;s style</h3>
 
                 <div className="flex justify-center mb-4">
                   <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
@@ -178,7 +178,7 @@ export default function KleoStyleSelector() {
                 <p className="font-semibold text-gray-800 mb-2">Tech Influencer</p>
 
                 <p className="text-gray-600 text-sm">
-                  Kleo AI will analyze Jake's writing style for your content.
+                  Kleo AI will analyze Jake&#39;s writing style for your content.
                 </p>
               </CardContent>
             </Card>
@@ -191,7 +191,7 @@ export default function KleoStyleSelector() {
               onClick={() => setSelectedStyle(selectedStyle === "lara" ? null : "lara")}
             >
               <CardContent className="p-6 text-center">
-                <h3 className="font-bold text-gray-900 text-lg mb-4">Lara's style</h3>
+                <h3 className="font-bold text-gray-900 text-lg mb-4">Lara&#39;s style</h3>
 
                 <div className="flex justify-center mb-4">
                   <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
@@ -202,7 +202,7 @@ export default function KleoStyleSelector() {
                 <p className="font-semibold text-gray-800 mb-2">Marketing Expert</p>
 
                 <p className="text-gray-600 text-sm">
-                  Kleo AI will analyze Laura's writing style for your content.
+                  Kleo AI will analyze Laura&#39;s writing style for your content.
                 </p>
               </CardContent>
             </Card>

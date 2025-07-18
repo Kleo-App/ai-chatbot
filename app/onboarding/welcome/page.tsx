@@ -157,7 +157,7 @@ export default function KleoProfileSetup() {
           </div>
 
           <p className="text-gray-600 mb-3 md:mb-4">
-            This will be used as context information when generating every post. Don't worry, you can change it later.
+            This will be used as context information when generating every post. Don&#39;t worry, you can change it later.
           </p>
 
           <div className="relative">

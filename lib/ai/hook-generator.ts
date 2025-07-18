@@ -1,6 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
+import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Initialize OpenAI client
@@ -49,67 +50,57 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       }
     }
 
-    // Create a prompt based on available user data and style preference
-    let prompt = `Generate 3 engaging hooks for a LinkedIn post. Each hook should be attention-grabbing, professional, and designed to make readers want to continue reading the full post.`;
+    // Get the prompt template from Langfuse
+    const promptTemplate = await getPrompt('hook-generator');
+  
+    // Prepare variables for the prompt template
+    const linkedInServicesText = Array.isArray(linkedInServices) ? linkedInServices.join('\n') : '';
+    const selectedTopicsText = Array.isArray(selectedTopics) ? selectedTopics.map((topic: any) => topic.title).join('\n') : '';
     
-    // Add user context to the prompt
-    prompt += '\n\nBased on the following information:\n\n';
+    // Process the prompt template with variables
+    const prompt = processPromptTemplate(promptTemplate, {
+      fullName: fullName || '',
+      jobTitle: jobTitle || '',
+      company: company || '',
+      bio: bio || '',
+      linkedInServices: linkedInServicesText,
+      selectedTopics: selectedTopicsText,
+      contentType: contentType ?? '',
+      contentDetails: contentDetails ?? '',
+      stylePreference: stylePreference ?? ''
+    });
     
-    if (fullName) {
-      prompt += `User Name: ${fullName}\n\n`;
-    }
-    
-    if (jobTitle) {
-      prompt += `Job Title: ${jobTitle}\n\n`;
-    }
-    
-    if (company) {
-      prompt += `Company: ${company}\n\n`;
-    }
-    
-    if (bio) {
-      prompt += `User Bio: ${bio}\n\n`;
-    }
-    
-    if (linkedInServices) {
-      prompt += `LinkedIn Services/Products: ${linkedInServices}\n\n`;
-    }
-    
-    if (topics.length > 0) {
-      prompt += `Selected Topics: ${topics.map(t => t.title).join(', ')}\n\n`;
-    }
-    
-    if (contentType) {
-      prompt += `Content Type: ${contentType}\n\n`;
-    }
-    
-    if (contentDetails) {
-      prompt += `Content Details: ${contentDetails}\n\n`;
-    }
-    
-    // Add style-specific instructions based on the selected style preference
-    if (stylePreference) {
-      switch(stylePreference) {
-        case 'kleo-generated':
-          prompt += 'Style: Generate hooks in a professional, balanced style that matches the user\'s profile and topic selections.\n\n';
-          break;
-        case 'jake':
-          prompt += 'Style: Generate hooks in the style of Jake, a tech influencer. The hooks should be bold, slightly provocative, and use tech industry language. They should feel modern, forward-thinking, and have a confident tone that tech professionals would relate to.\n\n';
-          break;
-        case 'lara':
-          prompt += 'Style: Generate hooks in the style of Lara Acosta, a marketing expert. The hooks should be creative, emotionally engaging, and use storytelling techniques. They should have a polished, persuasive quality with marketing-oriented language and a focus on value proposition.\n\n';
-          break;
-        default:
-          prompt += 'Style: Generate hooks in a professional, balanced style that matches the user\'s profile and topic selections.\n\n';
-      }
-    }
-    
-    prompt += 'Each hook should be 1-2 sentences long, attention-grabbing, and designed to make the reader want to continue reading the full post. Make each hook distinct in approach and tone.\n\n';
-    
-    prompt += 'Return your response in this JSON format: {"hooks": [{"content": "Hook text here"}]}';
-
     console.log('Generating hook ideas with prompt:', prompt);
+    
+    // Create Langfuse trace for tracking
+    const trace = createTrace('generate_hook_ideas', userId, {
+      fullName,
+      jobTitle,
+      company,
+      bio,
+      linkedInServices,
+      selectedTopics,
+      contentType,
+      contentDetails,
+      stylePreference
+    });
+    
+    // Skip Langfuse tracking if trace creation failed
+    if (!trace) {
+      console.warn('Skipping Langfuse tracking due to trace creation failure');
+    }
 
+    // Create Langfuse generation span
+    const generation = trace?.generation({
+      name: 'hook_ideas_generation',
+      model: 'gpt-4-turbo',
+      modelParameters: {
+        temperature: 0.7,
+        max_tokens: 1000
+      },
+      input: prompt,
+    });
+    
     // Call OpenAI API
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo',
@@ -131,16 +122,25 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     // Parse the response
     const content = response.choices[0]?.message?.content;
     if (!content) {
+      generation?.end({ output: null });
       throw new Error('No content returned from AI');
     }
 
     console.log('AI response received:', content.substring(0, 100) + '...');
+    
+    // Record successful completion in Langfuse
+    generation?.end({ output: content });
 
     // Parse the JSON response
     try {
       const parsedResponse = JSON.parse(content);
       
       if (!parsedResponse.hooks || !Array.isArray(parsedResponse.hooks)) {
+        trace?.event({
+          name: 'invalid_response_format',
+          level: 'ERROR',
+          metadata: { content }
+        });
         throw new Error('Invalid response format from AI');
       }
       
@@ -167,13 +167,27 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
         };
       });
       
+      trace?.event({
+        name: 'hooks_generated',
+        level: 'DEFAULT',
+        metadata: { count: hookIdeas.length }
+      });
+      
       return hookIdeas;
     } catch (error) {
       console.error('Failed to parse AI response:', error);
+      trace?.event({
+        name: 'parse_error',
+        level: 'ERROR',
+        metadata: { error: error instanceof Error ? error.message : String(error) }
+      });
       throw new Error('Failed to parse AI response');
     }
   } catch (error) {
     console.error('Error generating hook ideas:', error);
+    
+    // Log error to Langfuse
+    logError('generate_hook_ideas_error', userId, error instanceof Error ? error : String(error));
     
     // Return default hooks if there's an error
     return getDefaultHookIdeas();

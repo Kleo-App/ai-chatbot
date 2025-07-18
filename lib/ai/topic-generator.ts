@@ -1,6 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
+import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -17,29 +18,41 @@ export interface TopicSuggestion {
  * Generate topic suggestions based on user profile data
  */
 export async function generateTopicSuggestions(
-  bio: string | null | undefined,
-  linkedInServices: string | null | undefined
+  bio: string,
+  linkedInServices: string[]
 ): Promise<TopicSuggestion[]> {
   try {
-    // Create a prompt based on available user data
-    let prompt = 'Generate 10 professional LinkedIn content topics';
+    // Get the prompt template from Langfuse
+    const promptTemplate = await getPrompt('topic-generator');
     
-    if (bio || linkedInServices) {
-      prompt += ' based on the following information:\n\n';
-      
-      if (bio) {
-        prompt += `User Bio: ${bio}\n\n`;
-      }
-      
-      if (linkedInServices) {
-        prompt += `LinkedIn Services/Products: ${linkedInServices}\n\n`;
-      }
+    // Process the prompt template with variables
+    const prompt = processPromptTemplate(promptTemplate, {
+      bio,
+      linkedInServices: linkedInServices.join('\n')
+    });
+    
+    // Create Langfuse trace for tracking
+    const trace = createTrace('generate_topic_suggestions', bio || 'anonymous', {
+      bio,
+      linkedInServices
+    });
+    
+    // Skip Langfuse tracking if trace creation failed
+    if (!trace) {
+      console.warn('Skipping Langfuse tracking due to trace creation failure');
     }
-    
-    prompt += 'Each topic should be specific, engaging, and relevant to professional audiences. ' +
-      'Format the response as a JSON array of objects with "title" properties only. ' +
-      'Make topics specific and actionable. Each topic should be 5-10 words.';
 
+    // Create Langfuse generation span
+    const generation = trace?.generation({
+      name: 'topic_suggestions_generation',
+      model: 'gpt-4-turbo',
+      modelParameters: {
+        temperature: 0.7,
+        max_tokens: 1000
+      },
+      input: prompt,
+    });
+    
     // Call OpenAI API
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo',
@@ -61,8 +74,16 @@ export async function generateTopicSuggestions(
     // Parse the response
     const content = response.choices[0]?.message?.content;
     if (!content) {
+      generation?.end({ output: null });
+      trace?.event({
+        name: 'no_content_returned',
+        level: 'ERROR'
+      });
       throw new Error('No content returned from AI');
     }
+    
+    // Record successful completion in Langfuse
+    generation?.end({ output: content });
 
     // Parse the JSON response
     const parsedContent = JSON.parse(content);
@@ -97,6 +118,10 @@ export async function generateTopicSuggestions(
     // If we still don't have topics, create default ones
     if (topicsArray.length === 0) {
       console.warn('Could not extract topics from AI response, using defaults');
+      trace?.event({
+        name: 'fallback_to_default',
+        level: 'WARNING'
+      });
       return Array.from({ length: 10 }, (_, i) => ({
         id: i + 1,
         title: `Topic suggestion ${i + 1}`,
@@ -105,13 +130,25 @@ export async function generateTopicSuggestions(
     }
     
     // Map the topics to the expected format
-    return topicsArray.map((topic: any, index: number) => ({
+    const result = topicsArray.map((topic: any, index: number) => ({
       id: index + 1,
       title: topic.title || `Topic ${index + 1}`,
       subtitle: 'AI-generated for you'
     }));
+    
+    trace?.event({
+      name: 'topics_extracted',
+      level: 'DEFAULT',
+      metadata: { count: topicsArray.length }
+    });
+    
+    return result;
   } catch (error) {
     console.error('Error generating topic suggestions:', error);
+    
+    // Log error to Langfuse
+    logError('generate_topic_suggestions_error', bio || 'anonymous', error instanceof Error ? error : String(error));
+    
     // Return empty array if there's an error
     return [];
   }

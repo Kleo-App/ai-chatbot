@@ -1,6 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
+import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Initialize OpenAI client
@@ -90,6 +91,32 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
     
     console.log('Sending prompt to OpenAI');
     
+    // Create Langfuse trace for tracking
+    const trace = createTrace('generate_post_ideas', userId, {
+      fullName: userProfile.fullName,
+      jobTitle: userProfile.jobTitle,
+      company: userProfile.company,
+      topics,
+      stylePreference,
+      preferredHook
+    });
+    
+    // Skip Langfuse tracking if trace creation failed
+    if (!trace) {
+      console.warn('Skipping Langfuse tracking due to trace creation failure');
+    }
+    
+    // Create Langfuse generation span
+    const generation = trace?.generation({
+      name: 'post_ideas_generation',
+      model: 'gpt-4-turbo',
+      modelParameters: {
+        temperature: 0.7,
+        max_tokens: 2000
+      },
+      input: prompt,
+    });
+    
     // Call OpenAI API
     const response = await openai.chat.completions.create({
       model: 'gpt-4-turbo',
@@ -112,8 +139,18 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
     
     if (!content) {
       console.error('No content returned from OpenAI');
+      generation?.end({ output: null });
+      if (trace) {
+        trace.event({
+          name: 'no_content_returned',
+          level: 'ERROR'
+        });
+      }
       throw new Error('Failed to generate post ideas');
     }
+    
+    // Record successful completion in Langfuse
+    generation?.end({ output: content });
     
     console.log('Raw response from OpenAI:', content);
     
@@ -124,15 +161,35 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
     try {
       const postIdeas: PostIdea[] = JSON.parse(jsonString);
       console.log('Successfully parsed post ideas:', postIdeas);
+      
+      if (trace) {
+        trace.event({
+          name: 'post_ideas_generated',
+          level: 'DEFAULT',
+          metadata: { count: postIdeas.length }
+        });
+      }
+      
       return postIdeas;
     } catch (parseError) {
       console.error('Error parsing OpenAI response as JSON:', parseError);
+      
+      if (trace) {
+        trace.event({
+          name: 'json_parse_error',
+          level: 'ERROR',
+          metadata: { error: parseError instanceof Error ? parseError.message : String(parseError) }
+        });
+      }
       
       // Fallback to default post ideas
       return getDefaultPostIdeas(preferredHook);
     }
   } catch (error) {
     console.error('Error generating post ideas:', error);
+    
+    // Log error to Langfuse
+    logError('generate_post_ideas_error', userId, error instanceof Error ? error.message : String(error));
     
     // Return default post ideas on error
     return getDefaultPostIdeas();

@@ -11,6 +11,8 @@ import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-
 import { checkAndCreateUser } from "@/app/actions/user-actions"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
 
 export default function KleoProfileSetup() {
   const [profileText, setProfileText] = useState(
@@ -120,34 +122,18 @@ export default function KleoProfileSetup() {
   };
 
   return (
-    <div className="h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col overflow-hidden">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
+    <OnboardingLayout>
       {!isPageReady ? (
         <div className="flex-1 flex flex-col items-center justify-center">
           <div className="animate-spin rounded-full size-12 border-y-2 border-[#157DFF]"></div>
           <p className="mt-4 text-[#157DFF]">Loading your profile...</p>
         </div>
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-8 overflow-hidden">
-        {/* Progress Header */}
-        <div className="text-center mb-4 md:mb-6">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <span className="text-gray-700 font-medium">Step 1:</span>
-            <span className="text-gray-900 font-semibold">Profile</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Section */}
+        <div>
+          {/* Progress Header */}
+          <StepIndicator currentStep="welcome" />
+          
+          {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl">
           <div className="flex items-center gap-3 mb-2 md:mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
@@ -184,11 +170,6 @@ export default function KleoProfileSetup() {
           </div>
         </div>
 
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-2 md:mb-4">
-          <div className="size-3 bg-[#157DFF] rounded-full"></div>
-        </div>
-        
         {/* Next Button */}
         <div className="flex justify-center mt-4">
           <div className="flex flex-col gap-3 md:gap-4 mt-2 md:mt-4">
@@ -214,7 +195,7 @@ export default function KleoProfileSetup() {
           </div>
         </div>
       </div>
-      )}
-    </div>
-  )
+    )}
+    </OnboardingLayout>
+  );
 }

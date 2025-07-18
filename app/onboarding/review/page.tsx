@@ -277,10 +277,7 @@ export default function KleoReviewPublish() {
           </div>
         </div>
         
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-6">
-          <div className="size-3 bg-[#157DFF] rounded-full"></div>
-        </div>
+
       </div>
     </div>
   )

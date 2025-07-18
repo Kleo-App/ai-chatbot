@@ -14,6 +14,8 @@ import {
 export const user = pgTable('User', {
   id: text('id').primaryKey().notNull(), // Clerk user ID like "user_xxxxxxxx"
   email: varchar('email', { length: 64 }).notNull(),
+  firstName: text('firstName'),
+  lastName: text('lastName'),
   // Removed password field since Clerk handles authentication
 });
 
@@ -168,3 +170,11 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Re-export onboarding schema
+export { onboarding } from './schema-onboarding';
+export type { Onboarding } from './schema-onboarding';
+
+// Re-export user profile schema
+export { userProfile } from './schema-profile';
+export type { UserProfile } from './schema-profile';

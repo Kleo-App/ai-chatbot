@@ -33,6 +33,8 @@ export async function GET(request: NextRequest) {
   await getOrCreateUser({
     id: userId,
     email: user.emailAddresses[0].emailAddress,
+    firstName: user.firstName || undefined,
+    lastName: user.lastName || undefined,
   });
 
   const chats = await getChatsByUserId({

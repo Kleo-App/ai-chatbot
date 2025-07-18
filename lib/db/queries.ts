@@ -46,12 +46,21 @@ const db = drizzle(client, {
 export async function createUser({
   id,
   email,
+  firstName,
+  lastName,
 }: {
   id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
 }) {
   try {
-    const [newUser] = await db.insert(user).values({ id, email }).returning();
+    const [newUser] = await db.insert(user).values({ 
+      id, 
+      email, 
+      firstName, 
+      lastName 
+    }).returning();
     return newUser;
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to create user');
@@ -74,9 +83,13 @@ export async function getUser({ id }: { id: string }) {
 export async function getOrCreateUser({
   id,
   email,
+  firstName,
+  lastName,
 }: {
   id: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
 }) {
   try {
     // Try to get existing user first
@@ -86,7 +99,7 @@ export async function getOrCreateUser({
     }
 
     // Create new user if not found
-    return await createUser({ id, email });
+    return await createUser({ id, email, firstName, lastName });
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to get or create user');
   }

@@ -25,7 +25,7 @@ export const Greeting = ({ children }: GreetingProps) => {
       <div className={`flex flex-col ${children ? 'h-full' : 'h-screen'}`}>
         {/* Header - only show for unauthenticated users */}
         {showHeader && (
-          <header className="flex-shrink-0 w-full px-8 py-4">
+          <header className="shrink-0 w-full px-8 py-4">
             <div className="flex items-center justify-between">
               <Link href="/" className="flex items-center">
                 <Image

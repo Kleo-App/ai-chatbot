@@ -125,7 +125,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="overflow-hidden p-0 shadow-lg max-w-3xl">
         <DialogTitle className="sr-only">Command Menu</DialogTitle>
-        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+        <Command className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:size-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:size-5">
           <CommandInput 
             placeholder="Search chats..." 
             value={searchQuery}
@@ -140,7 +140,7 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
             onSelect={handleNewChat}
             className="flex items-center gap-2 h-12 px-3"
           >
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <MessageSquare className="size-4 text-muted-foreground" />
             <span>Create New Chat</span>
           </CommandItem>
         </CommandGroup>

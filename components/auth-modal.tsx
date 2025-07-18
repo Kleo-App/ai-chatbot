@@ -39,7 +39,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             onClick={onClose}
             className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className="size-5 text-gray-500" />
           </button>
 
           <div className="p-8 text-center">

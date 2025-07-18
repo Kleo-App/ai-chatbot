@@ -48,14 +48,14 @@ export function AppSidebar() {
           onClick={() => {
             setOpenMobile(false);
           }}
-          className="flex items-center justify-center hover:bg-muted/50 rounded-xl cursor-pointer h-10 w-10 p-1 transition-colors flex-shrink-0 -ml-0.5"
+          className="flex items-center justify-center hover:bg-muted/50 rounded-xl cursor-pointer size-10 p-1 transition-colors shrink-0 -ml-0.5"
         >
           <Image
             src="/images/kleo_square.svg"
             alt="Kleo"
             width={28}
             height={28}
-            className="h-7 w-7 opacity-90 hover:opacity-100 flex-shrink-0"
+            className="size-7 opacity-90 hover:opacity-100 shrink-0"
           />
         </Link>
       </SidebarHeader>
@@ -65,11 +65,11 @@ export function AppSidebar() {
             <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className="w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-full h-[36px] border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
+                className="w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-full h-[36px] border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
               >
                 <button aria-label="Search" onClick={commandMenu.toggle}>
                   <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                    <Search className="h-4 w-4" />
+                    <Search className="size-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden space-x-1 align-baseline">
                     <span>Search</span>
@@ -86,7 +86,7 @@ export function AppSidebar() {
             <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                className={`w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-xl h-[36px] border-transparent ${
                   isChatActive 
                     ? 'bg-muted text-foreground' 
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -94,7 +94,7 @@ export function AppSidebar() {
               >
                 <Link href="/" onClick={() => setOpenMobile(false)}>
                   <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                    <MessageSquare className="h-4 w-4" />
+                    <MessageSquare className="size-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Chat</span>
                 </Link>
@@ -104,7 +104,7 @@ export function AppSidebar() {
             <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                className={`w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-xl h-[36px] border-transparent ${
                   pathname.startsWith('/posts')
                     ? 'bg-muted text-foreground' 
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -112,7 +112,7 @@ export function AppSidebar() {
               >
                 <Link href="/posts" onClick={() => setOpenMobile(false)}>
                   <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                    <FileText className="h-4 w-4" />
+                    <FileText className="size-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Posts</span>
                 </Link>
@@ -122,7 +122,7 @@ export function AppSidebar() {
             <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
-                className={`w-full flex flex-row gap-2 p-[0.375rem] text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                className={`w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-xl h-[36px] border-transparent ${
                   pathname.startsWith('/knowledgebase')
                     ? 'bg-muted text-foreground' 
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
@@ -130,7 +130,7 @@ export function AppSidebar() {
               >
                 <Link href="/knowledgebase" onClick={() => setOpenMobile(false)}>
                   <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-4 w-4" />
+                    <BookOpen className="size-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Knowledge</span>
                 </Link>
@@ -142,7 +142,7 @@ export function AppSidebar() {
                 role="button" 
                 tabIndex={0} 
                 aria-label="History"
-                className="peer/menu-button flex items-center gap-2 overflow-hidden rounded-xl text-left outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-1 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 [&>span:last-child]:truncate [&>svg]:shrink-0 text-sm h-[36px] border-transparent data-[state=open]:hover:bg-muted/50 data-[active=true]:bg-muted aria-expanded:bg-muted/50 hover:bg-transparent active:bg-transparent cursor-default hover:text-muted-foreground w-full flex flex-row justify-start bg-background text-muted-foreground rounded-xl p-[0.375rem]"
+                className="peer/menu-button flex items-center gap-2 overflow-hidden rounded-xl text-left outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-1 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 [&>span:last-child]:truncate [&>svg]:shrink-0 text-sm h-[36px] border-transparent data-[state=open]:hover:bg-muted/50 data-[active=true]:bg-muted aria-expanded:bg-muted/50 hover:bg-transparent active:bg-transparent cursor-default hover:text-muted-foreground w-full flex flex-row justify-start bg-background text-muted-foreground p-1.5"
                 data-sidebar="menu-button"
                 data-active="false"
                 onClick={() => setHistoryExpanded(!historyExpanded)}
@@ -155,14 +155,14 @@ export function AppSidebar() {
               >
                 <div data-sidebar="icon" className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0 group-data-[collapsible=icon]:ml-0.5">
                   <button
-                    className="inline-flex items-center justify-center gap-2 group-data-[collapsible=icon]:gap-0 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:hover:text-muted-foreground disabled:hover:bg-transparent [&_svg]:hover:text-foreground h-6 w-6 group-data-[collapsible=icon]:h-4 group-data-[collapsible=icon]:w-4 rounded-full"
+                    className="inline-flex items-center justify-center gap-2 group-data-[collapsible=icon]:gap-0 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground hover:text-foreground hover:bg-muted/50 disabled:hover:text-muted-foreground disabled:hover:bg-transparent [&_svg]:hover:text-foreground size-6 group-data-[collapsible=icon]:size-4 rounded-full"
                     type="button"
                     aria-label="Toggle Menu"
                     onMouseEnter={() => setHistoryHovered(true)}
                     onMouseLeave={() => setHistoryHovered(false)}
                   >
-                    <History className={`h-4 w-4 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:hidden' : ''}`} />
-                    <ChevronRight className={`h-3 w-3 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:block' : 'hidden'} transition-[transform] duration-100 ${historyExpanded ? 'rotate-90' : ''}`} />
+                    <History className={`size-4 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:hidden' : ''}`} />
+                    <ChevronRight className={`size-3 stroke-[2] ${open && historyHovered ? 'group-hover/menu-item:block' : 'hidden'} transition-transform duration-100 ${historyExpanded ? 'rotate-90' : ''}`} />
                   </button>
                 </div>
                 <span className="group-data-[collapsible=icon]:hidden" style={{ opacity: 1 }}>History</span>

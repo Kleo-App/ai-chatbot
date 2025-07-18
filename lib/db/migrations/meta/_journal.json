@@ -71,6 +71,41 @@
       "when": 1752614000000,
       "tag": "0009_clerk_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1752692767987,
+      "tag": "0010_exotic_northstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1752693175073,
+      "tag": "0011_numerous_wither",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1752695412205,
+      "tag": "0012_busy_the_captain",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1752770488698,
+      "tag": "0013_volatile_obadiah_stane",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1752771263857,
+      "tag": "0014_magical_mercury",
+      "breakpoints": true
     }
   ]
 }

@@ -187,9 +187,9 @@ export default function TopicSelector() {
             <span className="text-gray-700 font-medium">Step 3:</span>
             <span className="text-gray-900 font-semibold">Topics</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function TopicSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 10 topics</h2>
@@ -227,8 +227,8 @@ export default function TopicSelector() {
                   key={topic.id}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
                     selectedTopics.includes(topic.id)
-                      ? "ring-2 ring-teal-400 bg-teal-50 border-teal-200"
-                      : "hover:border-teal-200 bg-white"
+                      ? "ring-2 ring-blue-500 bg-blue-50 border-blue-200"
+                      : "hover:border-blue-200 bg-white"
                   }`}
                   onClick={() => toggleTopic(topic.id)}
                 >
@@ -243,11 +243,11 @@ export default function TopicSelector() {
             {/* Add Custom Topic Card */}
             {!isLoading && (
               <Card 
-                className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-teal-200 bg-white border-2 border-dashed border-gray-300"
+                className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-blue-200 bg-white border-2 border-dashed border-gray-300"
                 onClick={() => setIsCustomDialogOpen(true)}
               >
                 <CardContent className="p-5 flex flex-col items-center justify-center text-center min-h-[120px]">
-                  <Plus className="size-8 text-teal-500 mb-2" />
+                  <Plus className="size-8 text-[#157DFF] mb-2" />
                   <h3 className="font-semibold text-gray-900">Add custom topic</h3>
                 </CardContent>
               </Card>
@@ -264,7 +264,7 @@ export default function TopicSelector() {
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -278,7 +278,7 @@ export default function TopicSelector() {
           </Button>
           <Button
             onClick={handleNext}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
             disabled={selectedTopics.length === 0 || isSaving}
           >

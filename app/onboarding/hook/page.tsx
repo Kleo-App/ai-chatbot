@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
 import { HookIdea } from "@/lib/ai/hook-generator"
 import { toast } from "sonner"
+import { VoiceRecorder } from "@/components/voice-recorder"
 
 export default function KleoHookSelector() {
   const [selectedHook, setSelectedHook] = useState<number | null>(null)
@@ -50,7 +51,7 @@ export default function KleoHookSelector() {
           const formattedHooks = result.hooks.map((hook: HookIdea) => ({
             id: hook.id,
             source: hook.source,
-            badgeColor: "bg-teal-500",
+            badgeColor: "bg-[#157DFF]",
             content: hook.content
           }))
           
@@ -70,20 +71,20 @@ export default function KleoHookSelector() {
             {
               id: 1,
               source: "From your writing style",
-              badgeColor: "bg-teal-500",
+              badgeColor: "bg-[#157DFF]",
               content: "Burnout nearly destroyed my team — until AI became our secret weapon.",
             },
             {
               id: 2,
               source: "From your topic",
-              badgeColor: "bg-teal-500",
+              badgeColor: "bg-[#157DFF]",
               content:
                 "From Burnout to Brilliance: My Journey Coaching a Team from Skeptical to Supercharged with Automated AI Agents",
             },
             {
               id: 3,
               source: "From Kleo AI",
-              badgeColor: "bg-teal-500",
+              badgeColor: "bg-[#157DFF]",
               content:
                 "The moment I realized my team was burning out wasn't when they started missing deadlines—it was when they stopped complaining about them.",
             },
@@ -191,13 +192,13 @@ export default function KleoHookSelector() {
             <span className="text-gray-700 font-medium">Step 7:</span>
             <span className="text-gray-900 font-semibold">Hook</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
             </div>
           </div>
         </div>
@@ -205,7 +206,7 @@ export default function KleoHookSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Choose the hook of your post</h2>
@@ -237,13 +238,13 @@ export default function KleoHookSelector() {
                 <Card
                   key={hook.id}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                    selectedHook === hook.id ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                    selectedHook === hook.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-200"
                   }`}
                   onClick={() => setSelectedHook(selectedHook === hook.id ? null : hook.id)}
                 >
                   <CardContent className="p-5">
                     <div className="mb-3">
-                      <Badge className={`bg-teal-500 text-white hover:bg-teal-600`}>{hook.source}</Badge>
+                      <Badge className={`bg-[#157DFF] text-white hover:bg-blue-600`}>{hook.source}</Badge>
                     </div>
 
                     <p className="text-gray-800 font-medium leading-relaxed text-center">{hook.content}</p>
@@ -260,7 +261,7 @@ export default function KleoHookSelector() {
             {!showCustomHookInput ? (
               <Button
                 variant="outline"
-                className="bg-white border border-gray-200 hover:border-teal-300 hover:bg-teal-50 text-gray-700 hover:text-teal-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
+                className="bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-blue-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
                 onClick={toggleCustomHookInput}
                 disabled={isLoading}
               >
@@ -272,15 +273,29 @@ export default function KleoHookSelector() {
                 <div className="mb-3 text-center">
                   <h3 className="font-semibold text-gray-800">Your custom hook:</h3>
                 </div>
-                <textarea
-                  value={customHook}
-                  onChange={handleCustomHookChange}
-                  placeholder="Enter your own hook here..."
-                  className={`w-full p-4 border-2 rounded-lg ${customHook ? 'border-teal-400 bg-teal-50' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-teal-300`}
-                  rows={3}
-                  disabled={isLoading}
-                  autoFocus
-                />
+                <div className="relative">
+                  <textarea
+                    value={customHook}
+                    onChange={handleCustomHookChange}
+                    placeholder="Enter your own hook here..."
+                    className={`w-full p-4 border-2 rounded-lg ${customHook ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-blue-300`}
+                    rows={3}
+                    disabled={isLoading}
+                    autoFocus
+                  />
+                  <div className="absolute top-4 right-4 flex gap-2">
+                    <VoiceRecorder 
+                      onTranscriptionComplete={(text) => {
+                        setCustomHook(prev => {
+                          const newContent = prev ? `${prev}\n${text}` : text;
+                          return newContent;
+                        });
+                        toast.success("Voice transcription added!");
+                      }} 
+                      className="flex items-center"
+                    />
+                  </div>
+                </div>
                 <div className="mt-3 flex justify-end">
                   <Button
                     variant="ghost"
@@ -301,7 +316,7 @@ export default function KleoHookSelector() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -315,7 +330,7 @@ export default function KleoHookSelector() {
           </Button>
           <Button
             onClick={handleNext}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
             disabled={(!selectedHook && !customHook) || isLoading}
           >

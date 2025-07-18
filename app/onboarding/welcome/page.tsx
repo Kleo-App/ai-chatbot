@@ -9,6 +9,8 @@ import { UserButton , useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
 import { checkAndCreateUser } from "@/app/actions/user-actions"
+import { VoiceRecorder } from "@/components/voice-recorder"
+import { toast } from "sonner"
 
 export default function KleoProfileSetup() {
   const [profileText, setProfileText] = useState(
@@ -126,8 +128,8 @@ export default function KleoProfileSetup() {
       
       {!isPageReady ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full size-12 border-y-2 border-teal-500"></div>
-          <p className="mt-4 text-gray-600">Loading your profile...</p>
+          <div className="animate-spin rounded-full size-12 border-y-2 border-[#157DFF]"></div>
+          <p className="mt-4 text-[#157DFF]">Loading your profile...</p>
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 md:py-8 overflow-hidden">
@@ -137,7 +139,7 @@ export default function KleoProfileSetup() {
             <span className="text-gray-700 font-medium">Step 1:</span>
             <span className="text-gray-900 font-semibold">Profile</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
@@ -148,7 +150,7 @@ export default function KleoProfileSetup() {
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl">
           <div className="flex items-center gap-3 mb-2 md:mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
@@ -164,15 +166,27 @@ export default function KleoProfileSetup() {
             <Textarea
               value={profileText}
               onChange={(e) => setProfileText(e.target.value)}
-              className="h-[120px] sm:h-[150px] md:h-[200px] lg:h-[250px] text-gray-700 border-gray-300 focus:border-teal-400 focus:ring-teal-400 resize-none rounded-xl text-base p-4 w-full"
+              className="h-[120px] sm:h-[150px] md:h-[200px] lg:h-[250px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
               placeholder="Tell us about yourself..."
             />
+            <div className="absolute top-4 right-4 flex gap-2">
+              <VoiceRecorder 
+                onTranscriptionComplete={(text) => {
+                  setProfileText(prev => {
+                    const newContent = prev ? `${prev}\n${text}` : text;
+                    return newContent;
+                  });
+                  toast.success("Voice transcription added!");
+                }} 
+                className="flex items-center"
+              />
+            </div>
           </div>
         </div>
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-2 md:mb-4">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
         
         {/* Next Button */}

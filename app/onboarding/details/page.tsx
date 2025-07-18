@@ -108,11 +108,11 @@ export default function KleoContentDetails() {
             <span className="text-gray-700 font-medium">Step 5:</span>
             <span className="text-gray-900 font-semibold">Details</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
             </div>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default function KleoContentDetails() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Good choice!</h2>
@@ -136,7 +136,7 @@ export default function KleoContentDetails() {
               <Textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
-                className="min-h-[200px] p-6 text-lg leading-relaxed border-2 border-gray-200 rounded-2xl bg-white shadow-sm focus:border-teal-300 focus:ring-2 focus:ring-teal-100 resize-none"
+                className="min-h-[200px] p-6 text-lg leading-relaxed border-2 border-gray-200 rounded-2xl bg-white shadow-sm focus:border-blue-500 focus:ring-blue-500 focus:ring-blue-500 resize-none"
                 placeholder={isLoadingContent ? "Loading your content..." : "Enter your content ideas here..."}
                 disabled={isLoadingContent}
               />
@@ -152,7 +152,7 @@ export default function KleoContentDetails() {
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -166,7 +166,7 @@ export default function KleoContentDetails() {
           </Button>
           <Button
             onClick={handleNext}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
             disabled={!content.trim() || isLoading || isLoadingContent}
           >

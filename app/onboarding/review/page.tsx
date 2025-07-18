@@ -106,14 +106,14 @@ export default function KleoReviewPublish() {
             <span className="text-gray-700 font-medium">Step 8:</span>
             <span className="text-gray-900 font-semibold">Review & publish</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
             </div>
           </div>
         </div>
@@ -121,7 +121,7 @@ export default function KleoReviewPublish() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-7xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Review & publish your post</h2>
@@ -135,7 +135,7 @@ export default function KleoReviewPublish() {
           <div>
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-12 w-full">
-                <Loader2 className="size-12 text-teal-500 animate-spin mb-4" />
+                <Loader2 className="size-12 text-[#157DFF] animate-spin mb-4" />
                 <p className="text-gray-600 font-medium">Generating your LinkedIn posts...</p>
                 <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
               </div>
@@ -147,7 +147,7 @@ export default function KleoReviewPublish() {
                 </div>
                 <Button 
                   onClick={() => router.refresh()}
-                  className="bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-all duration-200"
+                  className="bg-[#157DFF] hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200"
                 >
                   Try again
                 </Button>
@@ -220,7 +220,7 @@ export default function KleoReviewPublish() {
 
                     {/* Select Button */}
                     <Button
-                      className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-lg font-medium transition-all duration-200"
+                      className="w-full bg-[#157DFF] hover:bg-blue-600 text-white rounded-lg font-medium transition-all duration-200"
                       onClick={() => handleSelectPost(post.id)}
                       disabled={isSaving}
                     >
@@ -258,7 +258,7 @@ export default function KleoReviewPublish() {
               Back
             </Button>
             <Button
-              className="bg-teal-500 hover:bg-teal-600 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
               onClick={handleComplete}
               disabled={isLoading || isSaving || !selectedPost}
             >
@@ -279,7 +279,7 @@ export default function KleoReviewPublish() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
       </div>
     </div>

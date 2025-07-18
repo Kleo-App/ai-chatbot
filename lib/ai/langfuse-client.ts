@@ -31,7 +31,7 @@ class LangfuseClientSingleton {
  * Get the Langfuse client instance
  * Convenience function to access the singleton
  */
-export function getLangfuseClient(): Langfuse {
+export async function getLangfuseClient(): Promise<Langfuse> {
   return LangfuseClientSingleton.getInstance();
 }
 
@@ -41,9 +41,9 @@ export function getLangfuseClient(): Langfuse {
  * @param userId User ID
  * @param metadata Optional metadata
  */
-export function createTrace(name: string, userId: string, metadata?: Record<string, any>) {
+export async function createTrace(name: string, userId: string, metadata?: Record<string, any>) {
   try {
-    return getLangfuseClient().trace({
+    return (await getLangfuseClient()).trace({
       name,
       userId,
       metadata
@@ -60,10 +60,11 @@ export function createTrace(name: string, userId: string, metadata?: Record<stri
  * @param userId User ID
  * @param error Error object or message
  */
-export function logError(name: string, userId: string, error: Error | string) {
+export async function logError(name: string, userId: string, error: Error | string) {
   try {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const trace = getLangfuseClient().trace({
+    const client = await getLangfuseClient();
+    const trace = client.trace({
       name,
       userId,
       metadata: { error: errorMessage }
@@ -97,7 +98,7 @@ export const getPrompt = cache(async (promptName: string): Promise<string> => {
   
   try {
     // Get prompt from Langfuse
-    const prompt = await getLangfuseClient().getPrompt(promptName);
+    const prompt = await (await getLangfuseClient()).getPrompt(promptName);
     
     if (!prompt || !prompt.prompt) {
       console.warn(`Prompt '${promptName}' not found in Langfuse, using fallback`);
@@ -235,7 +236,7 @@ Each post should be 150-300 words and maintain the selected style preference thr
  * @param promptTemplate Prompt template with placeholders in {{placeholder}} format
  * @param variables Object containing values for the placeholders
  */
-export function processPromptTemplate(promptTemplate: string, variables: Record<string, any>): string {
+export async function processPromptTemplate(promptTemplate: string, variables: Record<string, any>): Promise<string> {
   return promptTemplate.replace(/\{\{([^}]+)\}\}/g, (match, placeholder) => {
     const value = variables[placeholder];
     return value !== undefined ? String(value) : match;

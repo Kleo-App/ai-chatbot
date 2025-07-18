@@ -154,11 +154,6 @@ export default function ProfileSetup() {
           </div>
         </div>
 
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-6">
-          <div className="size-3 bg-[#157DFF] rounded-full"></div>
-        </div>
-
         {/* Navigation Buttons */}
         <div className="flex justify-center gap-4 mt-4">
           <Button

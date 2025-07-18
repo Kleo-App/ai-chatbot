@@ -13,6 +13,8 @@ import { updateContentType } from "@/app/actions/profile-actions"
 import { generateContent, saveSelectedContent } from "@/app/actions/content-actions"
 import { ContentIdea } from "@/lib/ai/content-generator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function KleoContentCreator() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
@@ -161,7 +163,28 @@ export default function KleoContentCreator() {
     if (!userProfile?.contentDetails || contentIdeas.length === 0) return;
     
     try {
-      const savedContent = JSON.parse(userProfile.contentDetails);
+      // Check if contentDetails is a valid JSON string before parsing
+      if (typeof userProfile.contentDetails !== 'string' || !userProfile.contentDetails.trim()) {
+        console.warn('Content details is empty or not a string');
+        return;
+      }
+      
+      // Try to parse the JSON with additional error handling
+      let savedContent;
+      try {
+        savedContent = JSON.parse(userProfile.contentDetails);
+      } catch (parseError) {
+        console.error('Failed to parse content details JSON:', parseError);
+        console.warn('Invalid content details format:', userProfile.contentDetails);
+        return;
+      }
+      
+      // Make sure savedContent has the expected structure
+      if (!savedContent || typeof savedContent !== 'object' || !savedContent.title) {
+        console.warn('Parsed content details has invalid structure:', savedContent);
+        return;
+      }
+      
       const index = contentIdeas.findIndex(idea => 
         idea.title === savedContent.title
       );
@@ -169,7 +192,7 @@ export default function KleoContentCreator() {
         setSelectedCard(index);
       }
     } catch (err) {
-      console.error('Error parsing saved content details:', err);
+      console.error('Error handling saved content details:', err);
     }
   }, [contentIdeas, userProfile?.contentDetails]);
   
@@ -570,29 +593,12 @@ export default function KleoContentCreator() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 4:</span>
-            <span className="text-gray-900 font-semibold">Content</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-            </div>
-          </div>
-        </div>
+    <OnboardingLayout>
+      {/* Progress Header */}
+      <StepIndicator currentStep="content" />
 
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
+      {/* Main Content */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
@@ -701,11 +707,6 @@ export default function KleoContentCreator() {
           )}
         </div>
         
-        {/* Progress Indicator */}
-        <div className="flex justify-center mb-6">
-          <div className="size-3 bg-[#157DFF] rounded-full"></div>
-        </div>
-
         {/* Navigation Buttons */}
         <div className="flex justify-center gap-4 mt-4">
           <Button
@@ -724,7 +725,6 @@ export default function KleoContentCreator() {
             {isLoading ? 'Saving...' : 'Next'}
           </Button>
         </div>
-      </div>
-    </div>
-  )
+    </OnboardingLayout>
+  );
 }

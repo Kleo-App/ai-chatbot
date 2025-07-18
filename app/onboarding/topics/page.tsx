@@ -12,6 +12,8 @@ import { generateTopics, saveSelectedTopics } from "@/app/actions/topic-actions"
 import { TopicSuggestion } from "@/lib/ai/topic-generator"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 // Default topics will be replaced by AI-generated ones
 
@@ -106,7 +108,7 @@ export default function TopicSelector() {
 
   const toggleTopic = (topicId: number) => {
     setSelectedTopics((prev) =>
-      prev.includes(topicId) ? prev.filter((id) => id !== topicId) : prev.length < 10 ? [...prev, topicId] : prev,
+      prev.includes(topicId) ? prev.filter((id) => id !== topicId) : prev.length < 6 ? [...prev, topicId] : prev,
     )
   }
   
@@ -173,39 +175,21 @@ export default function TopicSelector() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <OnboardingLayout>
+      {/* Progress Header */}
+      <StepIndicator currentStep="topics" />
 
-        {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 3:</span>
-            <span className="text-gray-900 font-semibold">Topics</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
+      {/* Main Content */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 10 topics</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 6 topics</h2>
           </div>
 
           <p className="text-gray-600 mb-6">
-            Choose between 1 to 10 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don&#39;t worry, you can change these later.
+            Choose between 1 to 6 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don&#39;t worry, you can change these later.
           </p>
 
           {/* Topic Grid */}
@@ -263,10 +247,6 @@ export default function TopicSelector() {
         </div>
 
         {/* Progress Indicator */}
-        <div className="flex justify-center mb-6">
-          <div className="size-3 bg-[#157DFF] rounded-full"></div>
-        </div>
-
         {/* Navigation Buttons */}
         <div className="flex justify-center gap-4 mt-4">
           <Button
@@ -290,7 +270,6 @@ export default function TopicSelector() {
             ) : 'Next'}
           </Button>
         </div>
-      </div>
       
       {/* Custom Topic Dialog */}
       <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
@@ -330,6 +309,6 @@ export default function TopicSelector() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </OnboardingLayout>
   )
 }

@@ -105,12 +105,12 @@ export default function KleoStyleSelector() {
             <span className="text-gray-700 font-medium">Step 6:</span>
             <span className="text-gray-900 font-semibold">Style</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
             </div>
           </div>
         </div>
@@ -118,7 +118,7 @@ export default function KleoStyleSelector() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Choose the style of your post</h2>
@@ -134,8 +134,8 @@ export default function KleoStyleSelector() {
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
                 selectedStyle === "kleo-generated"
-                  ? "border-teal-400 bg-teal-50"
-                  : "border-gray-200 hover:border-teal-200"
+                  ? "border-blue-500 bg-blue-50"
+                  : "border-gray-200 hover:border-blue-200"
               }`}
               onClick={() => setSelectedStyle(selectedStyle === "kleo-generated" ? null : "kleo-generated")}
             >
@@ -145,7 +145,7 @@ export default function KleoStyleSelector() {
                 </div>
 
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="size-12 rounded-full overflow-hidden border-2 border-teal-200">
+                  <div className="size-12 rounded-full overflow-hidden border-2 border-blue-200">
                     <Image src="/images/kleo_square.svg" alt="Kleo" width={48} height={48} className="object-cover size-full" />
                   </div>
                   <p className="font-semibold text-gray-800">
@@ -162,7 +162,7 @@ export default function KleoStyleSelector() {
             {/* Jake's Style Card */}
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "jake" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                selectedStyle === "jake" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-200"
               }`}
               onClick={() => setSelectedStyle(selectedStyle === "jake" ? null : "jake")}
             >
@@ -170,7 +170,7 @@ export default function KleoStyleSelector() {
                 <h3 className="font-bold text-gray-900 text-lg mb-4">Jake&#39;s style</h3>
 
                 <div className="flex justify-center mb-4">
-                  <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
+                  <div className="size-16 rounded-full overflow-hidden border-2 border-blue-200">
                     <Image src="/images/jake_headshot.png" alt="Jake" width={64} height={64} className="object-cover size-full" />
                   </div>
                 </div>
@@ -186,7 +186,7 @@ export default function KleoStyleSelector() {
             {/* Lara's Style Card */}
             <Card
               className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                selectedStyle === "lara" ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                selectedStyle === "lara" ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-200"
               }`}
               onClick={() => setSelectedStyle(selectedStyle === "lara" ? null : "lara")}
             >
@@ -194,7 +194,7 @@ export default function KleoStyleSelector() {
                 <h3 className="font-bold text-gray-900 text-lg mb-4">Lara&#39;s style</h3>
 
                 <div className="flex justify-center mb-4">
-                  <div className="size-16 rounded-full overflow-hidden border-2 border-teal-200">
+                  <div className="size-16 rounded-full overflow-hidden border-2 border-blue-200">
                     <Image src="/images/laura_headshot.png" alt="Lara" width={64} height={64} className="object-cover size-full" />
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function KleoStyleSelector() {
 
           {/* Progress Indicator */}
           <div className="flex justify-center mb-6">
-            <div className="size-3 bg-teal-500 rounded-full"></div>
+            <div className="size-3 bg-[#157DFF] rounded-full"></div>
           </div>
 
           {/* Navigation Buttons */}
@@ -224,7 +224,7 @@ export default function KleoStyleSelector() {
             </Button>
             <Button
               onClick={handleNext}
-              className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
               size="lg"
               disabled={!selectedStyle || isLoading || isLoadingStyle}
             >

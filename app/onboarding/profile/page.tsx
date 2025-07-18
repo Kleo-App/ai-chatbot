@@ -9,6 +9,8 @@ import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateLinkedInServices } from "@/app/actions/profile-actions"
 import { Loader2 } from "lucide-react"
+import { VoiceRecorder } from "@/components/voice-recorder"
+import { toast } from "sonner"
 
 // Custom hook to handle page loading state
 function usePageLoading() {
@@ -98,8 +100,8 @@ export default function ProfileSetup() {
       
       {showLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <Loader2 className="size-12 animate-spin text-teal-500" />
-          <p className="mt-4 text-gray-600 font-medium">Loading your profile...</p>
+          <Loader2 className="size-12 animate-spin text-[#157DFF]" />
+          <p className="mt-4 text-[#157DFF] font-medium">Loading your profile...</p>
         </div>
       ) : (
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
@@ -109,8 +111,8 @@ export default function ProfileSetup() {
             <span className="text-gray-700 font-medium">Step 2:</span>
             <span className="text-gray-900 font-semibold">Profile Details</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
               <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
             </div>
@@ -120,7 +122,7 @@ export default function ProfileSetup() {
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
@@ -134,15 +136,27 @@ export default function ProfileSetup() {
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[300px] text-gray-700 border-gray-300 focus:border-teal-400 focus:ring-teal-400 resize-none rounded-xl text-base p-4 w-full"
+              className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
               placeholder="Tell us about your products or services..."
             />
+            <div className="absolute top-4 right-4 flex gap-2">
+              <VoiceRecorder 
+                onTranscriptionComplete={(text) => {
+                  setDescription(prev => {
+                    const newContent = prev ? `${prev}\n${text}` : text;
+                    return newContent;
+                  });
+                  toast.success("Voice transcription added!");
+                }} 
+                className="flex items-center"
+              />
+            </div>
           </div>
         </div>
 
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -156,7 +170,7 @@ export default function ProfileSetup() {
           </Button>
           <Button
             onClick={handleNext}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
             disabled={isSaving}
           >

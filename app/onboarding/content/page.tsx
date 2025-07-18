@@ -583,10 +583,10 @@ export default function KleoContentCreator() {
             <span className="text-gray-700 font-medium">Step 4:</span>
             <span className="text-gray-900 font-semibold">Content</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
-              <div className="w-8 h-2 bg-teal-500 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
             </div>
           </div>
         </div>
@@ -594,7 +594,7 @@ export default function KleoContentCreator() {
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
           <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-teal-200">
+            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Let&apos;s create your first post</h2>
@@ -615,7 +615,7 @@ export default function KleoContentCreator() {
                 <TabsTrigger 
                   key={type.id} 
                   value={type.id}
-                  className={`h-auto py-3 px-4 text-left ${selectedContentType === type.id ? 'data-[state=active]:bg-teal-50 data-[state=active]:text-teal-700 data-[state=active]:border-teal-200' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl relative`}
+                  className={`h-auto py-3 px-4 text-left ${selectedContentType === type.id ? 'data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 data-[state=active]:border-blue-200' : 'bg-white border-gray-200 text-gray-700'} border rounded-xl relative`}
                 >
                   <div className="flex flex-col items-start">
                     <div className="font-semibold">{type.name}</div>
@@ -629,7 +629,7 @@ export default function KleoContentCreator() {
                   {/* Show loading indicator if this type is being generated */}
                   {generationStatus[type.id] === 'loading' && (
                     <div className="absolute top-1 right-1">
-                      <Loader2 className="size-3 animate-spin text-teal-500" />
+                      <Loader2 className="size-3 animate-spin text-[#157DFF]" />
                     </div>
                   )}
                 </TabsTrigger>
@@ -639,7 +639,7 @@ export default function KleoContentCreator() {
           {/* Loading State */}
           {isGenerating && (
             <div className="flex flex-col items-center justify-center py-10">
-              <Loader2 className="size-10 text-teal-500 animate-spin mb-4" />
+              <Loader2 className="size-10 text-[#157DFF] animate-spin mb-4" />
               <p className="text-gray-600">Generating content ideas for {contentTypes.find(t => t.id === selectedContentType)?.name}...</p>
             </div>
           )}
@@ -659,13 +659,13 @@ export default function KleoContentCreator() {
                 <Card
                   key={index}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                    selectedCard === index ? "border-teal-400 bg-teal-50" : "border-gray-200 hover:border-teal-200"
+                    selectedCard === index ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-blue-200"
                   }`}
                   onClick={() => setSelectedCard(selectedCard === index ? null : index)}
                 >
                   <CardContent className="p-5">
                     <div className="text-center mb-3">
-                      <h3 className="font-semibold text-teal-600 text-sm uppercase tracking-wide mb-2">
+                      <h3 className="font-semibold text-[#157DFF] text-sm uppercase tracking-wide mb-2">
                         {idea.category}
                       </h3>
                     </div>
@@ -690,7 +690,7 @@ export default function KleoContentCreator() {
             <div className="text-center mt-4 mb-2">
               <Button 
                 variant="ghost" 
-                className="text-gray-700 hover:text-teal-600 hover:bg-teal-50 font-medium"
+                className="text-gray-700 hover:text-[#157DFF] hover:bg-blue-50 font-medium"
                 onClick={regenerateContentIdeas}
                 disabled={isGenerating}
               >
@@ -703,7 +703,7 @@ export default function KleoContentCreator() {
         
         {/* Progress Indicator */}
         <div className="flex justify-center mb-6">
-          <div className="size-3 bg-teal-500 rounded-full"></div>
+          <div className="size-3 bg-[#157DFF] rounded-full"></div>
         </div>
 
         {/* Navigation Buttons */}
@@ -717,7 +717,7 @@ export default function KleoContentCreator() {
           </Button>
           <Button
             onClick={handleNext}
-            className="bg-teal-500 hover:bg-teal-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
             disabled={selectedCard === null || isLoading}
           >

@@ -131,7 +131,7 @@ export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecor
         type="button"
         variant={isRecording ? "destructive" : "ghost"}
         size="sm"
-        className={`size-8 p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-teal-500 hover:text-teal-600 hover:bg-teal-50'}`}
+        className={`size-8 p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-[#157DFF] hover:text-blue-600 hover:bg-blue-50'}`}
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing}
       >

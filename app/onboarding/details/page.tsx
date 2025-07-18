@@ -20,9 +20,9 @@ export default function KleoContentDetails() {
   const { goToStep, userProfile } = useOnboarding();
   const router = useRouter();
   
-  // Load content from database on initial render
+  // Initialize with empty content - don't load JSON from previous steps
   useEffect(() => {
-    async function loadContentFromProfile() {
+    async function initializeContent() {
       if (!userProfile) return;
       
       try {
@@ -30,17 +30,27 @@ export default function KleoContentDetails() {
         
         // Check if we have content details saved in the user profile
         if (userProfile.contentDetails) {
-          setContent(userProfile.contentDetails);
+          // Check if it's a JSON object (from content selection step)
+          try {
+            const parsed = JSON.parse(userProfile.contentDetails);
+            // If it parsed successfully as an object, it's JSON from the previous step
+            // Don't display it - start with empty content instead
+            console.log('Found JSON content from previous step, not displaying it');
+          } catch (e) {
+            // If it's not valid JSON, it's probably plain text that was entered before
+            // So we can display it
+            setContent(userProfile.contentDetails);
+          }
         }
       } catch (error) {
-        console.error('Error loading content details:', error);
+        console.error('Error initializing content:', error);
         toast.error('Failed to load your saved content');
       } finally {
         setIsLoadingContent(false);
       }
     }
     
-    loadContentFromProfile();
+    initializeContent();
   }, [userProfile]);
   
   // Handle transcription from voice recorder
@@ -77,6 +87,7 @@ export default function KleoContentDetails() {
     
     try {
       // Save the content to the user profile using our server action
+      // Make sure we're saving plain text, not JSON
       const result = await saveContentDetails(content);
       
       if (!result.success) {

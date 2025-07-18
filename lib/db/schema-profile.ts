@@ -23,6 +23,7 @@ export const userProfile = pgTable(
     // Content preferences
     contentType: text('contentType'),
     contentDetails: text('contentDetails'),
+    postDetails: text('postDetails'),
     stylePreference: text('stylePreference'),
     preferredHook: text('preferredHook'),
     // AI-generated hooks stored as JSON string

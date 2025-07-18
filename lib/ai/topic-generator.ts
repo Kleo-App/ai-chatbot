@@ -18,7 +18,7 @@ export interface TopicSuggestion {
  * Generate topic suggestions based on user profile data
  */
 export async function generateTopicSuggestions(
-  bio: string,
+  bio?: string,
   linkedInServices: string[]
 ): Promise<TopicSuggestion[]> {
   try {

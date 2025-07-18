@@ -1,6 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
+import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -34,48 +35,47 @@ export async function generateContentIdeas(
       }
     }
 
-    // Create a prompt based on available user data and content type
-    let prompt = `Generate 3 professional LinkedIn content ideas for the "${contentType}" category. Return the response as a JSON object.`;
+    // Get the prompt template from Langfuse
+    const promptTemplate = await getPrompt('content-generator');
     
-    if (bio || linkedInServices || topics.length > 0) {
-      prompt += ' Based on the following information:\n\n';
-
-      if (bio) {
-        prompt += `User Bio: ${bio}\n\n`;
-      }
-      
-      if (linkedInServices) {
-        prompt += `LinkedIn Services/Products: ${linkedInServices}\n\n`;
-      }
-      
-      if (topics.length > 0) {
-        prompt += `Selected Topics: ${topics.map(t => t.title).join(', ')}\n\n`;
-      }
-    }
+    // Additional instructions based on content type
+    let additionalInstructions = 'Focus on creating diverse content ideas that showcase professional expertise while being engaging and valuable to the audience.';
+    additionalInstructions += '\n\nFor each idea, provide a catchy title, a compelling description (2-3 sentences), and a short tag that categorizes the content type (e.g., GUIDE, CASE STUDY, OPINION, etc.).\n\nReturn your response in this JSON format: {"ideas": [{"category": "' + contentType + '", "title": "Example Title", "description": "Example description text", "tag": "EXAMPLE TAG"}]}';
     
-    // Add specific instructions based on content type
-    switch(contentType.toLowerCase()) {
-      case 'monetisable expertise':
-      case 'monetizable expertise':
-        prompt += 'Focus on showcasing the user\'s professional expertise in a way that demonstrates value and could lead to business opportunities. Include actionable insights that readers would be willing to pay for.';
-        break;
-      case 'strategic arbitrage':
-        prompt += 'Focus on identifying gaps in the market or unique perspectives that position the user as a thought leader. Highlight contrarian viewpoints or innovative approaches.';
-        break;
-      case 'educational':
-        prompt += 'Focus on teaching concepts, explaining processes, or sharing knowledge that helps the audience learn something valuable. Include step-by-step explanations or clear takeaways.';
-        break;
-      case 'engaging':
-      case 'highly engaging':
-        prompt += 'Focus on creating content that sparks conversation, asks thought-provoking questions, or shares relatable stories that will generate high engagement and comments.';
-        break;
-      default:
-        prompt += 'Create diverse content ideas that showcase professional expertise while being engaging and valuable to the audience.';
-    }
-    
-    prompt += '\n\nFor each idea, provide a catchy title, a compelling description (2-3 sentences), and a short tag that categorizes the content type (e.g., GUIDE, CASE STUDY, OPINION, etc.).\n\nReturn your response in this JSON format: {"ideas": [{"category": "' + contentType + '", "title": "Example Title", "description": "Example description text", "tag": "EXAMPLE TAG"}]}';
+    // Process the prompt template with variables
+    const prompt = processPromptTemplate(promptTemplate, {
+      bio: bio || '',
+      linkedInServices: Array.isArray(linkedInServices) ? linkedInServices.join('\n') : '',
+      selectedTopics: Array.isArray(selectedTopics) ? selectedTopics.map(topic => topic.title).join('\n') : '',
+      contentType: contentType,
+      additionalInstructions: additionalInstructions
+    });
 
     console.log('Generating content ideas with prompt:', prompt);
+
+    // Create Langfuse trace for tracking
+    const trace = createTrace('generate_content_ideas', contentType, {
+      bio,
+      linkedInServices,
+      selectedTopics,
+      contentType
+    });
+    
+    // Skip Langfuse tracking if trace creation failed
+    if (!trace) {
+      console.warn('Skipping Langfuse tracking due to trace creation failure');
+    }
+
+    // Create Langfuse generation span
+    const generation = trace?.generation({
+      name: 'content_ideas_generation',
+      model: 'gpt-4-turbo',
+      modelParameters: {
+        temperature: 0.7,
+        max_tokens: 1000
+      },
+      input: prompt,
+    });
 
     // Call OpenAI API
     const response = await openai.chat.completions.create({
@@ -98,10 +98,14 @@ export async function generateContentIdeas(
     // Parse the response
     const content = response.choices[0]?.message?.content;
     if (!content) {
+      generation?.end({ output: null });
       throw new Error('No content returned from AI');
     }
 
     console.log('AI response received:', content.substring(0, 100) + '...');
+    
+    // Record successful completion in Langfuse
+    generation?.end({ output: content });
 
     // Parse the JSON response
     const parsedContent = JSON.parse(content);
@@ -128,18 +132,30 @@ export async function generateContentIdeas(
     // If we couldn't extract content ideas, return default ones
     if (contentIdeas.length === 0) {
       console.warn('Could not extract content ideas from AI response, using defaults');
+      trace?.event({
+        name: 'fallback_to_default',
+        level: 'WARNING'
+      });
       return getDefaultContentIdeas(contentType);
     }
     
     // Ensure all required fields are present
-    return contentIdeas.map(idea => ({
+    const result = contentIdeas.map(idea => ({
       category: contentType,
       title: idea.title || `Content idea for ${contentType}`,
       description: idea.description || 'A compelling content idea tailored to your expertise and audience.',
       tag: idea.tag || 'CONTENT'
     }));
+    
+    // End the trace successfully
+    
+    return result;
   } catch (error) {
     console.error('Error generating content ideas:', error);
+    
+    // Log error to Langfuse
+    logError('generate_content_ideas_error', contentType, error instanceof Error ? error : String(error));
+    
     // Return default content ideas if there's an error
     return getDefaultContentIdeas(contentType);
   }

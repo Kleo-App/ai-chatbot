@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { ArrowRight, ThumbsUp, Heart, Share, Edit, Clock, Loader2 } from "lucide-react"
+import { ArrowRight, ThumbsUp, ThumbsDown, Heart, Share, Edit, Clock, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useOnboarding } from "@/hooks/use-onboarding"
@@ -10,6 +10,7 @@ import { UserButton, useUser , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGeneratePosts, savePreferredPost } from "@/app/actions/post-actions"
 import { PostIdea } from "@/lib/ai/post-generator"
+import { trackFeedback } from "@/lib/ai/langfuse-client"
 import { toast } from "sonner"
 
 export default function KleoReviewPublish() {
@@ -18,6 +19,7 @@ export default function KleoReviewPublish() {
   const [isSaving, setIsSaving] = useState(false)
   const [postVariations, setPostVariations] = useState<PostIdea[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [feedbackState, setFeedbackState] = useState<Record<number, 'liked' | 'disliked' | null>>({})  // Track feedback state for each post
   const { completeOnboarding, goToStep } = useOnboarding()
   const { userId } = useAuth()
   const router = useRouter()
@@ -32,6 +34,13 @@ export default function KleoReviewPublish() {
         
         if (result.success && result.posts) {
           setPostVariations(result.posts)
+          
+          // Initialize feedback state for all posts
+          const initialFeedbackState: Record<number, 'liked' | 'disliked' | null> = {}
+          result.posts.forEach(post => {
+            initialFeedbackState[post.id] = null
+          })
+          setFeedbackState(initialFeedbackState)
         } else {
           setError(result.error || 'Failed to load posts')
           toast.error(result.error || 'Failed to load posts')
@@ -68,6 +77,62 @@ export default function KleoReviewPublish() {
     }
   }
 
+
+  // Handle user feedback (thumbs up/down)
+  const handleFeedback = async (postId: number, isPositive: boolean) => {
+    try {
+      if (!userId) {
+        console.warn('Cannot track feedback: No user ID available');
+        return;
+      }
+
+      // Update local state first for immediate UI feedback
+      setFeedbackState(prev => ({
+        ...prev,
+        [postId]: isPositive ? 'liked' : 'disliked'
+      }));
+
+      // Find the post
+      const post = postVariations.find(p => p.id === postId);
+      if (!post) {
+        console.warn('Cannot track feedback: Post not found');
+        return;
+      }
+
+      // Create a trace ID based on post ID and user ID for consistency
+      // This allows us to track feedback even without an explicit trace ID
+      const generatedTraceId = `post_${postId}_${userId}`;
+
+      // Track feedback in Langfuse
+      const success = await trackFeedback(
+        generatedTraceId,
+        userId,
+        isPositive ? 1 : 0,
+        `User ${isPositive ? 'liked' : 'disliked'} post ID ${postId}`,
+        { 
+          postId, 
+          postTitle: post.title,
+          feedback: isPositive ? 'thumbs_up' : 'thumbs_down'
+        }
+      );
+
+      if (success) {
+        toast.success(`Thank you for your ${isPositive ? 'positive' : 'negative'} feedback!`, {
+          duration: 2000,
+          position: 'bottom-center'
+        });
+      }
+    } catch (error) {
+      console.error('Error tracking feedback:', error);
+      toast.error('Unable to record your feedback');
+      
+      // Revert the UI state on error
+      setFeedbackState(prev => ({
+        ...prev,
+        [postId]: null
+      }));
+    }
+  };
 
   const handleBack = async () => {
     try {
@@ -201,8 +266,21 @@ export default function KleoReviewPublish() {
 
                     {/* Social Actions */}
                     <div className="flex items-center gap-4 mb-4 text-gray-500">
-                      <button className="hover:text-teal-600 transition-colors">
+                      <button 
+                        className={`transition-colors ${feedbackState[post.id] === 'liked' ? 'text-teal-600' : 'hover:text-teal-600'}`}
+                        onClick={() => handleFeedback(post.id, true)}
+                        disabled={feedbackState[post.id] === 'liked' || feedbackState[post.id] === 'disliked'}
+                        aria-label="Like this post"
+                      >
                         <ThumbsUp className="size-5" />
+                      </button>
+                      <button 
+                        className={`transition-colors ${feedbackState[post.id] === 'disliked' ? 'text-red-500' : 'hover:text-red-500'}`}
+                        onClick={() => handleFeedback(post.id, false)}
+                        disabled={feedbackState[post.id] === 'liked' || feedbackState[post.id] === 'disliked'}
+                        aria-label="Dislike this post"
+                      >
+                        <ThumbsDown className="size-5" />
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
                         <Heart className="size-5" />
@@ -212,9 +290,6 @@ export default function KleoReviewPublish() {
                       </button>
                       <button className="hover:text-teal-600 transition-colors">
                         <Edit className="size-5" />
-                      </button>
-                      <button className="hover:text-teal-600 transition-colors">
-                        <Clock className="size-5" />
                       </button>
                     </div>
 

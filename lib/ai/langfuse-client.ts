@@ -242,3 +242,46 @@ export async function processPromptTemplate(promptTemplate: string, variables: R
     return value !== undefined ? String(value) : match;
   });
 }
+
+/**
+ * Track user feedback (thumbs up/down) in Langfuse
+ * @param traceId The ID of the trace to associate the feedback with
+ * @param userId User ID
+ * @param score Score (1 for thumbs up, 0 for thumbs down)
+ * @param comment Optional comment or additional context
+ * @param metadata Optional metadata
+ */
+export async function trackFeedback(
+  traceId: string,
+  userId: string,
+  score: 1 | 0,
+  comment?: string,
+  metadata?: Record<string, any>
+) {
+  try {
+    const client = await getLangfuseClient();
+    
+    // Create a unique ID for the score to enable updating it later if needed
+    const scoreId = `feedback_${traceId}_${userId}`;
+    
+    // Use the correct score method based on documentation
+    await client.score({
+      id: scoreId, // Use as idempotency key
+      traceId: traceId,
+      name: score === 1 ? 'thumbs_up' : 'thumbs_down',
+      value: score,
+      comment: comment || `User ${userId} gave ${score === 1 ? 'positive' : 'negative'} feedback`,
+      metadata: {
+        ...metadata,
+        userId,
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    console.log(`Feedback tracked for trace ${traceId}: ${score === 1 ? 'thumbs up' : 'thumbs down'}`);
+    return true;
+  } catch (error) {
+    console.error('Error tracking feedback in Langfuse:', error);
+    return false;
+  }
+}

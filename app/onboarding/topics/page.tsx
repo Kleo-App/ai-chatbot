@@ -193,13 +193,8 @@ export default function TopicSelector() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {isLoading ? (
               // Loading state - show skeleton cards
-<<<<<<< HEAD
-              Array.from({ length: 9 }).map((_, index) => (
-                <Card key={`loading-skeleton-${index}-${Math.random().toString(36).substr(2, 5)}`} className="bg-white">
-=======
               Array.from({ length: 5 }).map((_, index) => (
                 <Card key={`loading-${index}`} className="bg-white">
->>>>>>> main
                   <CardContent className="p-5 flex flex-col items-center justify-center min-h-[120px]">
                     <div className="w-full h-4 bg-gray-200 rounded animate-pulse mb-2" />
                     <div className="w-2/3 h-3 bg-gray-200 rounded animate-pulse" />

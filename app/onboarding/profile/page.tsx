@@ -118,49 +118,49 @@ export default function ProfileSetup() {
             </p>
 
             <div className="relative">
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about your products or services..."
-            />
-            <div className="absolute top-4 right-4 flex gap-2">
-              <VoiceRecorder 
-                onTranscriptionComplete={(text) => {
-                  setDescription(prev => {
-                    const newContent = prev ? `${prev}\n${text}` : text;
-                    return newContent;
-                  });
-                  toast.success("Voice transcription added!");
-                }} 
-                className="flex items-center"
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
+                placeholder="Tell us about your products or services..."
               />
+              <div className="absolute top-4 right-4 flex gap-2">
+                <VoiceRecorder 
+                  onTranscriptionComplete={(text) => {
+                    setDescription(prev => {
+                      const newContent = prev ? `${prev}\n${text}` : text;
+                      return newContent;
+                    });
+                    toast.success("Voice transcription added!");
+                  }} 
+                  className="flex items-center"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-center gap-4 mt-4">
-          <Button
-            onClick={handleBack}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
-            size="lg"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Saving...
-              </>
-            ) : 'Next'}
-          </Button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-center gap-4 mt-4">
+            <Button
+              onClick={handleBack}
+              className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Saving...
+                </>
+              ) : 'Next'}
+            </Button>
           </div>
         </div>
       )}

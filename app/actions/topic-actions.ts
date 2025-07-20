@@ -43,7 +43,7 @@ export async function generateTopics(): Promise<{
     
     // Generate topic suggestions based on profile data
     const topics = await generateTopicSuggestions(
-      userProfile.bio || undefined,
+      userProfile.bio || "", // Use empty string instead of undefined
       userProfile.linkedInServices ? JSON.parse(userProfile.linkedInServices) : []
     );
     

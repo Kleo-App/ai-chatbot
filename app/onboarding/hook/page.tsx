@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { ArrowLeft, Plus, Sparkles, Loader2 } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -235,9 +235,9 @@ export default function KleoHookSelector() {
                   <Card key={i} className="border-2 border-gray-200 animate-pulse">
                     <CardContent className="p-5">
                       <div className="mb-3">
-                        <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-24 bg-gray-200 rounded" />
                       </div>
-                      <div className="h-20 bg-gray-200 rounded"></div>
+                      <div className="h-20 bg-gray-200 rounded" />
                     </CardContent>
                   </Card>
                 ))}

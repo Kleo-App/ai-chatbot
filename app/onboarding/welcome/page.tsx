@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton , useAuth, useUser } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
 import { checkAndCreateUser } from "@/app/actions/user-actions"
@@ -125,7 +125,7 @@ export default function KleoProfileSetup() {
     <OnboardingLayout>
       {!isPageReady ? (
         <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full size-12 border-y-2 border-[#157DFF]"></div>
+          <div className="animate-spin rounded-full size-12 border-y-2 border-[#157DFF]" />
           <p className="mt-4 text-[#157DFF]">Loading your profile...</p>
         </div>
       ) : (
@@ -177,6 +177,7 @@ export default function KleoProfileSetup() {
               <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
                 <p>Error: {error}</p>
                 <button 
+                  type="button"
                   onClick={() => window.location.reload()} 
                   className="underline mt-2"
                 >

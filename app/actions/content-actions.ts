@@ -1,9 +1,9 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { generateContentIdeas, ContentIdea } from '@/lib/ai/content-generator';
+import { generateContentIdeas, type ContentIdea } from '@/lib/ai/content-generator';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
-import { UserProfile } from '@/lib/db/schema-profile';
+import type { UserProfile } from '@/lib/db/schema-profile';
 
 // Type for dynamic content properties
 type UserProfileWithDynamicProps = UserProfile & Record<string, string | null>;

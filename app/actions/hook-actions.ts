@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
-import { generateHookIdeas, HookIdea } from '@/lib/ai/hook-generator';
+import { generateHookIdeas, type HookIdea } from '@/lib/ai/hook-generator';
 
 /**
  * Get or generate hook ideas based on user profile data

@@ -4,14 +4,13 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Plus, Loader2 } from "lucide-react"
-import { UserButton } from "@clerk/nextjs"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { updateContentType } from "@/app/actions/profile-actions"
 import { generateContent, saveSelectedContent } from "@/app/actions/content-actions"
-import { ContentIdea } from "@/lib/ai/content-generator"
+import type { ContentIdea } from "@/lib/ai/content-generator"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
@@ -170,7 +169,7 @@ export default function KleoContentCreator() {
       }
       
       // Try to parse the JSON with additional error handling
-      let savedContent;
+      let savedContent: any;
       try {
         savedContent = JSON.parse(userProfile.contentDetails);
       } catch (parseError) {
@@ -664,7 +663,7 @@ export default function KleoContentCreator() {
             <div className="grid md:grid-cols-3 gap-5 mb-8">
               {contentIdeas.map((idea, index) => (
                 <Card
-                  key={index}
+                  key={`content-idea-${idea.title}-${index}`}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
                     selectedCard === index ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-blue-200"
                   }`}

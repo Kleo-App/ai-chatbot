@@ -1,7 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
-import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
+import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Initialize OpenAI client
@@ -126,7 +126,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       throw new Error('No content returned from AI');
     }
 
-    console.log('AI response received:', content.substring(0, 100) + '...');
+    console.log('AI response received:', `${content.substring(0, 100)}...`);
     
     // Record successful completion in Langfuse
     generation?.end({ output: content });

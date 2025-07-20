@@ -54,8 +54,12 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // For static rendering during build, provide a fallback publishable key
+  // This prevents errors during Next.js static site generation
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_test_dummy_key_for_static_rendering';
+  
   return (
-    <ClerkProvider>
+    <ClerkProvider publishableKey={publishableKey}>
       <html
         lang="en"
         // `next-themes` injects an extra classname to the body element to avoid

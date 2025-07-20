@@ -134,6 +134,20 @@
       "when": 1753031793637,
       "tag": "0018_chilly_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1753038231481,
+      "tag": "0019_slim_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1753038706041,
+      "tag": "0020_stiff_bulldozer",
+      "breakpoints": true
     }
   ]
 }

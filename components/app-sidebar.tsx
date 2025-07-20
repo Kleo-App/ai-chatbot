@@ -4,13 +4,10 @@ import { useUser } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
 import { Search, MessageSquare, History, ChevronRight, BookOpen, FileText } from 'lucide-react';
 import Link from 'next/link';
-
-import { PlusIcon } from '@/components/icons';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarToggle } from '@/components/sidebar-toggle';
 import { SidebarUserNav } from '@/components/sidebar-user-nav';
 import { CommandMenu } from '@/components/command-menu';
-import { Button } from '@/components/ui/button';
 import {
   Sidebar,
   SidebarContent,
@@ -24,7 +21,6 @@ import {
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import Image from 'next/image';
-import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useState } from 'react';
 import { useCommandMenu } from '@/hooks/use-command-menu';
 import { useArtifact, initialArtifactData } from '@/hooks/use-artifact';
@@ -71,7 +67,7 @@ export function AppSidebar() {
                 asChild
                 className="w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-full h-[36px] border border-border bg-muted/50 text-muted-foreground hover:bg-muted/70 hover:text-foreground"
               >
-                <button aria-label="Search" onClick={commandMenu.toggle}>
+                <button type="button" aria-label="Search" onClick={commandMenu.toggle}>
                   <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
                     <Search className="size-4" />
                   </div>
@@ -174,7 +170,7 @@ export function AppSidebar() {
               <div style={{ overflow: 'hidden', height: historyExpanded ? 'auto' : '0', opacity: historyExpanded ? 1 : 0 }}>
                 <div className="flex flex-row mt-1 mx-1">
                   <div className="cursor-pointer ms-[8px] me-[2px] py-1">
-                    <div className="border-l border-border h-full ms-[10px] me-[4px]"></div>
+                    <div className="border-l border-border h-full ms-[10px] me-[4px]" />
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-0">
                     <SidebarHistory commandMenu={commandMenu} />

@@ -3,9 +3,9 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { userProfile, type UserProfile } from './schema-profile';
-import { getOrCreateUser } from './queries';
 import { ChatSDKError } from '../errors';
 import { clerkClient } from '@clerk/nextjs/server';
+import { getOrCreateUser } from './queries';
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);

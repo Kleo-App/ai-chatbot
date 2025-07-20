@@ -1,7 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
-import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
+import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 
 // Initialize OpenAI client
 const openai = new OpenAI({

@@ -18,7 +18,6 @@ import postgres from 'postgres';
 import {
   user,
   chat,
-  type User,
   document,
   type Suggestion,
   suggestion,
@@ -29,7 +28,6 @@ import {
   stream,
 } from './schema';
 import type { ArtifactKind } from '@/components/artifact';
-import { generateUUID } from '../utils';
 import type { VisibilityType } from '@/components/visibility-selector';
 import { ChatSDKError } from '../errors';
 

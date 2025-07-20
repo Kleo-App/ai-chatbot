@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon, BoltIcon, SizeDynamicIcon, FormatIcon, HooksIcon, CloseIcon } from './icons';
+import { PaperclipIcon, StopIcon, BoltIcon, SizeDynamicIcon, FormatIcon, HooksIcon, CloseIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';

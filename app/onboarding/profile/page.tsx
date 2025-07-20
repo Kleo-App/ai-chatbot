@@ -89,7 +89,6 @@ export default function ProfileSetup() {
     }
   };
 
-  // Only show loading spinner on initial page load or when profile data is loading
   // Never show loading when saving/navigating to prevent spinner during navigation
   const showLoading = (!hasLoaded || (hasLoaded && isProfileLoading)) && !isSaving;
   
@@ -107,61 +106,61 @@ export default function ProfileSetup() {
           
           {/* Profile Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
+                <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
-          </div>
 
-          <p className="text-gray-600 mb-6">
-            This will be used as context information when generating content. Don&#39;t worry, you can change it later.
-          </p>
+            <p className="text-gray-600 mb-6">
+              This will be used as context information when generating content. Don&#39;t worry, you can change it later.
+            </p>
 
-          <div className="relative">
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about your products or services..."
-            />
-            <div className="absolute top-4 right-4 flex gap-2">
-              <VoiceRecorder 
-                onTranscriptionComplete={(text) => {
-                  setDescription(prev => {
-                    const newContent = prev ? `${prev}\n${text}` : text;
-                    return newContent;
-                  });
-                  toast.success("Voice transcription added!");
-                }} 
-                className="flex items-center"
+            <div className="relative">
+              <Textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
+                placeholder="Tell us about your products or services..."
               />
+              <div className="absolute top-4 right-4 flex gap-2">
+                <VoiceRecorder 
+                  onTranscriptionComplete={(text) => {
+                    setDescription(prev => {
+                      const newContent = prev ? `${prev}\n${text}` : text;
+                      return newContent;
+                    });
+                    toast.success("Voice transcription added!");
+                  }} 
+                  className="flex items-center"
+                />
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-center gap-4 mt-4">
-          <Button
-            onClick={handleBack}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
-            size="lg"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Saving...
-              </>
-            ) : 'Next'}
-          </Button>
+          {/* Navigation Buttons */}
+          <div className="flex justify-center gap-4 mt-4">
+            <Button
+              onClick={handleBack}
+              className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+              size="lg"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Saving...
+                </>
+              ) : 'Next'}
+            </Button>
           </div>
         </div>
       )}

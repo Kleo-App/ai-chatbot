@@ -26,13 +26,13 @@ export async function generateTopicSuggestions(
     const promptTemplate = await getPrompt('topic-generator');
     
     // Process the prompt template with variables
-    const prompt = processPromptTemplate(promptTemplate, {
+    const prompt = await processPromptTemplate(promptTemplate, {
       bio,
       linkedInServices: linkedInServices.join('\n')
     });
     
     // Create Langfuse trace for tracking
-    const trace = createTrace('generate_topic_suggestions', bio || 'anonymous', {
+    const trace = await createTrace('generate_topic_suggestions', bio || 'anonymous', {
       bio,
       linkedInServices
     });

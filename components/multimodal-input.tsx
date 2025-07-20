@@ -16,7 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from './icons';
+import { PaperclipIcon, StopIcon } from './icons';
 import { PreviewAttachment } from './preview-attachment';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
@@ -322,9 +322,9 @@ function PureMultimodalInput({
               'Industry insights',
               'Professional tips',
               'Company announcement'
-            ].map((suggestion, index) => (
+            ].map((suggestion) => (
               <Button
-                key={index}
+                key={`suggestion-${suggestion}`}
                 variant="outline"
                 size="sm"
                 className="h-8 rounded-full px-3 text-sm bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-colors"

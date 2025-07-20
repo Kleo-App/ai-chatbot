@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { ArrowRight, ThumbsUp, ThumbsDown, Heart, Share, Edit, Clock, Loader2 } from "lucide-react"
+import { ArrowRight, ThumbsUp, ThumbsDown, Heart, Share, Edit, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton, useUser , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGeneratePosts, savePreferredPost } from "@/app/actions/post-actions"
-import { PostIdea } from "@/lib/ai/post-generator"
+import type { PostIdea } from "@/lib/ai/post-generator"
 import { trackFeedback } from "@/lib/ai/langfuse-client"
 import { toast } from "sonner"
 
@@ -171,14 +171,14 @@ export default function KleoReviewPublish() {
             <span className="text-gray-700 font-medium">Step 8:</span>
             <span className="text-gray-900 font-semibold">Review & publish</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
             </div>
           </div>
         </div>
@@ -259,7 +259,7 @@ export default function KleoReviewPublish() {
                     <div className="flex items-center justify-between mb-4">
                       <span className="text-sm text-gray-600">{post.wordCount} Words</span>
                       <div className="flex items-center gap-1 text-green-600">
-                        <div className="size-2 bg-green-500 rounded-full"></div>
+                        <div className="size-2 bg-green-500 rounded-full" />
                         <span className="text-sm font-medium">Ready to publish</span>
                       </div>
                     </div>
@@ -267,6 +267,7 @@ export default function KleoReviewPublish() {
                     {/* Social Actions */}
                     <div className="flex items-center gap-4 mb-4 text-gray-500">
                       <button 
+                        type="button"
                         className={`transition-colors ${feedbackState[post.id] === 'liked' ? 'text-teal-600' : 'hover:text-teal-600'}`}
                         onClick={() => handleFeedback(post.id, true)}
                         disabled={feedbackState[post.id] === 'liked' || feedbackState[post.id] === 'disliked'}
@@ -275,6 +276,7 @@ export default function KleoReviewPublish() {
                         <ThumbsUp className="size-5" />
                       </button>
                       <button 
+                        type="button"
                         className={`transition-colors ${feedbackState[post.id] === 'disliked' ? 'text-red-500' : 'hover:text-red-500'}`}
                         onClick={() => handleFeedback(post.id, false)}
                         disabled={feedbackState[post.id] === 'liked' || feedbackState[post.id] === 'disliked'}
@@ -282,13 +284,13 @@ export default function KleoReviewPublish() {
                       >
                         <ThumbsDown className="size-5" />
                       </button>
-                      <button className="hover:text-teal-600 transition-colors">
+                      <button type="button" className="hover:text-teal-600 transition-colors">
                         <Heart className="size-5" />
                       </button>
-                      <button className="hover:text-teal-600 transition-colors">
+                      <button type="button" className="hover:text-teal-600 transition-colors">
                         <Share className="size-5" />
                       </button>
-                      <button className="hover:text-teal-600 transition-colors">
+                      <button type="button" className="hover:text-teal-600 transition-colors">
                         <Edit className="size-5" />
                       </button>
                     </div>

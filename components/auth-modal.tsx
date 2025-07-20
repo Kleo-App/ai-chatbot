@@ -1,6 +1,4 @@
 'use client';
-
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -36,6 +34,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
         >
           {/* Close button */}
           <button
+            type="button"
             onClick={onClose}
             className="absolute top-4 right-4 z-10 p-2 rounded-full hover:bg-gray-100 transition-colors"
           >

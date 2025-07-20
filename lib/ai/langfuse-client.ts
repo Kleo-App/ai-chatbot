@@ -4,35 +4,24 @@ import { Langfuse } from 'langfuse';
 import { cache } from 'react';
 
 /**
- * Singleton class for Langfuse client
- * Ensures only one instance of Langfuse client is created
+ * Langfuse client singleton instance
  */
-class LangfuseClientSingleton {
-  private static instance: Langfuse | null = null;
-
-  /**
-   * Get the Langfuse client instance
-   * Creates a new instance if one doesn't exist
-   */
-  public static getInstance(): Langfuse {
-    if (!LangfuseClientSingleton.instance) {
-      LangfuseClientSingleton.instance = new Langfuse({
-        secretKey: process.env.LANGFUSE_SECRET_KEY,
-        publicKey: process.env.LANGFUSE_PUBLIC_KEY,
-        baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
-      });
-    }
-
-    return LangfuseClientSingleton.instance;
-  }
-}
+let langfuseInstance: Langfuse | null = null;
 
 /**
  * Get the Langfuse client instance
- * Convenience function to access the singleton
+ * Creates a new instance if one doesn't exist
  */
 export async function getLangfuseClient(): Promise<Langfuse> {
-  return LangfuseClientSingleton.getInstance();
+  if (!langfuseInstance) {
+    langfuseInstance = new Langfuse({
+      secretKey: process.env.LANGFUSE_SECRET_KEY,
+      publicKey: process.env.LANGFUSE_PUBLIC_KEY,
+      baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
+    });
+  }
+
+  return langfuseInstance;
 }
 
 /**
@@ -93,7 +82,8 @@ const promptCache = new Map<string, string>();
 export const getPrompt = cache(async (promptName: string): Promise<string> => {
   // Check cache first
   if (promptCache.has(promptName)) {
-    return promptCache.get(promptName)!;
+    const cachedPrompt = promptCache.get(promptName);
+    if (cachedPrompt) return cachedPrompt;
   }
   
   try {

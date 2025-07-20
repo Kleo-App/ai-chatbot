@@ -2,12 +2,11 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { HelpCircle, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton , useAuth } from "@clerk/nextjs"
+import { UserButton , } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
@@ -124,11 +123,11 @@ export default function KleoContentDetails() {
             <span className="text-gray-700 font-medium">Step 5:</span>
             <span className="text-gray-900 font-semibold">Details</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
             </div>
           </div>
         </div>

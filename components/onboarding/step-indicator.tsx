@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { OnboardingStep } from '@/hooks/use-onboarding';
+import type { OnboardingStep } from '@/hooks/use-onboarding';
 
 // Define the steps in the onboarding flow
 const ONBOARDING_STEPS: OnboardingStep[] = [

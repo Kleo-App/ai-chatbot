@@ -1,7 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
-import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
+import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -40,7 +40,7 @@ export async function generateContentIdeas(
     
     // Additional instructions based on content type
     let additionalInstructions = 'Focus on creating diverse content ideas that showcase professional expertise while being engaging and valuable to the audience.';
-    additionalInstructions += '\n\nFor each idea, provide a catchy title, a compelling description (2-3 sentences), and a short tag that categorizes the content type (e.g., GUIDE, CASE STUDY, OPINION, etc.).\n\nReturn your response in this JSON format: {"ideas": [{"category": "' + contentType + '", "title": "Example Title", "description": "Example description text", "tag": "EXAMPLE TAG"}]}';
+    additionalInstructions += `\n\nFor each idea, provide a catchy title, a compelling description (2-3 sentences), and a short tag that categorizes the content type (e.g., GUIDE, CASE STUDY, OPINION, etc.).\n\nReturn your response in this JSON format: {"ideas": [{"category": "${contentType}", "title": "Example Title", "description": "Example description text", "tag": "EXAMPLE TAG"}]}`;
     
     // Process the prompt template with variables
     const prompt = await processPromptTemplate(promptTemplate, {
@@ -102,7 +102,7 @@ export async function generateContentIdeas(
       throw new Error('No content returned from AI');
     }
 
-    console.log('AI response received:', content.substring(0, 100) + '...');
+    console.log('AI response received:', `${content.substring(0, 100)}...`);
     
     // Record successful completion in Langfuse
     generation?.end({ output: content });

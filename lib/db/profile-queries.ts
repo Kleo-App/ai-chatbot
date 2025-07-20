@@ -3,7 +3,6 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { userProfile, type UserProfile } from './schema-profile';
-import { getOrCreateUser } from './queries';
 import { ChatSDKError } from '../errors';
 
 // biome-ignore lint: Forbidden non-null assertion.

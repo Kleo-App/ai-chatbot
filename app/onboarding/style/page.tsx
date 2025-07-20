@@ -2,10 +2,9 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { TrendingUp, Smile, Sparkles, BookOpen, Briefcase, Megaphone, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
@@ -105,12 +104,12 @@ export default function KleoStyleSelector() {
             <span className="text-gray-700 font-medium">Step 6:</span>
             <span className="text-gray-900 font-semibold">Style</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
             </div>
           </div>
         </div>

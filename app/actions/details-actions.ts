@@ -3,14 +3,13 @@
 import { revalidatePath } from 'next/cache';
 import { auth } from '@clerk/nextjs/server';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
-import { UserProfile } from '@/lib/db/schema-profile';
 
 /**
  * Save the content details entered by the user during onboarding
  */
 export async function saveContentDetails(content: string): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('Saving content details:', content.substring(0, 50) + '...');
+    console.log('Saving content details:', `${content.substring(0, 50)}...`);
     
     const { userId } = await auth();
     

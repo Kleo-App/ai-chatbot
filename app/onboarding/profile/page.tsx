@@ -111,10 +111,10 @@ export default function ProfileSetup() {
             <span className="text-gray-700 font-medium">Step 2:</span>
             <span className="text-gray-900 font-semibold">Profile Details</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
-              <div className="w-8 h-2 bg-gray-300 rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-gray-300 rounded-full" />
+              <div className="w-8 h-2 bg-gray-300 rounded-full" />
             </div>
           </div>
         </div>

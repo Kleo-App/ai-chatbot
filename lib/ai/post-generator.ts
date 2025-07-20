@@ -1,7 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
-import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
+import { createTrace, logError, } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
 
 // Initialize OpenAI client
@@ -199,7 +199,7 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
 /**
  * Get default post ideas if AI generation fails
  */
-function getDefaultPostIdeas(preferredHook: string = ''): PostIdea[] {
+function getDefaultPostIdeas(preferredHook = ''): PostIdea[] {
   const hook = preferredHook || 'I used to think automation meant replacing humans.';
   
   return [

@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { generatePostIdeas, PostIdea } from '@/lib/ai/post-generator';
+import { generatePostIdeas, type PostIdea } from '@/lib/ai/post-generator';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
 
 /**

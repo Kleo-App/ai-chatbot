@@ -1,7 +1,7 @@
 'use server';
 
 import OpenAI from 'openai';
-import { getLangfuseClient, createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
+import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -18,7 +18,7 @@ export interface TopicSuggestion {
  * Generate topic suggestions based on user profile data
  */
 export async function generateTopicSuggestions(
-  bio?: string,
+  bio: string,
   linkedInServices: string[]
 ): Promise<TopicSuggestion[]> {
   try {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { ArrowLeft, Plus, Sparkles, Loader2 } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -10,7 +10,7 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
-import { HookIdea } from "@/lib/ai/hook-generator"
+import type { HookIdea } from "@/lib/ai/hook-generator"
 import { toast } from "sonner"
 import { VoiceRecorder } from "@/components/voice-recorder"
 
@@ -192,13 +192,13 @@ export default function KleoHookSelector() {
             <span className="text-gray-700 font-medium">Step 7:</span>
             <span className="text-gray-900 font-semibold">Hook</span>
             <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
+              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
             </div>
           </div>
         </div>
@@ -225,9 +225,9 @@ export default function KleoHookSelector() {
                   <Card key={i} className="border-2 border-gray-200 animate-pulse">
                     <CardContent className="p-5">
                       <div className="mb-3">
-                        <div className="h-6 w-24 bg-gray-200 rounded"></div>
+                        <div className="h-6 w-24 bg-gray-200 rounded" />
                       </div>
-                      <div className="h-20 bg-gray-200 rounded"></div>
+                      <div className="h-20 bg-gray-200 rounded" />
                     </CardContent>
                   </Card>
                 ))}

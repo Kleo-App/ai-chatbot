@@ -1,7 +1,7 @@
 'use server';
 
 import { auth } from '@clerk/nextjs/server';
-import { generateTopicSuggestions, TopicSuggestion } from '@/lib/ai/topic-generator';
+import { generateTopicSuggestions, type TopicSuggestion } from '@/lib/ai/topic-generator';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
 import { updateSelectedTopics } from './profile-actions';
 

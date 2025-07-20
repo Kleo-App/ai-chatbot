@@ -89,7 +89,6 @@ export default function ProfileSetup() {
     }
   };
 
-  // Only show loading spinner on initial page load or when profile data is loading
   // Never show loading when saving/navigating to prevent spinner during navigation
   const showLoading = (!hasLoaded || (hasLoaded && isProfileLoading)) && !isSaving;
   
@@ -101,44 +100,24 @@ export default function ProfileSetup() {
           <p className="mt-4 text-[#157DFF] font-medium">Loading your profile...</p>
         </div>
       ) : (
-<<<<<<< HEAD
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 2:</span>
-            <span className="text-gray-900 font-semibold">Profile Details</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-gray-300 rounded-full" />
-              <div className="w-8 h-2 bg-gray-300 rounded-full" />
-            </div>
-          </div>
-        </div>
-
-        {/* Profile Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
-=======
         <div>
           {/* Progress Header */}
           <StepIndicator currentStep="profile" />
           
           {/* Profile Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
->>>>>>> main
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
+            <div className="flex items-center gap-3 mb-4">
+              <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
+                <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900">What products or services do you sell on LinkedIn?</h2>
-          </div>
 
-          <p className="text-gray-600 mb-6">
-            This will be used as context information when generating content. Don&#39;t worry, you can change it later.
-          </p>
+            <p className="text-gray-600 mb-6">
+              This will be used as context information when generating content. Don&#39;t worry, you can change it later.
+            </p>
 
-          <div className="relative">
+            <div className="relative">
             <Textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}

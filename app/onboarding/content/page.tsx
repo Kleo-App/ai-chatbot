@@ -533,7 +533,7 @@ export default function KleoContentCreator() {
       const selectedContent = contentIdeas[selectedCard];
       
       // Start navigation immediately
-      router.prefetch('/onboarding/details');
+      router.prefetch('/onboarding/style');
       
       // Perform these operations in the background without blocking navigation
       Promise.all([
@@ -552,7 +552,7 @@ export default function KleoContentCreator() {
         }),
         
         // Update step in the background
-        goToStep('details').catch(error => {
+        goToStep('style').catch(error => {
           console.error('Background step operation error:', error);
         })
       ]).catch(error => {
@@ -560,10 +560,10 @@ export default function KleoContentCreator() {
       });
       
       // Navigate immediately without waiting for background operations
-      router.push('/onboarding/details');
+      router.push('/onboarding/style');
     } catch (error) {
       console.error('Error preparing navigation:', error);
-      router.push('/onboarding/details');
+      router.push('/onboarding/style');
     } finally {
       setIsLoading(false);
     }
@@ -582,11 +582,11 @@ export default function KleoContentCreator() {
       }
       
       // Proceed to the next step instead of completing onboarding
-      await goToStep('details');
-      router.push('/onboarding/details');
+      await goToStep('style');
+      router.push('/onboarding/style');
     } catch (error) {
       console.error('Error updating content type or navigating:', error);
-      router.push('/onboarding/details');
+      router.push('/onboarding/style');
     } finally {
       setIsLoading(false);
     }

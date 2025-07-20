@@ -51,11 +51,11 @@ export default function KleoStyleSelector() {
 
   const handleBack = async () => {
     try {
-      await goToStep('details')
-      router.push('/onboarding/details')
+      await goToStep('content')
+      router.push('/onboarding/content')
     } catch (error) {
-      console.error('Error navigating to details:', error)
-      router.push('/onboarding/details')
+      console.error('Error navigating to content:', error)
+      router.push('/onboarding/content')
     }
   }
 

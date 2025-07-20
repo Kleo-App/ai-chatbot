@@ -6,10 +6,8 @@ import { OnboardingStep } from '@/hooks/use-onboarding';
 // Define the steps in the onboarding flow
 const ONBOARDING_STEPS: OnboardingStep[] = [
   'welcome',
-  'profile',
   'topics',
   'content',
-  'details',
   'style',
   'hook',
   'review'
@@ -18,10 +16,8 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
 // Map step names to display names
 const STEP_DISPLAY_NAMES: Record<OnboardingStep, string> = {
   'welcome': 'Welcome',
-  'profile': 'Profile',
   'topics': 'Topics',
   'content': 'Content',
-  'details': 'Details',
   'style': 'Style',
   'hook': 'Hook',
   'review': 'Review',

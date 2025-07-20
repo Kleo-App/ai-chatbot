@@ -14,8 +14,7 @@ export const userProfile = pgTable(
     jobTitle: text('jobTitle'),
     company: text('company'),
     bio: text('bio'),
-    // LinkedIn services (as string instead of array)
-    linkedInServices: text('linkedInServices'),
+    // LinkedIn services removed
     // Topics (as string instead of array)
     selectedTopics: text('selectedTopics'),
     // AI-generated topics stored as JSON string

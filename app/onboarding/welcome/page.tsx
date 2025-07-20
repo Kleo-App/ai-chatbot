@@ -15,9 +15,7 @@ import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
 
 export default function KleoProfileSetup() {
-  const [profileText, setProfileText] = useState(
-    "",
-  )
+  const [combinedProfileText, setCombinedProfileText] = useState("")
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,11 +62,15 @@ export default function KleoProfileSetup() {
     initializeProfile();
   }, [isLoaded, user, userId]);
   
-  // Pre-fill the profile text if it exists in the user profile
+  // Pre-fill the combined profile text from the user's bio
   useEffect(() => {
+    let combinedText = '';
+    
     if (userProfile?.bio) {
-      setProfileText(userProfile.bio);
+      combinedText = userProfile.bio;
     }
+    
+    setCombinedProfileText(combinedText);
   }, [userProfile]);
 
   const handleNext = async () => {
@@ -76,7 +78,7 @@ export default function KleoProfileSetup() {
     try {
       // Start navigation immediately to prevent flashing
       // We'll do this in the background while transitioning
-      router.prefetch('/onboarding/profile');
+      router.prefetch('/onboarding/topics');
       
       // Run these operations in parallel to speed up the process
       const promises = [];
@@ -93,20 +95,21 @@ export default function KleoProfileSetup() {
         );
       }
       
-      // Save the profile text to the user profile
+      // Save the combined profile text to the user profile
       promises.push(
         updateProfileInfo({
-          bio: profileText,
+          bio: combinedProfileText,
+          linkedInServices: "", // We're storing everything in the bio field now
           // Use existing fullName from database if available, otherwise use Clerk data
           fullName: userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : undefined),
         })
       );
       
       // Update the step in the background
-      promises.push(goToStep('profile'));
+      promises.push(goToStep('topics'));
       
       // Navigate immediately without waiting for all operations to complete
-      router.push('/onboarding/profile');
+      router.push('/onboarding/topics');
       
       // Still wait for operations to complete in the background
       await Promise.all(promises).catch(err => {
@@ -116,7 +119,7 @@ export default function KleoProfileSetup() {
     } catch (error) {
       console.error('Error during navigation:', error);
       // Ensure we navigate even if there's an error
-      router.push('/onboarding/profile');
+      router.push('/onboarding/topics');
     }
     // We don't need to set isLoading to false since we're navigating away
   };
@@ -135,30 +138,31 @@ export default function KleoProfileSetup() {
           
           {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl">
+          {/* Combined Who is X and LinkedIn Services section */}
           <div className="flex items-center gap-3 mb-2 md:mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
-              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')}?
+              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')} and what products or services do you sell on LinkedIn?
             </h2>
           </div>
 
           <p className="text-gray-600 mb-3 md:mb-4">
-            This will be used as context information when generating every post. Don&#39;t worry, you can change it later.
+            This will be used as context information when generating content. Don&#39;t worry, you can change it later.
           </p>
 
           <div className="relative">
             <Textarea
-              value={profileText}
-              onChange={(e) => setProfileText(e.target.value)}
-              className="h-[120px] sm:h-[150px] md:h-[200px] lg:h-[250px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about yourself..."
+              value={combinedProfileText}
+              onChange={(e) => setCombinedProfileText(e.target.value)}
+              className="h-[200px] sm:h-[250px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
+              placeholder="Tell us about yourself and the products or services you sell on LinkedIn..."
             />
             <div className="absolute top-4 right-4 flex gap-2">
               <VoiceRecorder 
                 onTranscriptionComplete={(text) => {
-                  setProfileText(prev => {
+                  setCombinedProfileText(prev => {
                     const newContent = prev ? `${prev}\n${text}` : text;
                     return newContent;
                   });

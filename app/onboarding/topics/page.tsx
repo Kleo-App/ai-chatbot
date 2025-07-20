@@ -131,15 +131,15 @@ export default function TopicSelector() {
 
   const handleBack = async () => {
     try {
-      console.log('Navigating back to profile page');
+      console.log('Navigating back to welcome page');
       // Try both navigation methods to ensure it works
-      await goToStep('profile');
+      await goToStep('welcome');
       // As a fallback, use direct router navigation
-      router.push('/onboarding/profile');
+      router.push('/onboarding/welcome');
     } catch (error) {
       console.error('Error navigating back:', error);
       // If the goToStep fails, try direct navigation
-      router.push('/onboarding/profile');
+      router.push('/onboarding/welcome');
     }
   }
 

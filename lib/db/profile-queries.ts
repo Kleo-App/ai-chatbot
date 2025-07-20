@@ -5,6 +5,7 @@ import postgres from 'postgres';
 import { userProfile, type UserProfile } from './schema-profile';
 import { ChatSDKError } from '../errors';
 import { clerkClient } from '@clerk/nextjs/server';
+import { getOrCreateUser } from './queries';
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);

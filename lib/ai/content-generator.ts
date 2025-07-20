@@ -67,7 +67,7 @@ export async function generateContentIdeas(
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'content_ideas_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

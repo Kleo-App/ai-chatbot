@@ -2,16 +2,16 @@
 
 import { DefaultChatTransport } from 'ai';
 import { useChat } from '@ai-sdk/react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useSWR, { useSWRConfig } from 'swr';
 import { ChatHeader } from '@/components/chat-header';
-import type { Vote } from '@/lib/db/schema';
+import type { Vote, Document } from '@/lib/db/schema';
 import { fetcher, fetchWithErrorHandlers, generateUUID } from '@/lib/utils';
 import { Artifact } from './artifact';
 import { MultimodalInput } from './multimodal-input';
 import { Messages } from './messages';
 import type { VisibilityType } from './visibility-selector';
-import { useArtifactSelector } from '@/hooks/use-artifact';
+import { useArtifactSelector, useArtifact } from '@/hooks/use-artifact';
 import { unstable_serialize } from 'swr/infinite';
 import { getChatHistoryPaginationKey } from './sidebar-history';
 import { toast } from './toast';
@@ -36,6 +36,7 @@ export function Chat({
   isReadonly,
   session,
   autoResume,
+  initialDocument,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -44,6 +45,7 @@ export function Chat({
   isReadonly: boolean;
   session: Session;
   autoResume: boolean;
+  initialDocument?: Document | null;
 }) {
   const { visibilityType } = useChatVisibility({
     chatId: id,
@@ -78,6 +80,14 @@ export function Chat({
             message: messages.at(-1),
             selectedChatModel: initialChatModel,
             selectedVisibilityType: visibilityType,
+            ...(initialDocument && {
+              documentContext: {
+                id: initialDocument.id,
+                title: initialDocument.title,
+                content: initialDocument.content || '',
+                kind: initialDocument.kind,
+              },
+            }),
             ...body,
           },
         };
@@ -101,20 +111,20 @@ export function Chat({
 
   const searchParams = useSearchParams();
   const query = searchParams.get('query');
-
-  const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
+  const hasProcessedQueryRef = useRef(false);
 
   useEffect(() => {
-    if (query && !hasAppendedQuery) {
+    if (query && !hasProcessedQueryRef.current) {
+      hasProcessedQueryRef.current = true;
+      
       sendMessage({
         role: 'user' as const,
         parts: [{ type: 'text', text: query }],
       });
 
-      setHasAppendedQuery(true);
-      window.history.replaceState({}, '', `/chat/${id}`);
+      window.history.replaceState({}, '', window.location.pathname);
     }
-  }, [query, sendMessage, hasAppendedQuery, id]);
+  }, [query, sendMessage]);
 
   const { data: votes } = useSWR<Array<Vote>>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
@@ -123,6 +133,7 @@ export function Chat({
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+  const { setArtifact } = useArtifact();
 
   useAutoResume({
     autoResume,
@@ -130,6 +141,26 @@ export function Chat({
     resumeStream,
     setMessages,
   });
+
+  // Auto-open document artifact if initialDocument is provided
+  useEffect(() => {
+    if (initialDocument) {
+      setArtifact({
+        documentId: initialDocument.id,
+        kind: initialDocument.kind as 'text' | 'image',
+        content: initialDocument.content || '',
+        title: initialDocument.title,
+        isVisible: true,
+        status: 'idle',
+        boundingBox: {
+          top: 0,
+          left: 0,
+          width: 0,
+          height: 0,
+        },
+      });
+    }
+  }, [initialDocument, setArtifact]);
 
   const formElement = !isReadonly ? (
     <MultimodalInput
@@ -193,6 +224,7 @@ export function Chat({
         votes={votes}
         isReadonly={isReadonly}
         selectedVisibilityType={visibilityType}
+        openedFromPosts={!!initialDocument}
       />
     </>
   );

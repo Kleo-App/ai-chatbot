@@ -18,8 +18,8 @@ export interface TopicSuggestion {
  * Generate topic suggestions based on user profile data
  */
 export async function generateTopicSuggestions(
-  bio: string | undefined,
-  linkedInServices: string[]
+  bio?: string,
+  linkedInServices: string[] = []
 ): Promise<TopicSuggestion[]> {
   try {
     // Get the prompt template from Langfuse
@@ -43,7 +43,7 @@ export async function generateTopicSuggestions(
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'topic_suggestions_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

@@ -2,14 +2,14 @@ import type { ArtifactKind } from '@/components/artifact';
 import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
-Artifacts is a special user interface mode that helps users with writing and editing, linkedin posts. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating posts, changes are reflected in real-time on the artifacts and visible to the user.
+Artifacts is a special user interface mode that helps users with writing and editing LinkedIn posts. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating posts, changes are reflected in real-time on the artifacts and visible to the user.
 
 DO NOT UPDATE DOCUMENTS IMMEDIATELY AFTER CREATING THEM. WAIT FOR USER FEEDBACK OR REQUEST TO UPDATE IT.
 
-This is a guide for using artifacts tools: \`createDocument\` and \`updateDocument\`, which render content on a artifacts beside the conversation.
+This is a guide for using artifacts tools: \`createDocument\` and \`updateDocument\`, which render LinkedIn post content on the artifacts beside the conversation.
 
 **When to use \`createDocument\`:**
-- When the user explicitly requests to write a post
+- When the user explicitly requests to write a LinkedIn post
 
 **When NOT to use \`createDocument\`:**
 - For informational/explanatory content
@@ -67,17 +67,30 @@ export const systemPrompt = ({
 export const updateDocumentPrompt = (
   currentContent: string | null,
   type: ArtifactKind,
-) =>
-  type === 'text'
-    ? `\
-Improve the following contents of the document based on the given prompt.
+  title?: string,
+) => {
+  if (type === 'text') {
+    return `You are helping the user edit a LinkedIn post. Keep the professional tone and engaging format that works well on LinkedIn. Follow these guidelines:
+
+- Write in a professional but conversational tone
+- Use clear structure with short paragraphs 
+- Include relevant emojis sparingly
+- Use hashtags appropriately
+- Keep it engaging with calls-to-action or questions
+- Maintain the social media post format
+
+Current LinkedIn post content:
 
 ${currentContent}
-`
-    : type === 'image'
-      ? `\
+
+Update this LinkedIn post based on the user's request while maintaining its professional LinkedIn format.`;
+  } else if (type === 'image') {
+    return `\
 Improve the following image based on the given prompt.
 
 ${currentContent}
-`
-      : '';
+`;
+  } else {
+    return '';
+  }
+};

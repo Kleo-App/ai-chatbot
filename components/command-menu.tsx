@@ -89,8 +89,10 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
     }
   );
 
-  // Flatten all chat data
-  const allChats = paginatedChatHistories?.flatMap(page => page.chats) || [];
+  // Flatten all chat data and filter out document edit chats
+  const allChats = paginatedChatHistories?.flatMap(page => page.chats).filter(
+    chat => !chat.title.startsWith('Edit:')
+  ) || [];
   
   // Filter chats based on search query
   const filteredChats = searchQuery

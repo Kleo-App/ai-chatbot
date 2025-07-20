@@ -11,6 +11,8 @@ import { updateLinkedInServices } from "@/app/actions/profile-actions"
 import { Loader2 } from "lucide-react"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 // Custom hook to handle page loading state
 function usePageLoading() {
@@ -92,18 +94,14 @@ export default function ProfileSetup() {
   const showLoading = (!hasLoaded || (hasLoaded && isProfileLoading)) && !isSaving;
   
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
+    <OnboardingLayout>
       {showLoading ? (
         <div className="flex-1 flex flex-col items-center justify-center">
           <Loader2 className="size-12 animate-spin text-[#157DFF]" />
           <p className="mt-4 text-[#157DFF] font-medium">Loading your profile...</p>
         </div>
       ) : (
+<<<<<<< HEAD
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         {/* Progress Header */}
         <div className="text-center mb-10">
@@ -121,6 +119,14 @@ export default function ProfileSetup() {
 
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
+=======
+        <div>
+          {/* Progress Header */}
+          <StepIndicator currentStep="profile" />
+          
+          {/* Profile Section */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">
+>>>>>>> main
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
@@ -176,9 +182,9 @@ export default function ProfileSetup() {
               </>
             ) : 'Next'}
           </Button>
+          </div>
         </div>
-      </div>
       )}
-    </div>
+    </OnboardingLayout>
   )
 }

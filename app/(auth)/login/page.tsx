@@ -12,6 +12,7 @@ export default function LoginPage() {
         }}
         routing="hash"
         signUpUrl="/register"
+        fallbackRedirectUrl="/"
       />
     </div>
   );

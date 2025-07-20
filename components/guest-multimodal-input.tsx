@@ -93,7 +93,7 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
       </div>
 
       {/* Suggested actions */}
-      <div className="flex flex-wrap gap-2 justify-center">
+      <div className="flex flex-wrap gap-2 justify-center mt-6">
         {[
           'Career update post',
           'Industry insights',

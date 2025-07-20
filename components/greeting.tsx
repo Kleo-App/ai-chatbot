@@ -11,14 +11,15 @@ import { AuthModal } from '@/components/auth-modal';
 
 interface GreetingProps {
   children?: React.ReactNode; // For authenticated multimodal input
+  isLoggedOut?: boolean; // Server-side indication that user is not authenticated
 }
 
-export const Greeting = ({ children }: GreetingProps) => {
+export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, isLoaded } = useUser();
 
-  // If user is authenticated (client-side check), don't show the header
-  const showHeader = !user && isLoaded;
+  // Show header immediately if server confirms user is logged out, otherwise wait for client-side check
+  const showHeader = isLoggedOut || (!user && isLoaded);
 
   return (
     <>

@@ -1,9 +1,10 @@
 import { Artifact } from '@/components/create-artifact';
 import { DiffView } from '@/components/diffview';
 import { DocumentSkeleton } from '@/components/document-skeleton';
-import { Editor } from '@/components/text-editor';
+import { LinkedInPostPreview } from '@/components/linkedin-post-preview';
+import { LinkedInPublishModal } from '@/components/linkedin-publish-modal';
+
 import {
-  ClockRewind,
   CopyIcon,
   MessageIcon,
   PenIcon,
@@ -13,15 +14,105 @@ import {
 import type { Suggestion } from '@/lib/db/schema';
 import { toast } from 'sonner';
 import { getSuggestions } from '../actions';
+import { useState, useEffect } from 'react';
 
 interface TextArtifactMetadata {
   suggestions: Array<Suggestion>;
 }
 
+// Create a separate component that can use hooks
+function TextArtifactContent({
+  mode,
+  status,
+  content,
+  title,
+  isCurrentVersion,
+  currentVersionIndex,
+  onSaveContent,
+  getDocumentContentById,
+  isLoading,
+  metadata,
+  user,
+  artifact,
+  document,
+  isContentDirty,
+  handleVersionChange,
+  setMetadata,
+}: any) {
+  const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('desktop');
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+
+  const handleToggleDevice = () => {
+    setDeviceType(prevType => prevType === 'desktop' ? 'mobile' : 'desktop');
+  };
+
+  const handleToggleCollapsed = () => {
+    setIsCollapsed(prev => !prev);
+  };
+
+  const handleClosePublishModal = () => {
+    setIsPublishModalOpen(false);
+  };
+
+  if (isLoading) {
+    return <DocumentSkeleton artifactKind="text" />;
+  }
+
+  if (mode === 'diff') {
+    const oldContent = getDocumentContentById(currentVersionIndex - 1);
+    const newContent = getDocumentContentById(currentVersionIndex);
+
+    return <DiffView oldContent={oldContent} newContent={newContent} />;
+  }
+
+  // All content is LinkedIn posts now
+  // Construct user profile from Clerk user data
+  const userProfile = user ? {
+    fullName: user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName}` 
+      : user.fullName || user.firstName || 'User',
+    profileImage: user.imageUrl
+  } : {
+    fullName: 'User',
+    profileImage: undefined
+  };
+
+  return (
+    <>
+      <LinkedInPostPreview
+        content={content}
+        userProfile={userProfile}
+        deviceType={deviceType}
+        onToggleDevice={handleToggleDevice}
+        isCollapsed={isCollapsed}
+        onToggleCollapsed={handleToggleCollapsed}
+        artifact={artifact}
+        document={document}
+        isContentDirty={isContentDirty}
+        currentVersionIndex={currentVersionIndex}
+        handleVersionChange={handleVersionChange}
+        isCurrentVersion={isCurrentVersion}
+        mode={mode}
+        metadata={metadata}
+        setMetadata={setMetadata}
+                onShareClick={() => setIsPublishModalOpen(true)}
+      />
+      
+      <LinkedInPublishModal
+        isOpen={isPublishModalOpen}
+        onClose={handleClosePublishModal}
+        content={content}
+        userProfile={userProfile}
+      />
+      </>
+    );
+}
+
 export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
   kind: 'text',
-  description: 'Useful for text content, like drafting essays and emails.',
-  initialize: async ({ documentId, setMetadata }) => {
+  description: 'Useful for creating and editing LinkedIn posts.',
+  initialize: async ({ documentId, setMetadata }: { documentId: string; setMetadata: (metadata: TextArtifactMetadata) => void }) => {
     const suggestions = await getSuggestions({ documentId });
 
     setMetadata({
@@ -53,62 +144,8 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
       });
     }
   },
-  content: ({
-    mode,
-    status,
-    content,
-    isCurrentVersion,
-    currentVersionIndex,
-    onSaveContent,
-    getDocumentContentById,
-    isLoading,
-    metadata,
-  }) => {
-    if (isLoading) {
-      return <DocumentSkeleton artifactKind="text" />;
-    }
-
-    if (mode === 'diff') {
-      const oldContent = getDocumentContentById(currentVersionIndex - 1);
-      const newContent = getDocumentContentById(currentVersionIndex);
-
-      return <DiffView oldContent={oldContent} newContent={newContent} />;
-    }
-
-    return (
-      <>
-        <div className="flex flex-row py-8 md:p-20 px-4">
-          <Editor
-            content={content}
-            suggestions={metadata ? metadata.suggestions : []}
-            isCurrentVersion={isCurrentVersion}
-            currentVersionIndex={currentVersionIndex}
-            status={status}
-            onSaveContent={onSaveContent}
-          />
-
-          {metadata?.suggestions && metadata.suggestions.length > 0 ? (
-            <div className="md:hidden h-dvh w-12 shrink-0" />
-          ) : null}
-        </div>
-      </>
-    );
-  },
+  content: (props) => <TextArtifactContent {...props} />,
   actions: [
-    {
-      icon: <ClockRewind size={18} />,
-      description: 'View changes',
-      onClick: ({ handleVersionChange }) => {
-        handleVersionChange('toggle');
-      },
-      isDisabled: ({ currentVersionIndex, setMetadata }) => {
-        if (currentVersionIndex === 0) {
-          return true;
-        }
-
-        return false;
-      },
-    },
     {
       icon: <UndoIcon size={18} />,
       description: 'View Previous version',

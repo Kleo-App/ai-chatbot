@@ -91,7 +91,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'hook_ideas_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

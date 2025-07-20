@@ -45,13 +45,15 @@ export async function initializeUserProfile() {
 }
 
 /**
- * Update profile information (Step 1: Welcome)
+ * Update profile information (all fields)
  */
-export async function updateProfileInfo(data: {
+export async function updateProfileInfo(profileData: {
   fullName?: string;
   jobTitle?: string;
   company?: string;
   bio?: string;
+  stylePreference?: string;
+  linkedInServices?: string;
 }) {
   const { userId } = await auth();
   
@@ -59,11 +61,18 @@ export async function updateProfileInfo(data: {
     return { success: false, error: 'User not authenticated' };
   }
   
+  // Debug linkedInServices
+  console.log('Updating profile with data:', profileData);
+  console.log('linkedInServices value being saved:', profileData.linkedInServices);
+  
   try {
     const profile = await updateUserProfile(userId, {
-      ...data,
+      ...profileData,
       lastCompletedStep: 'profile',
     });
+    
+    console.log('Profile after update:', profile);
+    console.log('linkedInServices after update:', profile.linkedInServices);
     
     return { success: true, profile };
   } catch (error) {

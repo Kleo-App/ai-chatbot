@@ -47,6 +47,11 @@ interface ArtifactContent<M = any> {
   isLoading: boolean;
   metadata: M;
   setMetadata: Dispatch<SetStateAction<M>>;
+  user?: any;
+  artifact?: any;
+  document?: any;
+  isContentDirty?: boolean;
+  handleVersionChange?: (type: 'next' | 'prev' | 'toggle' | 'latest') => void;
 }
 
 interface InitializeParameters<M = any> {

@@ -11,6 +11,8 @@ import { useRouter } from "next/navigation"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
 import { saveContentDetails } from "@/app/actions/details-actions"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function KleoContentDetails() {
   const [content, setContent] = useState("");
@@ -110,30 +112,13 @@ export default function KleoContentDetails() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <OnboardingLayout>
+      <div>
         {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 5:</span>
-            <span className="text-gray-900 font-semibold">Details</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-            </div>
-          </div>
-        </div>
-
+        <StepIndicator currentStep="details" />
+        
         {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl sm:min-w-[768px]">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
@@ -191,6 +176,6 @@ export default function KleoContentDetails() {
           </Button>
         </div>
       </div>
-    </div>
+    </OnboardingLayout>
   )
 }

@@ -216,7 +216,12 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                   (paginatedChatHistory) => paginatedChatHistory.chats,
                 );
 
-                const groupedChats = groupChatsByDate(chatsFromHistory);
+                // Filter out document edit chats (those starting with "Edit:")
+                const filteredChats = chatsFromHistory.filter(
+                  (chat) => !chat.title.startsWith('Edit:')
+                );
+
+                const groupedChats = groupChatsByDate(filteredChats);
 
                 return (
                   <div className="flex flex-col gap-4">

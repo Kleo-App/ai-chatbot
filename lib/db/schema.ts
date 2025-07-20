@@ -178,3 +178,7 @@ export type { Onboarding } from './schema-onboarding';
 // Re-export user profile schema
 export { userProfile } from './schema-profile';
 export type { UserProfile } from './schema-profile';
+
+// Re-export LinkedIn connection schema
+export { linkedinConnection } from './schema-linkedin';
+export type { LinkedInConnection } from './schema-linkedin';

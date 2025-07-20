@@ -366,6 +366,73 @@ export async function getDocumentById({ id }: { id: string }) {
   }
 }
 
+export async function getDocumentsByUserId({ 
+  userId,
+  limit = 50,
+}: { 
+  userId: string;
+  limit?: number;
+}) {
+  try {
+    const documents = await db
+      .select()
+      .from(document)
+      .where(eq(document.userId, userId))
+      .orderBy(desc(document.createdAt))
+      .limit(limit);
+
+    return documents;
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get documents by user id',
+    );
+  }
+}
+
+export async function getLatestDocumentsByUserId({ 
+  userId,
+  limit = 50,
+}: { 
+  userId: string;
+  limit?: number;
+}) {
+  try {
+    // Get the latest version of each document by grouping by id and taking the max createdAt
+    const documents = await db
+      .select({
+        id: document.id,
+        createdAt: document.createdAt,
+        title: document.title,
+        content: document.content,
+        kind: document.kind,
+        userId: document.userId,
+      })
+      .from(document)
+      .where(eq(document.userId, userId))
+      .orderBy(desc(document.createdAt));
+
+    // Group by document id and keep only the latest version of each
+    const latestDocuments = new Map();
+    for (const doc of documents) {
+      if (!latestDocuments.has(doc.id) || 
+          new Date(doc.createdAt) > new Date(latestDocuments.get(doc.id).createdAt)) {
+        latestDocuments.set(doc.id, doc);
+      }
+    }
+
+    // Convert map to array and sort by createdAt descending, then limit
+    return Array.from(latestDocuments.values())
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, limit);
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to get latest documents by user id',
+    );
+  }
+}
+
 export async function deleteDocumentsByIdAfterTimestamp({
   id,
   timestamp,

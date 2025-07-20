@@ -92,7 +92,7 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
     console.log('Sending prompt to OpenAI');
     
     // Create Langfuse trace for tracking
-    const trace = createTrace('generate_post_ideas', userId, {
+    const trace = await createTrace('generate_post_ideas', userId, {
       fullName: userProfile.fullName,
       jobTitle: userProfile.jobTitle,
       company: userProfile.company,

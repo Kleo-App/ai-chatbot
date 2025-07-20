@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createOnboarding } from '@/lib/db/onboarding-queries';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

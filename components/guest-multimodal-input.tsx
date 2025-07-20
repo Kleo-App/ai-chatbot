@@ -1,8 +1,7 @@
 'use client';
 
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
-import { useLocalStorage, useWindowSize } from 'usehooks-ts';
 import cx from 'classnames';
 
 import { ArrowUpIcon, PaperclipIcon } from './icons';
@@ -100,9 +99,9 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
           'Industry insights',
           'Professional tips',
           'Company announcement'
-        ].map((suggestion, index) => (
+        ].map((suggestion) => (
           <Button
-            key={index}
+            key={`suggestion-${suggestion}`}
             variant="outline"
             size="sm"
             className="h-8 rounded-full px-3 text-sm bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-colors"

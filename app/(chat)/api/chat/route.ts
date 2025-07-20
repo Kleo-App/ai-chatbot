@@ -7,7 +7,7 @@ import {
   streamText,
 } from 'ai';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { type RequestHints, systemPrompt } from '@/lib/ai/prompts';
+import type { RequestHints, } from '@/lib/ai/prompts';
 import {
   createStreamId,
   deleteChatById,
@@ -24,7 +24,6 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
-import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';

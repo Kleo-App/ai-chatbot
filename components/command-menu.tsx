@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { isToday, isYesterday, subMonths, subWeeks } from 'date-fns';
 import useSWRInfinite from 'swr/infinite';
-import { Search, MessageSquare, Plus } from 'lucide-react';
+import { MessageSquare, } from 'lucide-react';
 
 import {
   Command,

@@ -19,6 +19,8 @@ export const userProfile = pgTable(
     selectedTopics: text('selectedTopics'),
     // AI-generated topics stored as JSON string
     generatedTopics: text('generatedTopics'),
+    // AI-generated posts stored as JSON string
+    generatedPosts: text('generatedPosts'),
     // Content preferences
     contentType: text('contentType'),
     contentDetails: text('contentDetails'),
@@ -27,6 +29,8 @@ export const userProfile = pgTable(
     preferredHook: text('preferredHook'),
     // AI-generated hooks stored as JSON string
     generatedHooks: text('generatedHooks'),
+    // User's preferred post content
+    preferredPost: text('preferredPost'),
     // Metadata
     onboardingCompleted: boolean('onboardingCompleted').notNull().default(false),
     lastCompletedStep: text('lastCompletedStep').notNull().default('welcome'),

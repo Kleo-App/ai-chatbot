@@ -1,11 +1,11 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { checkAndCreateUser } from '@/app/actions/user-actions';
 import { getUserProfile, updateOnboardingStep, completeOnboarding as completeUserOnboarding } from '@/app/actions/profile-actions';
-import { UserProfile } from '@/lib/db/schema-profile';
+import type { UserProfile } from '@/lib/db/schema-profile';
 
 // Define the onboarding steps
 export type OnboardingStep = 'welcome' | 'topics' | 'content' | 'style' | 'hook' | 'review' | 'complete';

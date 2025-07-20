@@ -6,10 +6,9 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Plus, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { UserButton } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { generateTopics, saveSelectedTopics } from "@/app/actions/topic-actions"
-import { TopicSuggestion } from "@/lib/ai/topic-generator"
+import type { TopicSuggestion } from "@/lib/ai/topic-generator"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
@@ -197,8 +196,8 @@ export default function TopicSelector() {
               Array.from({ length: 5 }).map((_, index) => (
                 <Card key={`loading-${index}`} className="bg-white">
                   <CardContent className="p-5 flex flex-col items-center justify-center min-h-[120px]">
-                    <div className="w-full h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-                    <div className="w-2/3 h-3 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-full h-4 bg-gray-200 rounded animate-pulse mb-2" />
+                    <div className="w-2/3 h-3 bg-gray-200 rounded animate-pulse" />
                   </CardContent>
                 </Card>
               ))

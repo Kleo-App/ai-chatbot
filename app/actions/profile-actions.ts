@@ -5,10 +5,9 @@ import {
   updateUserProfile, 
   updateUserProfileStep,
   completeUserProfileOnboarding,
-  getUserProfileByUserId
 } from '@/lib/db/profile-queries';
 import { auth, clerkClient } from '@clerk/nextjs/server';
-import { OnboardingStep } from '@/hooks/use-onboarding';
+import type { OnboardingStep } from '@/hooks/use-onboarding';
 
 /**
  * Initialize user profile

@@ -68,7 +68,7 @@ export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecor
         await sendToDeepgram(audioBlob);
         
         // Stop all tracks in the stream
-        if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+        if (mediaRecorderRef.current?.stream) {
           mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
         }
       } catch (err) {
@@ -115,7 +115,7 @@ export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecor
   // Clean up on unmount
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && mediaRecorderRef.current.stream) {
+      if (mediaRecorderRef.current?.stream) {
         mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
       }
     };

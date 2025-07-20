@@ -5,7 +5,6 @@ import postgres from 'postgres';
 import { onboarding, type Onboarding } from './schema-onboarding';
 import { ChatSDKError } from '../errors';
 
-// biome-ignore lint: Forbidden non-null assertion.
 const postgresUrl = process.env.POSTGRES_URL;
 if (!postgresUrl) {
   throw new Error('POSTGRES_URL environment variable is not set');

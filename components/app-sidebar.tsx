@@ -27,6 +27,7 @@ import Image from 'next/image';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { useState } from 'react';
 import { useCommandMenu } from '@/hooks/use-command-menu';
+import { useArtifact, initialArtifactData } from '@/hooks/use-artifact';
 
 export function AppSidebar() {
   const router = useRouter();
@@ -36,6 +37,7 @@ export function AppSidebar() {
   const [historyHovered, setHistoryHovered] = useState(false);
   const { user } = useUser();
   const commandMenu = useCommandMenu();
+  const { setArtifact } = useArtifact();
 
   // Check if we're on a chat-related page (homepage or chat pages)
   const isChatActive = pathname === '/' || pathname.startsWith('/chat');
@@ -47,6 +49,8 @@ export function AppSidebar() {
           href="/"
           onClick={() => {
             setOpenMobile(false);
+            // Clear any visible artifacts to ensure clean home state
+            setArtifact({ ...initialArtifactData, status: 'idle' });
           }}
           className="flex items-center justify-center hover:bg-muted/50 rounded-xl cursor-pointer size-10 p-1 transition-colors shrink-0 -ml-0.5"
         >

@@ -12,7 +12,7 @@ export function OnboardingLayout({ children }: OnboardingLayoutProps) {
     <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
       {/* User button for logout in top-right corner */}
       <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
+        <UserButton afterSignOutUrl="/" />
       </div>
       
       {/* Main content with scrolling enabled */}

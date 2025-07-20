@@ -43,7 +43,7 @@ export async function generateContentIdeas(
     additionalInstructions += '\n\nFor each idea, provide a catchy title, a compelling description (2-3 sentences), and a short tag that categorizes the content type (e.g., GUIDE, CASE STUDY, OPINION, etc.).\n\nReturn your response in this JSON format: {"ideas": [{"category": "' + contentType + '", "title": "Example Title", "description": "Example description text", "tag": "EXAMPLE TAG"}]}';
     
     // Process the prompt template with variables
-    const prompt = processPromptTemplate(promptTemplate, {
+    const prompt = await processPromptTemplate(promptTemplate, {
       bio: bio || '',
       linkedInServices: Array.isArray(linkedInServices) ? linkedInServices.join('\n') : '',
       selectedTopics: Array.isArray(selectedTopics) ? selectedTopics.map(topic => topic.title).join('\n') : '',
@@ -54,7 +54,7 @@ export async function generateContentIdeas(
     console.log('Generating content ideas with prompt:', prompt);
 
     // Create Langfuse trace for tracking
-    const trace = createTrace('generate_content_ideas', contentType, {
+    const trace = await createTrace('generate_content_ideas', contentType, {
       bio,
       linkedInServices,
       selectedTopics,
@@ -67,7 +67,7 @@ export async function generateContentIdeas(
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'content_ideas_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

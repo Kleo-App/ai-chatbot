@@ -14,11 +14,12 @@ import { cn, fetcher } from '@/lib/utils';
 import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
-import { Editor } from './text-editor';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { ImageEditor } from './image-editor';
+import { LinkedInPostPreview } from './linkedin-post-preview';
+import { useUser } from '@clerk/nextjs';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -234,27 +235,40 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
+  const { user } = useUser();
 
   const containerClassName = cn(
     'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
     {
-      'p-4 sm:px-14 sm:py-16': document.kind === 'text',
+      'p-0': document.kind === 'text', // Remove padding for LinkedIn post preview
     },
   );
 
-  const commonProps = {
-    content: document.content ?? '',
-    isCurrentVersion: true,
-    currentVersionIndex: 0,
-    status: artifact.status,
-    saveContent: () => {},
-    suggestions: [],
+  // Construct user profile from Clerk user data
+  const userProfile = user ? {
+    fullName: user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName}` 
+      : user.fullName || user.firstName || 'User',
+    profileImage: user.imageUrl
+  } : {
+    fullName: 'User',
+    profileImage: undefined
   };
 
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
-        <Editor {...commonProps} onSaveContent={() => {}} />
+        // Show LinkedIn post preview for text documents
+        <div className="h-full">
+          <LinkedInPostPreview
+            content={document.content || ''}
+            userProfile={userProfile}
+            deviceType="desktop"
+            showShareButton={false}
+            showHeader={false}
+            showDeviceToggle={false}
+          />
+        </div>
       ) : document.kind === 'image' ? (
         <ImageEditor
           title={document.title}

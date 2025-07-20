@@ -11,6 +11,8 @@ import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
 import { saveStylePreference, getStylePreference } from "@/app/actions/style-actions"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function KleoStyleSelector() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null)
@@ -92,28 +94,10 @@ export default function KleoStyleSelector() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <OnboardingLayout>
+      <div>
         {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 6:</span>
-            <span className="text-gray-900 font-semibold">Style</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-            </div>
-          </div>
-        </div>
+        <StepIndicator currentStep="style" />
 
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
@@ -235,6 +219,6 @@ export default function KleoStyleSelector() {
           </div>
         </div>
       </div>
-    </div>
+    </OnboardingLayout>
   )
 }

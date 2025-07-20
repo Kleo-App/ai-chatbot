@@ -5,6 +5,7 @@ import postgres from 'postgres';
 import { userProfile, type UserProfile } from './schema-profile';
 import { getOrCreateUser } from './queries';
 import { ChatSDKError } from '../errors';
+import { clerkClient } from '@clerk/nextjs/server';
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);
@@ -15,6 +16,19 @@ const db = drizzle(client);
  */
 export async function createUserProfile(userId: string): Promise<UserProfile> {
   try {
+    // First, ensure the user exists in the main user table
+    // Get user info from Clerk to create the user record if needed
+    const client = await clerkClient();
+    const clerkUser = await client.users.getUser(userId);
+    
+    await getOrCreateUser({
+      id: userId,
+      email: clerkUser.emailAddresses[0]?.emailAddress || '',
+      firstName: clerkUser.firstName || '',
+      lastName: clerkUser.lastName || '',
+    });
+    
+    // Now create the user profile
     const [newProfile] = await db
       .insert(userProfile)
       .values({
@@ -28,6 +42,7 @@ export async function createUserProfile(userId: string): Promise<UserProfile> {
     
     return newProfile;
   } catch (error) {
+    console.error('Error creating user profile:', error);
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to create user profile',
@@ -66,6 +81,7 @@ export async function getOrCreateUserProfile(userId: string): Promise<UserProfil
     
     return await createUserProfile(userId);
   } catch (error) {
+    console.error('Error in getOrCreateUserProfile:', error);
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get or create user profile',

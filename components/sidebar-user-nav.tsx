@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { useState, useEffect, useRef } from 'react';
 import { 
   Settings, LogOut, User, FileText, Save, 
-  Linkedin, BookText, Mic, MicOff
+  Linkedin, BookText, Mic, MicOff, Unlink
 } from 'lucide-react';
 
 import {
@@ -53,6 +53,71 @@ export function SidebarUserNav() {
   const [activeField, setActiveField] = useState<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  
+  // LinkedIn connection states
+  const [linkedInStatus, setLinkedInStatus] = useState<{
+    isConnected: boolean;
+    profile?: {
+      firstName?: string;
+      lastName?: string;
+      profilePicture?: string;
+    };
+  }>({ isConnected: false });
+  const [isLinkedInLoading, setIsLinkedInLoading] = useState(false);
+
+  // Fetch LinkedIn connection status
+  const fetchLinkedInStatus = async () => {
+    try {
+      const response = await fetch('/api/linkedin/status');
+      if (response.ok) {
+        const data = await response.json();
+        setLinkedInStatus(data);
+      }
+    } catch (error) {
+      console.error('Failed to check LinkedIn status:', error);
+    }
+  };
+
+  // Handle LinkedIn connection/disconnection
+  const handleLinkedInConnect = async () => {
+    setIsLinkedInLoading(true);
+    try {
+      window.location.href = '/api/linkedin/auth';
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'Failed to connect LinkedIn',
+      });
+    } finally {
+      setIsLinkedInLoading(false);
+    }
+  };
+
+  const handleLinkedInDisconnect = async () => {
+    setIsLinkedInLoading(true);
+    try {
+      const response = await fetch('/api/linkedin/disconnect', {
+        method: 'POST',
+      });
+      
+      if (response.ok) {
+        setLinkedInStatus({ isConnected: false });
+        toast({
+          type: 'success',
+          description: 'LinkedIn disconnected successfully',
+        });
+      } else {
+        throw new Error('Failed to disconnect LinkedIn');
+      }
+    } catch (error) {
+      toast({
+        type: 'error',
+        description: 'Failed to disconnect LinkedIn',
+      });
+    } finally {
+      setIsLinkedInLoading(false);
+    }
+  };
 
   // Fetch user profile when settings modal is opened
   useEffect(() => {
@@ -91,6 +156,7 @@ export function SidebarUserNav() {
       };
 
       fetchUserProfile();
+      fetchLinkedInStatus();
     }
   }, [isSettingsOpen, user?.id]);
   
@@ -269,7 +335,7 @@ export function SidebarUserNav() {
               type="button"
               className="w-full cursor-pointer flex items-center gap-2"
               onClick={() => {
-                signOut(() => router.push('/'));
+                signOut({ redirectUrl: '/' });
               }}
             >
               <LogOut className="h-5 w-5" />
@@ -465,6 +531,50 @@ export function SidebarUserNav() {
                       <p className="text-sm text-muted-foreground">
                         {userProfile.stylePreference || 'Not set'}
                       </p>
+                    </div>
+                  </div>
+                  
+                  <div className="border-t pt-6">
+                    <h3 className="font-medium mb-4">LinkedIn Connection</h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Linkedin className="h-5 w-5 text-[#0077B5]" />
+                        <div>
+                          {linkedInStatus.isConnected ? (
+                            <>
+                              <p className="font-medium text-green-600">Connected</p>
+                              {linkedInStatus.profile && (
+                                <p className="text-sm text-muted-foreground">
+                                  {linkedInStatus.profile.firstName} {linkedInStatus.profile.lastName}
+                                </p>
+                              )}
+                            </>
+                          ) : (
+                            <p className="font-medium text-muted-foreground">Not connected</p>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        variant={linkedInStatus.isConnected ? "outline" : "default"}
+                        size="sm"
+                        onClick={linkedInStatus.isConnected ? handleLinkedInDisconnect : handleLinkedInConnect}
+                        disabled={isLinkedInLoading}
+                        className={linkedInStatus.isConnected ? "" : "bg-[#0077B5] hover:bg-[#005885] text-white"}
+                      >
+                        {isLinkedInLoading ? (
+                          <LoaderIcon size={16} />
+                        ) : linkedInStatus.isConnected ? (
+                          <>
+                            <Unlink className="mr-2 h-4 w-4" />
+                            Disconnect
+                          </>
+                        ) : (
+                          <>
+                            <Linkedin className="mr-2 h-4 w-4" />
+                            Connect
+                          </>
+                        )}
+                      </Button>
                     </div>
                   </div>
                 </div>

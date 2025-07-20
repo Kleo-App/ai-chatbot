@@ -594,11 +594,12 @@ export default function KleoContentCreator() {
 
   return (
     <OnboardingLayout>
-      {/* Progress Header */}
-      <StepIndicator currentStep="content" />
+      <div>
+        {/* Progress Header */}
+        <StepIndicator currentStep="content" />
 
-      {/* Main Content */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
+        {/* Main Content */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
@@ -725,6 +726,7 @@ export default function KleoContentCreator() {
             {isLoading ? 'Saving...' : 'Next'}
           </Button>
         </div>
+      </div>
     </OnboardingLayout>
   );
 }

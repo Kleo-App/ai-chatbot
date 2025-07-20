@@ -58,7 +58,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     const selectedTopicsText = Array.isArray(selectedTopics) ? selectedTopics.map((topic: any) => topic.title).join('\n') : '';
     
     // Process the prompt template with variables
-    const prompt = processPromptTemplate(promptTemplate, {
+    const prompt = await processPromptTemplate(promptTemplate, {
       fullName: fullName || '',
       jobTitle: jobTitle || '',
       company: company || '',
@@ -73,7 +73,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     console.log('Generating hook ideas with prompt:', prompt);
     
     // Create Langfuse trace for tracking
-    const trace = createTrace('generate_hook_ideas', userId, {
+    const trace = await createTrace('generate_hook_ideas', userId, {
       fullName,
       jobTitle,
       company,
@@ -91,7 +91,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'hook_ideas_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

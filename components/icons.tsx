@@ -831,6 +831,23 @@ export const ChevronDownIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+export const ChevronUpIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    height={size}
+    strokeLinejoin="round"
+    viewBox="0 0 16 16"
+    width={size}
+    style={{ color: 'currentcolor' }}
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M3.93933 9.25001L4.46966 8.71968L7.29288 5.89646C7.68341 5.50594 8.31657 5.50594 8.7071 5.89646L11.5303 8.71968L12.0607 9.25001L11 10.3107L10.4697 9.78034L7.99999 7.31067L5.53032 9.78034L4.99999 10.3107L3.93933 9.25001Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 export const SparklesIcon = ({ size = 16 }: { size?: number }) => (
   <svg
     height={size}
@@ -1172,3 +1189,300 @@ export const WarningIcon = ({ size = 16 }: { size?: number }) => {
     </svg>
   );
 };
+
+export const ArrowLeftIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="m12 19-7-7 7-7"/>
+    <path d="M19 12H5"/>
+  </svg>
+);
+
+export const ArrowRightIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 12h14"/>
+    <path d="m12 5 7 7-7 7"/>
+  </svg>
+);
+
+export const ArrowUpRightIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M7 7h10v10"/>
+    <path d="M7 17 17 7"/>
+  </svg>
+);
+
+export const CalendarIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M8 2v4"/>
+    <path d="M16 2v4"/>
+    <rect width="18" height="18" x="3" y="4" rx="2"/>
+    <path d="M3 10h18"/>
+  </svg>
+);
+
+export const MessageSquareIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+  </svg>
+);
+
+export const ZapIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z"/>
+  </svg>
+);
+
+export const FileTextIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/>
+    <path d="M14 2v4a2 2 0 0 0 2 2h4"/>
+    <path d="M10 9H8"/>
+    <path d="M16 13H8"/>
+    <path d="M16 17H8"/>
+  </svg>
+);
+
+export const HashIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <line x1="4" x2="20" y1="9" y2="9"/>
+    <line x1="4" x2="20" y1="15" y2="15"/>
+    <line x1="10" x2="8" y1="3" y2="21"/>
+    <line x1="16" x2="14" y1="3" y2="21"/>
+  </svg>
+);
+
+export const MonitorIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect width="20" height="14" x="2" y="3" rx="2"/>
+    <line x1="8" x2="16" y1="21" y2="21"/>
+    <line x1="12" x2="12" y1="17" y2="21"/>
+  </svg>
+);
+
+export const SmartphoneIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"/>
+    <path d="M12 18h.01"/>
+  </svg>
+);
+
+export const BoltIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 18 18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path 
+      opacity="0.3" 
+      d="M14.7505 7.25H9.49905L9.81065 1.9868C9.82325 1.7732 9.55085 1.6734 9.42255 1.8446L3.04965 10.3501C2.92615 10.5149 3.04376 10.75 3.24976 10.75H8.50115L8.18955 16.0132C8.17695 16.2268 8.44935 16.3266 8.57765 16.1554L14.9506 7.6499C15.0741 7.4851 14.9565 7.25 14.7505 7.25Z" 
+      fill="currentColor" 
+      stroke="none"
+    />
+    <path d="M14.7505 7.25H9.49905L9.81065 1.9868C9.82325 1.7732 9.55085 1.6734 9.42255 1.8446L3.04965 10.3501C2.92615 10.5149 3.04376 10.75 3.24976 10.75H8.50115L8.18955 16.0132C8.17695 16.2268 8.44935 16.3266 8.57765 16.1554L14.9506 7.6499C15.0741 7.4851 14.9565 7.25 14.7505 7.25Z" />
+  </svg>
+);
+
+export const SizeDynamicIcon = ({ size = 16, type = 'normal' }: { size?: number; type?: 'normal' | 'decrease' | 'increase' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 18 18"
+    fill="currentColor"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    strokeWidth="1.5"
+    stroke="currentColor"
+  >
+    <rect x="2" y="14.5" width="4.25" height="1.5" rx="0.75" stroke="none" />
+    <rect x="2" y="11.5" width="2.25" height="1.5" rx="0.75" stroke="none" />
+    <rect x="2" y="8.25" width="4.25" height="1.5" rx="0.75" stroke="none" />
+    <rect x="2" y="5" width="2.25" height="1.5" rx="0.75" stroke="none" />
+    <rect x="2" y="2" width="4.25" height="1.5" rx="0.75" stroke="none" />
+    {type === 'decrease' && <rect x="9" y="13.2" width="7" height="2.8" rx="1" fill="currentColor" fillOpacity="0.4" />}
+    {type === 'increase' && <rect x="9" y="2" width="7" height="14" rx="1" fill="currentColor" fillOpacity="0.4" />}
+    {type === 'normal' && <rect x="9" y="7.6" width="7" height="8.4" rx="1" fill="currentColor" fillOpacity="0.4" />}
+  </svg>
+);
+
+export const FormatIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 54 54"
+    fill="none"
+  >
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M6 45.75C6 44.5074 7.00737 43.5 8.25 43.5H18.75C19.9926 43.5 21 44.5074 21 45.75C21 46.9926 19.9926 48 18.75 48H8.25C7.00737 48 6 46.9926 6 45.75Z" 
+      fill="currentColor" 
+    />
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M6 36.75C6 35.5074 7.00737 34.5 8.25 34.5H12.75C13.9926 34.5 15 35.5074 15 36.75C15 37.9926 13.9926 39 12.75 39H8.25C7.00737 39 6 37.9926 6 36.75Z" 
+      fill="currentColor" 
+    />
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M6 27C6 25.7574 7.00737 24.75 8.25 24.75H18.75C19.9926 24.75 21 25.7574 21 27C21 28.2426 19.9926 29.25 18.75 29.25H8.25C7.00737 29.25 6 28.2426 6 27Z" 
+      fill="currentColor" 
+    />
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M6 17.25C6 16.0074 7.00737 15 8.25 15H12.75C13.9926 15 15 16.0074 15 17.25C15 18.4926 13.9926 19.5 12.75 19.5H8.25C7.00737 19.5 6 18.4926 6 17.25Z" 
+      fill="currentColor" 
+    />
+    <path 
+      fillRule="evenodd" 
+      clipRule="evenodd" 
+      d="M6 8.25C6 7.00737 7.00737 6 8.25 6H18.75C19.9926 6 21 7.00737 21 8.25C21 9.49263 19.9926 10.5 18.75 10.5H8.25C7.00737 10.5 6 9.49263 6 8.25Z" 
+      fill="currentColor" 
+    />
+    <path 
+      d="M25.75 37.25H47.2237C48.619 37.25 49.75 36.0561 49.75 34.5833V27.9167C49.75 26.4439 48.619 25.25 47.2237 25.25H42.8026" 
+      stroke="currentColor" 
+      strokeWidth="6" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+    <path 
+      d="M31.75 30.25L24.75 36.75L31.75 43.25" 
+      stroke="currentColor" 
+      strokeWidth="6" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+    />
+  </svg>
+);
+
+export const HooksIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 18 18"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path 
+      d="M3.06602 7.25H14.934C15.595 7.25 16.075 7.88 15.898 8.518L13.954 15.518C13.834 15.951 13.44 16.25 12.99 16.25H5.01002C4.56102 16.25 4.16702 15.95 4.04602 15.518L2.10202 8.518C1.92502 7.881 2.40402 7.25 3.06602 7.25Z" 
+      fill="currentColor" 
+      fillOpacity="0.3" 
+      stroke="none"
+    />
+    <path d="M12.25 1.25H5.75" />
+    <path d="M14.25 4.25H3.75" />
+    <path d="M3.06602 7.25H14.934C15.595 7.25 16.075 7.88 15.898 8.518L13.954 15.518C13.834 15.951 13.44 16.25 12.99 16.25H5.01002C4.56102 16.25 4.16702 15.95 4.04602 15.518L2.10202 8.518C1.92502 7.881 2.40402 7.25 3.06602 7.25Z" />
+  </svg>
+);
+
+export const CloseIcon = ({ size = 16 }: { size?: number }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+  >
+    <path d="m12 13.4l-4.9 4.9q-.275.275-.7.275t-.7-.275t-.275-.7t.275-.7l4.9-4.9l-4.9-4.9q-.275-.275-.275-.7t.275-.7t.7-.275t.7.275l4.9 4.9l4.9-4.9q.275-.275.7-.275t.7.275t.275.7t-.275.7L13.4 12l4.9 4.9q.275.275.275.7t-.275.7t-.7.275t-.7-.275z" />
+  </svg>
+);

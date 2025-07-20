@@ -8,10 +8,12 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
+    // All content is LinkedIn posts now
+    const systemPrompt = 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.';
+
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
-      system:
-        'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
+      system: systemPrompt,
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: title,
     });
@@ -39,7 +41,7 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'text'),
+      system: updateDocumentPrompt(document.content, 'text', document.title),
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,
       providerOptions: {

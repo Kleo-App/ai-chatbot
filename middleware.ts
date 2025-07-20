@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/
 import { NextResponse } from 'next/server';
 
 // Define public routes that don't require authentication
-const isPublicRoute = createRouteMatcher(['/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
+const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/api/auth(.*)', '/api/admin/delete-users']);
 
 // Define paths that don't require onboarding check
 const isOnboardingExemptPath = createRouteMatcher([
@@ -52,21 +52,54 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.next();
   }
 
+  // Add debug logging for onboarding checks
+  console.log(`[Middleware] Checking onboarding for user ${userId} on path ${pathname}`);
+
   // Check onboarding status by fetching user data directly from Clerk
   try {
     const client = await clerkClient();
     const clerkUser = await client.users.getUser(userId);
     const onboardingComplete = clerkUser.publicMetadata?.onboardingComplete;
 
+    console.log(`[Middleware] User ${userId} onboardingComplete status:`, onboardingComplete);
+
     // Check if user has completed onboarding
     if (userId && !onboardingComplete) {
+      console.log(`[Middleware] User ${userId} needs onboarding, redirecting from ${pathname} to /onboarding/welcome`);
+      
+      // For new users, ensure they have an onboarding record in our database
+      try {
+        const { getOrCreateUserProfile } = await import('@/lib/db/profile-queries');
+        await getOrCreateUserProfile(userId);
+        console.log(`[Middleware] Created/ensured user profile for ${userId}`);
+      } catch (dbError) {
+        console.log(`[Middleware] Could not ensure user profile for ${userId}:`, dbError);
+      }
+
       const url = request.nextUrl.clone();
       url.pathname = '/onboarding/welcome';
       return NextResponse.redirect(url);
+    } else {
+      console.log(`[Middleware] User ${userId} has completed onboarding, allowing access to ${pathname}`);
     }
   } catch (error) {
     console.error(`[Middleware] Error checking onboarding status for user ${userId}:`, error);
-    // In case of error, allow access to avoid blocking users
+    // If Clerk fails, try checking our database as fallback
+    try {
+      const { getUserProfileByUserId } = await import('@/lib/db/profile-queries');
+      const profile = await getUserProfileByUserId(userId);
+      console.log(`[Middleware] Fallback DB check for user ${userId}:`, profile?.onboardingCompleted);
+      
+      if (!profile || !profile.onboardingCompleted) {
+        console.log(`[Middleware] DB fallback: User ${userId} needs onboarding`);
+        const url = request.nextUrl.clone();
+        url.pathname = '/onboarding/welcome';
+        return NextResponse.redirect(url);
+      }
+    } catch (dbError) {
+      console.error(`[Middleware] DB fallback failed for user ${userId}:`, dbError);
+      // Allow access if both Clerk and DB checks fail to avoid blocking users
+    }
   }
 
   return NextResponse.next();

@@ -10,10 +10,27 @@ import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
-import { HookIdea } from "@/lib/ai/hook-generator"
+import type { HookIdea } from "@/lib/ai/hook-generator"
 import { toast } from "sonner"
 import { VoiceRecorder } from "@/components/voice-recorder"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
+// Create a user-friendly prompt that will trigger LinkedIn post creation
+function createUserFriendlyPrompt(userProfile: any, selectedHook: string): string {
+  const topics = userProfile?.selectedTopics ? (() => {
+    try {
+      const parsedTopics = JSON.parse(userProfile.selectedTopics)
+      return Array.isArray(parsedTopics) ? parsedTopics.map((t: any) => t.title).join(" and ") : "business topics"
+    } catch {
+      return "business topics"
+    }
+  })() : "business topics"
+  
+  return `Write a LinkedIn post in the artifact about ${topics} using this hook: "${selectedHook}"`
+}
+
+ 
 export default function KleoHookSelector() {
   const [selectedHook, setSelectedHook] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -27,7 +44,7 @@ export default function KleoHookSelector() {
   }>>([]);
   const [customHook, setCustomHook] = useState<string>("");
   
-  const { goToStep, userProfile } = useOnboarding()
+  const { goToStep, userProfile, completeOnboarding } = useOnboarding()
   const { userId } = useAuth()
   const router = useRouter()
   
@@ -149,12 +166,24 @@ export default function KleoHookSelector() {
       
       console.log('Hook saved successfully')
       
-      // Update the step and navigate
-      await goToStep('review')
-      router.push('/onboarding/review')
+      // Complete onboarding
+      await completeOnboarding()
+      
+      // Create a clean, user-friendly prompt that will trigger document creation
+      const prompt = createUserFriendlyPrompt(userProfile, hookToSave)
+      
+      // Navigate to main chat page with the prompt - this will create a new chat and start streaming
+      const encodedPrompt = encodeURIComponent(prompt)
+      router.push(`/?query=${encodedPrompt}`)
     } catch (error) {
-      console.error('Error saving hook or navigating:', error)
-      toast.error("Something went wrong. Please try again.")
+      console.error('❌ Error in handleNext:', error)
+      
+      // If it's a fetch error, show more specific message
+      if (error instanceof Error) {
+        toast.error(error.message)
+      } else {
+        toast.error("Something went wrong. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -179,29 +208,10 @@ export default function KleoHookSelector() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
+    <OnboardingLayout>
+      <div>
         {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 7:</span>
-            <span className="text-gray-900 font-semibold">Hook</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full"></div>
-            </div>
-          </div>
-        </div>
+        <StepIndicator currentStep="hook" />
 
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
@@ -332,14 +342,14 @@ export default function KleoHookSelector() {
             {isLoading ? (
               <>
                 <Loader2 className="size-5 mr-2 animate-spin" />
-                Saving...
+                Generating...
               </>
             ) : (
-              "Next"
+              "Generate my post"
             )}
           </Button>
         </div>
       </div>
-    </div>
+    </OnboardingLayout>
   )
 }

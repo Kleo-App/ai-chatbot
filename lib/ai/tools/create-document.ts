@@ -20,13 +20,15 @@ interface CreateDocumentProps {
 export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
   tool({
     description:
-      'Create a document for writing linkedin posts. This tool will call other functions that will generate the contents of the document based on the title and kind.',
+      'Create a LinkedIn post document. This tool will generate LinkedIn post content based on the title and topic provided.',
     inputSchema: z.object({
       title: z.string(),
       kind: z.enum(artifactKinds),
     }),
     execute: async ({ title, kind }) => {
       const id = generateUUID();
+
+      const finalTitle = title;
 
       dataStream.write({
         type: 'data-kind',
@@ -42,7 +44,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
 
       dataStream.write({
         type: 'data-title',
-        data: title,
+        data: finalTitle,
         transient: true,
       });
 
@@ -63,7 +65,7 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
 
       await documentHandler.onCreateDocument({
         id,
-        title,
+        title: finalTitle,
         dataStream,
         session,
       });
@@ -72,9 +74,9 @@ export const createDocument = ({ session, dataStream }: CreateDocumentProps) =>
 
       return {
         id,
-        title,
+        title: finalTitle,
         kind,
-        content: 'A post was created and is now visible to the user.',
+        content: 'A LinkedIn post was created and is now visible to the user.',
       };
     },
   });

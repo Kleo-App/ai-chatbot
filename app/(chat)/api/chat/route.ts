@@ -106,11 +106,7 @@ export async function POST(request: Request) {
       message,
       selectedChatModel,
       selectedVisibilityType,
-    }: {
-      id: string;
-      message: ChatMessage;
-      selectedChatModel: ChatModel['id'];
-      selectedVisibilityType: VisibilityType;
+      documentContext,
     } = requestBody;
 
     const { userId } = await auth();
@@ -204,9 +200,19 @@ export async function POST(request: Request) {
         // Get the prompt first
         const prompt = await getFetchedPrompt();
         
+        // Add document context to system prompt if editing an existing document
+        let systemPrompt = prompt?.toJSON() || '';
+        if (documentContext) {
+          systemPrompt += `\n\nIMPORTANT: You are currently helping the user edit an existing ${documentContext.kind} artifact titled "${documentContext.title}". The artifact is already open and contains the following content:
+
+${documentContext.content}
+
+When the user asks to make changes, you MUST use the updateDocument tool with the ID "${documentContext.id}" to modify this existing artifact rather than creating a new one. Always reference and build upon the existing content when making edits.`;
+        }
+        
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: prompt?.toJSON() || undefined,
+          system: systemPrompt || undefined,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:

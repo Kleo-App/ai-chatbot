@@ -13,19 +13,23 @@ import { useDebounceCallback, useWindowSize } from 'usehooks-ts';
 import type { Document, Vote } from '@/lib/db/schema';
 import { fetcher } from '@/lib/utils';
 import { MultimodalInput } from './multimodal-input';
-import { Toolbar } from './toolbar';
 import { VersionFooter } from './version-footer';
 import { ArtifactActions } from './artifact-actions';
 import { ArtifactCloseButton } from './artifact-close-button';
 import { ArtifactMessages } from './artifact-messages';
+import { ArrowLeftIcon, MessageIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
-import { useArtifact } from '@/hooks/use-artifact';
+import { useArtifact, initialArtifactData } from '@/hooks/use-artifact';
 import { imageArtifact } from '@/artifacts/image/client';
 import { textArtifact } from '@/artifacts/text/client';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
 import type { Attachment, ChatMessage } from '@/lib/types';
+import { useUser } from '@clerk/nextjs';
+import { LinkedInPostEditor } from './linkedin-post-editor';
+import { Button } from './ui/button';
+import { useRouter } from 'next/navigation';
 
 export const artifactDefinitions = [
   textArtifact,
@@ -63,6 +67,7 @@ function PureArtifact({
   votes,
   isReadonly,
   selectedVisibilityType,
+  openedFromPosts = false,
 }: {
   chatId: string;
   input: string;
@@ -78,8 +83,11 @@ function PureArtifact({
   regenerate: UseChatHelpers<ChatMessage>['regenerate'];
   isReadonly: boolean;
   selectedVisibilityType: VisibilityType;
+  openedFromPosts?: boolean;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
+  const { user } = useUser();
+  const router = useRouter();
 
   const {
     data: documents,
@@ -95,6 +103,7 @@ function PureArtifact({
   const [mode, setMode] = useState<'edit' | 'diff'>('edit');
   const [document, setDocument] = useState<Document | null>(null);
   const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
+  const [viewMode, setViewMode] = useState<'chat' | 'editor'>('chat');
 
   const { open: isSidebarOpen } = useSidebar();
 
@@ -184,6 +193,30 @@ function PureArtifact({
     [document, debouncedHandleContentChange, handleContentChange],
   );
 
+  const handleEditorContentChange = useCallback((content: string) => {
+    // Pass HTML content directly to LinkedIn post preview
+    saveContent(content, true);
+  }, [saveContent]);
+
+  const toggleViewMode = useCallback(() => {
+    setViewMode(mode => mode === 'chat' ? 'editor' : 'chat');
+  }, []);
+
+  const handleBackButton = useCallback(() => {
+    if (openedFromPosts) {
+      router.push('/posts');
+    } else {
+      setArtifact((currentArtifact) =>
+        currentArtifact.status === 'streaming'
+          ? {
+              ...currentArtifact,
+              isVisible: false,
+            }
+          : { ...initialArtifactData, status: 'idle' },
+      );
+    }
+  }, [openedFromPosts, router, setArtifact]);
+
   function getDocumentContentById(index: number) {
     if (!documents) return '';
     if (!documents[index]) return '';
@@ -213,14 +246,6 @@ function PureArtifact({
     }
   };
 
-  const [isToolbarVisible, setIsToolbarVisible] = useState(false);
-
-  /*
-   * NOTE: if there are no documents, or if
-   * the documents are being fetched, then
-   * we mark it as the current version.
-   */
-
   const isCurrentVersion =
     documents && documents.length > 0
       ? currentVersionIndex === documents.length - 1
@@ -232,6 +257,9 @@ function PureArtifact({
   const artifactDefinition = artifactDefinitions.find(
     (definition) => definition.kind === artifact.kind,
   );
+
+  // All content is LinkedIn posts now
+  const isLinkedInPost = true;
 
   if (!artifactDefinition) {
     throw new Error('Artifact definition not found!');
@@ -275,7 +303,7 @@ function PureArtifact({
 
           {!isMobile && (
             <motion.div
-              className="relative w-[400px] bg-muted dark:bg-background h-dvh shrink-0"
+              className="relative w-2/5 bg-muted dark:bg-background h-dvh shrink-0"
               initial={{ opacity: 0, x: 10, scale: 1 }}
               animate={{
                 opacity: 1,
@@ -298,7 +326,7 @@ function PureArtifact({
               <AnimatePresence>
                 {!isCurrentVersion && (
                   <motion.div
-                    className="left-0 absolute h-dvh w-[400px] top-0 bg-zinc-900/50 z-50"
+                    className="left-0 absolute h-dvh w-full top-0 bg-zinc-900/50 z-50"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -307,33 +335,107 @@ function PureArtifact({
               </AnimatePresence>
 
               <div className="flex flex-col h-full justify-between items-center">
-                <ArtifactMessages
-                  chatId={chatId}
-                  status={status}
-                  votes={votes}
-                  messages={messages}
-                  setMessages={setMessages}
-                  regenerate={regenerate}
-                  isReadonly={isReadonly}
-                  artifactStatus={artifact.status}
-                />
+                {viewMode === 'chat' ? (
+                  <>
+                    {/* Chat Header with Back/Toggle Button */}
+                    <div className="flex items-center justify-between w-full p-3 border-b">
+                      <div className="flex items-center gap-3">
+                        {isLinkedInPost && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleBackButton}
+                            className="h-fit p-2"
+                            title="Back"
+                          >
+                            <ArrowLeftIcon size={16} />
+                          </Button>
+                        )}
+                        <h3 className="text-sm font-medium">Chat</h3>
+                      </div>
+                      {isLinkedInPost && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={toggleViewMode}
+                          className="gap-2"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" className="h-4 w-4">
+                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                            <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
+                          </svg>
+                          Edit
+                        </Button>
+                      )}
+                    </div>
 
-                <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
-                  <MultimodalInput
-                    chatId={chatId}
-                    input={input}
-                    setInput={setInput}
-                    status={status}
-                    stop={stop}
-                    attachments={attachments}
-                    setAttachments={setAttachments}
-                    messages={messages}
-                    sendMessage={sendMessage}
-                    className="bg-background dark:bg-muted"
-                    setMessages={setMessages}
-                    selectedVisibilityType={selectedVisibilityType}
-                  />
-                </form>
+                    <ArtifactMessages
+                      chatId={chatId}
+                      status={status}
+                      votes={votes}
+                      messages={messages}
+                      setMessages={setMessages}
+                      regenerate={regenerate}
+                      isReadonly={isReadonly}
+                      artifactStatus={artifact.status}
+                    />
+
+                    <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
+                      <MultimodalInput
+                        chatId={chatId}
+                        input={input}
+                        setInput={setInput}
+                        status={status}
+                        stop={stop}
+                        attachments={attachments}
+                        setAttachments={setAttachments}
+                        messages={messages}
+                        sendMessage={sendMessage}
+                        className="bg-background dark:bg-muted"
+                        setMessages={setMessages}
+                        selectedVisibilityType={selectedVisibilityType}
+                        isArtifactContext={true}
+                        artifactKind={artifact.kind}
+                      />
+                    </form>
+                  </>
+                ) : (
+                  <>
+                    {/* Editor Header with Back Button */}
+                    <div className="flex items-center justify-between w-full p-3 border-b">
+                      <div className="flex items-center gap-3">
+                        {isLinkedInPost && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={handleBackButton}
+                            className="h-fit p-2"
+                            title="Back"
+                          >
+                            <ArrowLeftIcon size={16} />
+                          </Button>
+                        )}
+                        <h3 className="text-sm font-medium">Edit Post</h3>
+                      </div>
+                                             <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         onClick={toggleViewMode}
+                         className="gap-2"
+                       >
+                         <MessageIcon size={16} />
+                         Chat
+                       </Button>
+                    </div>
+                    <div className="flex-1 overflow-hidden">
+                      <LinkedInPostEditor
+                        content={isCurrentVersion ? artifact.content : getDocumentContentById(currentVersionIndex)}
+                        onContentChange={handleEditorContentChange}
+                        onToggleView={toggleViewMode}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
@@ -378,12 +480,12 @@ function PureArtifact({
                   }
                 : {
                     opacity: 1,
-                    x: 400,
+                    x: windowWidth ? windowWidth * 0.4 : 'calc(40dvw)',
                     y: 0,
                     height: windowHeight,
                     width: windowWidth
-                      ? windowWidth - 400
-                      : 'calc(100dvw-400px)',
+                      ? windowWidth * 0.6
+                      : 'calc(60dvw)',
                     borderRadius: 0,
                     transition: {
                       delay: 0,
@@ -405,43 +507,46 @@ function PureArtifact({
               },
             }}
           >
-            <div className="p-2 flex flex-row justify-between items-start">
-              <div className="flex flex-row gap-4 items-start">
-                <ArtifactCloseButton />
+            {/* Hide header for LinkedIn posts as it's now integrated into the preview */}
+            {!isLinkedInPost && (
+              <div className="p-2 flex flex-row justify-between items-start">
+                <div className="flex flex-row gap-4 items-start">
+                  <ArtifactCloseButton />
 
-                <div className="flex flex-col">
-                  <div className="font-medium">{artifact.title}</div>
+                  <div className="flex flex-col">
+                    <div className="font-medium">{artifact.title}</div>
 
-                  {isContentDirty ? (
-                    <div className="text-sm text-muted-foreground">
-                      Saving changes...
-                    </div>
-                  ) : document ? (
-                    <div className="text-sm text-muted-foreground">
-                      {`Updated ${formatDistance(
-                        new Date(document.createdAt),
-                        new Date(),
-                        {
-                          addSuffix: true,
-                        },
-                      )}`}
-                    </div>
-                  ) : (
-                    <div className="w-32 h-3 mt-2 bg-muted-foreground/20 rounded-md animate-pulse" />
-                  )}
+                    {isContentDirty ? (
+                      <div className="text-sm text-muted-foreground">
+                        Saving changes...
+                      </div>
+                    ) : document ? (
+                      <div className="text-sm text-muted-foreground">
+                        {`Updated ${formatDistance(
+                          new Date(document.createdAt),
+                          new Date(),
+                          {
+                            addSuffix: true,
+                          },
+                        )}`}
+                      </div>
+                    ) : (
+                      <div className="w-32 h-3 mt-2 bg-muted-foreground/20 rounded-md animate-pulse" />
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <ArtifactActions
-                artifact={artifact}
-                currentVersionIndex={currentVersionIndex}
-                handleVersionChange={handleVersionChange}
-                isCurrentVersion={isCurrentVersion}
-                mode={mode}
-                metadata={metadata}
-                setMetadata={setMetadata}
-              />
-            </div>
+                <ArtifactActions
+                  artifact={artifact}
+                  currentVersionIndex={currentVersionIndex}
+                  handleVersionChange={handleVersionChange}
+                  isCurrentVersion={isCurrentVersion}
+                  mode={mode}
+                  metadata={metadata}
+                  setMetadata={setMetadata}
+                />
+              </div>
+            )}
 
             <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">
               <artifactDefinition.content
@@ -462,21 +567,12 @@ function PureArtifact({
                 isLoading={isDocumentsFetching && !artifact.content}
                 metadata={metadata}
                 setMetadata={setMetadata}
+                user={user}
+                artifact={artifact}
+                document={document}
+                isContentDirty={isContentDirty}
+                handleVersionChange={handleVersionChange}
               />
-
-              <AnimatePresence>
-                {isCurrentVersion && (
-                  <Toolbar
-                    isToolbarVisible={isToolbarVisible}
-                    setIsToolbarVisible={setIsToolbarVisible}
-                    sendMessage={sendMessage}
-                    status={status}
-                    stop={stop}
-                    setMessages={setMessages}
-                    artifactKind={artifact.kind}
-                  />
-                )}
-              </AnimatePresence>
             </div>
 
             <AnimatePresence>

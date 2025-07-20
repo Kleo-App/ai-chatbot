@@ -50,6 +50,8 @@ export async function initializeUserProfile() {
  */
 export async function updateProfileInfo(profileData: {
   fullName?: string;
+  jobTitle?: string;
+  company?: string;
   bio?: string;
   stylePreference?: string;
   linkedInServices?: string;

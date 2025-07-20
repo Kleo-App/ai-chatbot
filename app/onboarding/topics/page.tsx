@@ -86,9 +86,6 @@ export default function TopicSelector() {
             { id: 3, title: "AI-powered content creation", subtitle: "Default suggestion" },
             { id: 4, title: "Startup fundraising strategies", subtitle: "Default suggestion" },
             { id: 5, title: "Remote team management", subtitle: "Default suggestion" },
-            { id: 6, title: "Product-market fit strategies", subtitle: "Default suggestion" },
-            { id: 7, title: "Growth hacking for 2024", subtitle: "Default suggestion" },
-            { id: 8, title: "Future of work and automation", subtitle: "Default suggestion" },
           ]);
         }
       } catch (err) {
@@ -176,11 +173,12 @@ export default function TopicSelector() {
 
   return (
     <OnboardingLayout>
-      {/* Progress Header */}
-      <StepIndicator currentStep="topics" />
+      <div>
+        {/* Progress Header */}
+        <StepIndicator currentStep="topics" />
 
-      {/* Main Content */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
+        {/* Main Content */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
           <div className="flex items-center gap-3 mb-4">
             <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
@@ -196,7 +194,7 @@ export default function TopicSelector() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {isLoading ? (
               // Loading state - show skeleton cards
-              Array.from({ length: 9 }).map((_, index) => (
+              Array.from({ length: 5 }).map((_, index) => (
                 <Card key={`loading-${index}`} className="bg-white">
                   <CardContent className="p-5 flex flex-col items-center justify-center min-h-[120px]">
                     <div className="w-full h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
@@ -205,8 +203,8 @@ export default function TopicSelector() {
                 </Card>
               ))
             ) : (
-              // Show generated topics
-              topics.map((topic) => (
+              // Show only first 5 generated topics
+              topics.slice(0, 5).map((topic) => (
                 <Card
                   key={topic.id}
                   className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
@@ -230,9 +228,12 @@ export default function TopicSelector() {
                 className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-blue-200 bg-white border-2 border-dashed border-gray-300"
                 onClick={() => setIsCustomDialogOpen(true)}
               >
-                <CardContent className="p-5 flex flex-col items-center justify-center text-center min-h-[120px]">
-                  <Plus className="size-8 text-[#157DFF] mb-2" />
-                  <h3 className="font-semibold text-gray-900">Add custom topic</h3>
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Plus className="size-5 text-[#157DFF]" />
+                    <h3 className="font-semibold text-gray-900 leading-snug">Add custom topic</h3>
+                  </div>
+                  <p className="text-sm text-gray-500">Create your own topic</p>
                 </CardContent>
               </Card>
             )}
@@ -241,12 +242,11 @@ export default function TopicSelector() {
           {/* Selection Counter */}
           {selectedTopics.length > 0 && (
             <div className="text-center mb-4">
-              <p className="text-sm text-gray-600 font-medium">{selectedTopics.length} of 10 topics selected</p>
+              <p className="text-sm text-gray-600 font-medium">{selectedTopics.length} of 5 topics selected</p>
             </div>
           )}
         </div>
 
-        {/* Progress Indicator */}
         {/* Navigation Buttons */}
         <div className="flex justify-center gap-4 mt-4">
           <Button
@@ -270,6 +270,7 @@ export default function TopicSelector() {
             ) : 'Next'}
           </Button>
         </div>
+      </div>
       
       {/* Custom Topic Dialog */}
       <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>

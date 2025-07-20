@@ -113,6 +113,27 @@
       "when": 1752842254407,
       "tag": "0015_overjoyed_gamma_corps",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1752989753995,
+      "tag": "0016_lazy_mister_fear",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1752989788126,
+      "tag": "0017_military_colossus",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1753031793637,
+      "tag": "0018_chilly_fenris",
+      "breakpoints": true
     }
   ]
 }

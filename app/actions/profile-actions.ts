@@ -68,7 +68,7 @@ export async function updateProfileInfo(profileData: {
   try {
     const profile = await updateUserProfile(userId, {
       ...profileData,
-      lastCompletedStep: 'profile',
+      lastCompletedStep: 'topics',
     });
     
     console.log('Profile after update:', profile);
@@ -81,28 +81,7 @@ export async function updateProfileInfo(profileData: {
   }
 }
 
-/**
- * Update LinkedIn services (Step 2: Profile)
- */
-export async function updateLinkedInServices(linkedInServices: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      linkedInServices,
-      lastCompletedStep: 'topics',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating LinkedIn services:', error);
-    return { success: false, error: 'Failed to update LinkedIn services' };
-  }
-}
+// LinkedIn services now handled in updateProfileInfo
 
 /**
  * Update selected topics (Step 3: Topics)

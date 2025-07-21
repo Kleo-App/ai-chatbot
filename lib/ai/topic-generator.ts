@@ -18,8 +18,7 @@ export interface TopicSuggestion {
  * Generate topic suggestions based on user profile data
  */
 export async function generateTopicSuggestions(
-  bio?: string,
-  linkedInServices: string[] = []
+  bio?: string
 ): Promise<TopicSuggestion[]> {
   try {
     // Get the prompt template from Langfuse
@@ -27,14 +26,12 @@ export async function generateTopicSuggestions(
     
     // Process the prompt template with variables
     const prompt = await processPromptTemplate(promptTemplate, {
-      bio,
-      linkedInServices: linkedInServices.join('\n')
+      bio
     });
     
     // Create Langfuse trace for tracking
     const trace = await createTrace('generate_topic_suggestions', bio || 'anonymous', {
-      bio,
-      linkedInServices
+      bio
     });
     
     // Skip Langfuse tracking if trace creation failed

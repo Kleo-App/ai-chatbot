@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { UserButton , useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
-import { updateLinkedInServices } from "@/app/actions/profile-actions"
+import { updateProfileInfo } from "@/app/actions/profile-actions"
 import { Loader2 } from "lucide-react"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
@@ -38,10 +38,10 @@ export default function ProfileSetup() {
   const router = useRouter();
   const { hasLoaded } = usePageLoading();
   
-  // Load existing LinkedIn services data when userProfile becomes available
+  // Load existing profile data when userProfile becomes available
   useEffect(() => {
-    if (userProfile?.linkedInServices) {
-      setDescription(userProfile.linkedInServices);
+    if (userProfile?.bio) {
+      setDescription(userProfile.bio);
     }
   }, [userProfile]);
 
@@ -54,7 +54,7 @@ export default function ProfileSetup() {
       router.prefetch('/onboarding/topics');
       
       // Save data in the background
-      const savePromise = updateLinkedInServices(description).then(result => {
+      const savePromise = updateProfileInfo({ bio: description }).then(result => {
         if (!result.success) {
           console.error('Failed to save profile data:', result.error);
         }
@@ -102,7 +102,7 @@ export default function ProfileSetup() {
       ) : (
         <div>
           {/* Progress Header */}
-          <StepIndicator currentStep="profile" />
+          <StepIndicator currentStep="topics" />
           
           {/* Profile Section */}
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">

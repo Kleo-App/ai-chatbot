@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { updateLinkedInServices } from '@/app/actions/profile-actions';
+import { updateProfileInfo } from '@/app/actions/profile-actions';
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -10,9 +10,9 @@ export async function POST(req: NextRequest) {
   }
   
   try {
-    const { linkedInServices } = await req.json();
+    const { description } = await req.json();
     
-    const result = await updateLinkedInServices(linkedInServices);
+    const result = await updateProfileInfo({ bio: description });
     
     if (!result.success) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     
     return NextResponse.json({ success: true, profile: result.profile });
   } catch (error) {
-    console.error('Error updating LinkedIn services:', error);
-    return NextResponse.json({ error: 'Failed to update LinkedIn services' }, { status: 500 });
+    console.error('Error updating profile description:', error);
+    return NextResponse.json({ error: 'Failed to update profile description' }, { status: 500 });
   }
 }

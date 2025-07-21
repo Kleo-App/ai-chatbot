@@ -111,15 +111,12 @@ export const getPrompt = cache(async (promptName: string): Promise<string> => {
 function getFallbackPrompt(promptName: string): string {
   // Fallback prompts for each generator
   const fallbackPrompts: Record<string, string> = {
-    'topic-generator': `You are an AI assistant helping a LinkedIn content creator generate topic ideas based on their profile and services.
+    'topic-generator': `You are an AI assistant helping a LinkedIn content creator generate topic ideas based on their profile.
 
 Profile information:
 {{bio}}
 
-LinkedIn services:
-{{linkedInServices}}
-
-Generate a list of 10 specific topics that would be good for the user to post about on LinkedIn based on their profile and services. Focus on topics that would showcase their expertise and attract potential clients.
+Generate a list of 10 specific topics that would be good for the user to post about on LinkedIn based on their profile. Focus on topics that would showcase their expertise and attract potential clients.
 
 Return the topics as a JSON array with objects that have a 'title' property. For example:
 [
@@ -135,15 +132,12 @@ Make topics specific and actionable. Each topic should be 5-10 words.`,
 Profile information:
 {{bio}}
 
-LinkedIn services:
-{{linkedInServices}}
-
 Selected topics:
 {{selectedTopics}}
 
 Content type: {{contentType}}
 
-Generate 5 specific content ideas for the selected content type that would be good for the user to post about on LinkedIn based on their profile, services, and selected topics.
+Generate 5 specific content ideas for the selected content type that would be good for the user to post about on LinkedIn based on their profile and selected topics.
 
 Return the ideas as a JSON object with the following structure:
 {
@@ -166,9 +160,6 @@ Name: {{fullName}}
 Job Title: {{jobTitle}}
 Company: {{company}}
 Bio: {{bio}}
-
-LinkedIn services:
-{{linkedInServices}}
 
 Selected topics:
 {{selectedTopics}}

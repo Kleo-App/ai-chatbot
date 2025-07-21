@@ -33,7 +33,6 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       jobTitle,
       company,
       bio,
-      linkedInServices,
       selectedTopics,
       contentType,
       contentDetails,
@@ -54,7 +53,6 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     const promptTemplate = await getPrompt('hook-generator');
   
     // Prepare variables for the prompt template
-    const linkedInServicesText = Array.isArray(linkedInServices) ? linkedInServices.join('\n') : '';
     const selectedTopicsText = Array.isArray(selectedTopics) ? selectedTopics.map((topic: any) => topic.title).join('\n') : '';
     
     // Process the prompt template with variables
@@ -63,7 +61,6 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       jobTitle: jobTitle || '',
       company: company || '',
       bio: bio || '',
-      linkedInServices: linkedInServicesText,
       selectedTopics: selectedTopicsText,
       contentType: contentType ?? '',
       contentDetails: contentDetails ?? '',
@@ -78,7 +75,6 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       jobTitle,
       company,
       bio,
-      linkedInServices,
       selectedTopics,
       contentType,
       contentDetails,
@@ -91,7 +87,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
     }
 
     // Create Langfuse generation span
-    const generation = await trace?.generation({
+    const generation = trace?.generation({
       name: 'hook_ideas_generation',
       model: 'gpt-4-turbo',
       modelParameters: {

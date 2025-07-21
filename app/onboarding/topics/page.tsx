@@ -14,6 +14,7 @@ import { updatePostDetails } from "@/app/actions/topic-actions"
 export default function PostInformationPage() {
   const [postInformation, setPostInformation] = useState("")
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingExample, setIsGeneratingExample] = useState(false);
   const { goToStep, userProfile } = useOnboarding();
   const { userId } = useAuth();
   const { user } = useUser();
@@ -36,20 +37,78 @@ export default function PostInformationPage() {
     }
   }
 
-  const handleUseExample = () => {
-    const exampleContent = `I'm a software engineer who's passionate about helping developers build better products. I've been working with React and TypeScript for the past 5 years and love sharing what I've learned.
+  const handleUseExample = async () => {
+    try {
+      setIsGeneratingExample(true);
+      // Import the content generator
+      const { generateExampleContent } = await import('@/lib/ai/content-example-generator');
+      
+      // Generate content based on user profile
+      let jsonContent = "";
+      
+      if (userProfile) {
+        jsonContent = await generateExampleContent(
+          userProfile.fullName || undefined,
+          userProfile.jobTitle || undefined,
+          userProfile.company || undefined,
+          userProfile.bio || undefined
+        );
+      } else {
+        // Fallback if no user profile is available
+        jsonContent = JSON.stringify({
+          topics: [
+            {
+              title: "Sharing Industry Insights and Best Practices",
+              description: "Leverage your professional experience to help others navigate common challenges. This topic aligns with your expertise and has potential to establish you as a thought leader in your field."
+            }
+          ]
+        });
+      }
 
-Some topics I'd like to write about:
-• Best practices for clean code and maintainable architecture
-• My experience transitioning from junior to senior developer
-• Common mistakes I see in React applications and how to avoid them
-• The importance of testing and how to write effective tests
-• Career advice for developers looking to level up their skills
-
-I want to share practical insights that other developers can actually use in their day-to-day work.`;
-
-    setPostInformation(exampleContent);
-    toast.success("Example content added!");
+      try {
+        // Parse the JSON response
+        const parsedContent = JSON.parse(jsonContent);
+        
+        if (parsedContent.topics && parsedContent.topics.length > 0) {
+          const topic = parsedContent.topics[0];
+          const formattedContent = `Topic: ${topic.title}\n\n${topic.description}`;
+          setPostInformation(formattedContent);
+        } else {
+          throw new Error('Invalid JSON format');
+        }
+      } catch (jsonError) {
+        console.error('Error parsing JSON content:', jsonError);
+        // If JSON parsing fails, display the raw content
+        setPostInformation(jsonContent);
+      }
+      toast.success("Example content generated based on your profile!");
+    } catch (error) {
+      console.error('Error generating example content:', error);
+      toast.error("Couldn't generate example content. Using default example.");
+      
+      // Use default example if generation fails
+      try {
+        const defaultExample = JSON.stringify({
+          topics: [
+            {
+              title: "Sharing Industry Insights and Best Practices",
+              description: "Leverage your professional experience to help others navigate common challenges. This topic aligns with your expertise and has potential to establish you as a thought leader in your field."
+            }
+          ]
+        });
+        
+        const parsedDefault = JSON.parse(defaultExample);
+        const topic = parsedDefault.topics[0];
+        const formattedDefault = `Topic: ${topic.title}\n\n${topic.description}`;
+        setPostInformation(formattedDefault);
+      } catch (error) {
+        // Fallback to plain text if JSON handling fails
+        const plainTextDefault = `Topic: Sharing Industry Insights\n\nLeverage your professional experience to help others navigate common challenges in your field.`;
+        setPostInformation(plainTextDefault);
+      }
+    } finally {
+      setIsGeneratingExample(false);
+    }
   };
 
   const handleNext = async () => {
@@ -106,9 +165,17 @@ I want to share practical insights that other developers can actually use in the
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
                   <button
                     onClick={handleUseExample}
-                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium flex items-center gap-1"
+                    disabled={isGeneratingExample}
                   >
-                    Use an example
+                    {isGeneratingExample ? (
+                      <>
+                        <span className="inline-block h-3 w-3 animate-spin rounded-full border-2 border-solid border-current border-r-transparent mr-1"></span>
+                        Generating...
+                      </>
+                    ) : (
+                      "Use an example"
+                    )}
                   </button>
                   <VoiceRecorder 
                     onTranscriptionComplete={(text) => {

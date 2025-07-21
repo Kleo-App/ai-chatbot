@@ -1,13 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { linkedinConnection } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-
-// Database connection
-const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client, { schema: { linkedinConnection } });
 
 export async function GET(request: NextRequest) {
   const { userId } = await auth();

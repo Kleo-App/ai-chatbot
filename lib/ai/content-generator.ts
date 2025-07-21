@@ -20,7 +20,6 @@ export interface ContentIdea {
  */
 export async function generateContentIdeas(
   bio: string | null | undefined,
-  linkedInServices: string | null | undefined,
   selectedTopics: string | null | undefined,
   contentType: string
 ): Promise<ContentIdea[]> {
@@ -45,7 +44,6 @@ export async function generateContentIdeas(
     // Process the prompt template with variables
     const prompt = await processPromptTemplate(promptTemplate, {
       bio: bio || '',
-      linkedInServices: Array.isArray(linkedInServices) ? linkedInServices.join('\n') : '',
       selectedTopics: Array.isArray(selectedTopics) ? selectedTopics.map(topic => topic.title).join('\n') : '',
       contentType: contentType,
       additionalInstructions: additionalInstructions
@@ -56,7 +54,6 @@ export async function generateContentIdeas(
     // Create Langfuse trace for tracking
     const trace = await createTrace('generate_content_ideas', contentType, {
       bio,
-      linkedInServices,
       selectedTopics,
       contentType
     });

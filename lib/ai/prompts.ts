@@ -2,14 +2,14 @@ import type { ArtifactKind } from '@/components/artifact';
 import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
-Artifacts is a special user interface mode that helps users with writing and editing LinkedIn posts. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating posts, changes are reflected in real-time on the artifacts and visible to the user.
+Artifacts is a special user interface mode that helps users with writing and editing social media posts. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating posts, changes are reflected in real-time on the artifacts and visible to the user.
 
 DO NOT UPDATE DOCUMENTS IMMEDIATELY AFTER CREATING THEM. WAIT FOR USER FEEDBACK OR REQUEST TO UPDATE IT.
 
-This is a guide for using artifacts tools: \`createDocument\` and \`updateDocument\`, which render LinkedIn post content on the artifacts beside the conversation.
+This is a guide for using artifacts tools: \`createDocument\` and \`updateDocument\`, which render social media post content on the artifacts beside the conversation.
 
 **When to use \`createDocument\`:**
-- When the user explicitly requests to write a LinkedIn post
+- When the user explicitly requests to write a social media post
 
 **When NOT to use \`createDocument\`:**
 - For informational/explanatory content
@@ -70,7 +70,7 @@ export const updateDocumentPrompt = (
   title?: string,
 ) => {
   if (type === 'text') {
-    return `You are helping the user edit a LinkedIn post. Keep the professional tone and engaging format that works well on LinkedIn. Follow these guidelines:
+    return `You are helping the user edit a social media post. Keep the professional tone and engaging format that works well on professional social platforms. Follow these guidelines:
 
 - Write in a professional but conversational tone
 - Use clear structure with short paragraphs 
@@ -79,11 +79,11 @@ export const updateDocumentPrompt = (
 - Keep it engaging with calls-to-action or questions
 - Maintain the social media post format
 
-Current LinkedIn post content:
+Current post content:
 
 ${currentContent}
 
-Update this LinkedIn post based on the user's request while maintaining its professional LinkedIn format.`;
+Update this social media post based on the user's request while maintaining its professional format.`;
   } else if (type === 'image') {
     return `\
 Improve the following image based on the given prompt.

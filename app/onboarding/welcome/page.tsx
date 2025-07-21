@@ -99,7 +99,6 @@ export default function KleoProfileSetup() {
       promises.push(
         updateProfileInfo({
           bio: combinedProfileText,
-          linkedInServices: "", // We're storing everything in the bio field now
           // Use existing fullName from database if available, otherwise use Clerk data
           fullName: userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : undefined),
         })
@@ -144,7 +143,7 @@ export default function KleoProfileSetup() {
               <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">
-              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')} and what products or services do you sell on LinkedIn?
+              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')} and what products or services do you sell?
             </h2>
           </div>
 
@@ -157,7 +156,7 @@ export default function KleoProfileSetup() {
               value={combinedProfileText}
               onChange={(e) => setCombinedProfileText(e.target.value)}
               className="h-[200px] sm:h-[250px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about yourself and the products or services you sell on LinkedIn..."
+              placeholder="Tell us about yourself and the products or services you sell..."
             />
             <div className="absolute top-4 right-4 flex gap-2">
               <VoiceRecorder 

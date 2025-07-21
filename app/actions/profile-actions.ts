@@ -53,7 +53,6 @@ export async function updateProfileInfo(profileData: {
   company?: string;
   bio?: string;
   stylePreference?: string;
-  linkedInServices?: string;
 }) {
   const { userId } = await auth();
   
@@ -61,9 +60,7 @@ export async function updateProfileInfo(profileData: {
     return { success: false, error: 'User not authenticated' };
   }
   
-  // Debug linkedInServices
   console.log('Updating profile with data:', profileData);
-  console.log('linkedInServices value being saved:', profileData.linkedInServices);
   
   try {
     const profile = await updateUserProfile(userId, {
@@ -72,7 +69,6 @@ export async function updateProfileInfo(profileData: {
     });
     
     console.log('Profile after update:', profile);
-    console.log('linkedInServices after update:', profile.linkedInServices);
     
     return { success: true, profile };
   } catch (error) {
@@ -81,7 +77,7 @@ export async function updateProfileInfo(profileData: {
   }
 }
 
-// LinkedIn services now handled in updateProfileInfo
+
 
 /**
  * Update selected topics (Step 3: Topics)
@@ -119,7 +115,7 @@ export async function updateContentType(contentType: string) {
   try {
     const profile = await updateUserProfile(userId, {
       contentType,
-      lastCompletedStep: 'details',
+      lastCompletedStep: 'style',
     });
     
     return { success: true, profile };
@@ -129,28 +125,7 @@ export async function updateContentType(contentType: string) {
   }
 }
 
-/**
- * Update content details (Step 5: Details)
- */
-export async function updateContentDetails(contentDetails: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      contentDetails,
-      lastCompletedStep: 'style',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating content details:', error);
-    return { success: false, error: 'Failed to update content details' };
-  }
-}
+
 
 /**
  * Update style preference (Step 6: Style)

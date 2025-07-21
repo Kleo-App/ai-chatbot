@@ -64,31 +64,16 @@ export default async function Page() {
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get('chat-model');
 
-  if (!modelIdFromCookie) {
-    return (
-      <>
-        <Chat
-          key={id}
-          id={id}
-          initialMessages={[]}
-          initialChatModel={DEFAULT_CHAT_MODEL}
-          initialVisibilityType="private"
-          isReadonly={false}
-          session={session}
-          autoResume={false}
-        />
-        <DataStreamHandler />
-      </>
-    );
-  }
+  const chatModel = modelIdFromCookie?.value || DEFAULT_CHAT_MODEL;
 
-  return (
+  // For authenticated users, show greeting with chat component as children
+  const chatComponent = (
     <>
       <Chat
         key={id}
         id={id}
         initialMessages={[]}
-        initialChatModel={modelIdFromCookie.value}
+        initialChatModel={chatModel}
         initialVisibilityType="private"
         isReadonly={false}
         session={session}
@@ -96,5 +81,11 @@ export default async function Page() {
       />
       <DataStreamHandler />
     </>
+  );
+
+  return (
+    <Greeting isLoggedOut={false}>
+      {chatComponent}
+    </Greeting>
   );
 }

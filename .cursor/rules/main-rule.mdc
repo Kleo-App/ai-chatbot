@@ -1,0 +1,123 @@
+---
+description: AI Chatbot with Next.js 15, TypeScript, Clerk Auth, DrizzleORM, and Vercel AI SDK
+globs: 
+alwaysApply: true
+---
+
+You are an expert in TypeScript, Node.js, Next.js 15 App Router, React, ShadCN UI, Radix UI, Tailwind CSS, DrizzleORM, Vercel AI SDK, Clerk Authentication, and TipTap Editor.
+
+Code Style and Structure
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError, canAccess).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+- Organize related functionality in logical directories (e.g., ai/, db/, auth/).
+
+Naming Conventions
+- Use lowercase with dashes for directories (e.g., components/auth-modal, app/(chat)).
+- Use PascalCase for React components and interfaces.
+- Use camelCase for functions, variables, and object properties.
+- Favor named exports for components and utilities.
+- Use descriptive names for API routes and database schemas.
+
+TypeScript Usage
+- Use TypeScript for all code; prefer interfaces over types for object shapes.
+- Avoid enums; use const objects with 'as const' or string literal unions instead.
+- Use strict TypeScript configuration with proper error handling.
+- Define proper types for AI responses, database schemas, and API endpoints.
+- Use Zod for runtime schema validation and type inference.
+
+Syntax and Formatting
+- Use the "function" keyword for pure functions and utilities.
+- Use arrow functions for event handlers and inline functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX with proper accessibility attributes.
+- Prefer template literals for dynamic strings.
+
+UI and Styling
+- Use ShadCN UI, Radix, and Tailwind for components and styling.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+- Ensure compatibility with next-themes for dark/light mode switching.
+- Use Tailwind's design system consistently (spacing, colors, typography).
+- Implement proper loading states and skeleton components.
+- Use Motion.dev (not Framer Motion) for animations and transitions.
+- Use Lucide React for icons consistently.
+
+Performance Optimization
+- Minimize 'use client' directive; favor React Server Components (RSC).
+- Use 'use client' only when necessary for:
+  - Browser APIs (localStorage, geolocation, etc.)
+  - Event handlers that require client-side state
+  - Third-party libraries that require client-side execution
+- Wrap client components in Suspense with meaningful fallback UI.
+- Use dynamic loading for non-critical components.
+- Optimize images with Next.js Image component and proper sizing.
+- Implement proper caching strategies for API routes and database queries.
+
+Database and Backend
+- Use DrizzleORM for all database operations with type-safe queries.
+- Implement proper database schema design with relationships.
+- Use proper migration strategies for schema changes.
+- Handle database errors gracefully with proper error boundaries.
+- Implement proper validation at both client and server levels.
+- Use prepared statements for performance and security.
+
+AI Integration
+- Use Vercel AI SDK for streaming responses and AI functionality.
+- Implement proper error handling for AI API calls.
+- Use streaming patterns for real-time chat experiences.
+- Handle rate limiting and API quotas appropriately.
+- Implement proper prompt engineering and context management.
+- Use structured outputs when possible for consistent AI responses.
+
+Authentication and Security
+- Use Clerk for authentication with proper middleware configuration.
+- Implement role-based access control where needed.
+- Protect API routes with proper authentication checks.
+- Handle authentication state properly in both server and client components.
+- Use environment variables for sensitive configuration.
+- Implement proper CORS and security headers.
+
+State Management
+- Use React's built-in state for component-level state.
+- Use URL search parameters with nuqs for shareable application state.
+- Implement optimistic updates for better user experience.
+- Use React Query or SWR for server state management when needed.
+- Avoid global state unless absolutely necessary.
+
+Error Handling
+- Implement comprehensive error boundaries for React components.
+- Use proper HTTP status codes in API responses.
+- Provide meaningful error messages to users.
+- Log errors appropriately for debugging and monitoring.
+- Handle network failures and retry logic gracefully.
+
+Key Conventions
+- Follow Next.js 15 App Router patterns with proper route organization.
+- Use route groups (parentheses) for logical organization without affecting URL structure.
+- Implement proper SEO with metadata API and OpenGraph images.
+- Use Server Actions for form handling and mutations.
+- Implement proper loading UI with loading.tsx files.
+- Use error.tsx files for error boundaries at route level.
+- Optimize Core Web Vitals (LCP, CLS, FID).
+
+Development Workflow
+- Always use pnpm for package management and commands.
+- Use the correct ShadCN command: `pnpm dlx shadcn@latest add [component]`.
+- Implement proper TypeScript strict mode compliance.
+- Use proper linting and formatting with consistent code style.
+- Write meaningful commit messages and maintain clean git history.
+
+Testing and Quality
+- Write unit tests for utility functions and critical business logic.
+- Implement proper API testing for backend functionality.
+- Use proper TypeScript types to catch errors at compile time.
+- Implement proper accessibility features (ARIA labels, keyboard navigation).
+- Test authentication flows and protected routes thoroughly.
+
+Never maintain backward compatibility unless explicitly requested.
+Always prioritize modern, efficient patterns and latest best practices.
+Focus on creating maintainable, scalable, and performant applications.
+
+Refer to Next.js 15 documentation for App Router patterns, Vercel AI SDK documentation for AI integration, Clerk documentation for authentication, and DrizzleORM documentation for database operations.

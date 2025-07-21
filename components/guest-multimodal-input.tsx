@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from 'react';
 import { toast } from 'sonner';
 import cx from 'classnames';
+import { Blocks, Search, GraduationCap, Images } from 'lucide-react';
 
 import { ArrowUpIcon, PaperclipIcon } from './icons';
 import { Button } from './ui/button';
@@ -42,17 +43,14 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
   }, [onTriggerAuth]);
 
   return (
-    <div className="relative w-full flex flex-col gap-4">
-      <div className="relative bg-white border border-blue-100 rounded-2xl shadow-xl transition-all duration-150 ease-in-out">
+    <div className={cx("relative w-full flex flex-col gap-4", className)}>
+      <div className="relative bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-150 ease-in-out ring-2 ring-black focus-within:ring-2 focus-within:ring-black">
         <Textarea
           ref={textareaRef}
           placeholder="Ask Kleo to create amazing LinkedIn content..."
           value={input}
           onChange={handleInput}
-          className={cx(
-            'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none px-4 py-4 pb-12 focus:ring-0 focus:ring-offset-0',
-            className,
-          )}
+          className="min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none px-4 py-4 pb-12 focus:ring-0 focus:ring-offset-0"
           rows={2}
           autoFocus
           onKeyDown={(event) => {
@@ -93,21 +91,22 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
       </div>
 
       {/* Suggested actions */}
-      <div className="flex flex-wrap gap-2 justify-center mt-6">
+      <div className="flex flex-wrap gap-2 justify-center mt-3">
         {[
-          'Career update post',
-          'Industry insights',
-          'Professional tips',
-          'Company announcement'
+          { text: 'Smart post builder', icon: Blocks },
+          { text: 'Research topics', icon: Search },
+          { text: 'Write an educational post', icon: GraduationCap },
+          { text: 'Create a carousel', icon: Images }
         ].map((suggestion) => (
           <Button
-            key={`suggestion-${suggestion}`}
+            key={`suggestion-${suggestion.text}`}
             variant="outline"
             size="sm"
-            className="h-8 rounded-full px-3 text-sm bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-colors"
-            onClick={() => setInput(`Write a ${suggestion.toLowerCase()}`)}
+            className="h-8 rounded-full px-3 text-sm bg-white hover:bg-gray-50 text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-1.5"
+            onClick={onTriggerAuth}
           >
-            {suggestion}
+            <suggestion.icon size={14} />
+            {suggestion.text}
           </Button>
         ))}
       </div>

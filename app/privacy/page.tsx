@@ -1,40 +1,13 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 import { Footer } from '@/components/footer';
+import { LoggedOutHeader } from '@/components/logged-out-header';
 
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="w-full px-8 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between max-w-6xl mx-auto">
-          <Link href="/" className="flex items-center">
-            <Image
-              src="/images/kleo.svg"
-              alt="Kleo"
-              width={107}
-              height={32}
-              className="h-8 w-auto"
-            />
-          </Link>
-          <nav className="flex items-center space-x-2">
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/login">
-                Sign In
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/register">
-                Get Started
-              </Link>
-            </Button>
-          </nav>
-        </div>
-      </header>
+      <LoggedOutHeader showJoinWaitlist={false} />
 
       {/* Main Content */}
-      <main className="max-w-4xl mx-auto px-8 py-16">
+      <main className="max-w-4xl mx-auto px-8 py-16 pt-24">
         <div className="prose prose-gray max-w-none">
           <h1 className="text-4xl font-medium text-gray-900 mb-8">Privacy Policy</h1>
           

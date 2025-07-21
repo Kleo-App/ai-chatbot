@@ -125,7 +125,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       const hookIdeas: HookIdea[] = parsedResponse.hooks.map((hook: any, index: number) => {
         return {
           id: index + 1,
-          source: hook.type, // Using the type from AI response as the source label
+          source: hook.source || hook.type || `Hook ${index + 1}`, // Use source or type field from AI response
           content: hook.text
         };
       });

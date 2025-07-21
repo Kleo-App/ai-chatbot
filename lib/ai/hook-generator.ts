@@ -159,7 +159,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
         return {
           id: index + 1,
           source,
-          content: hook.content
+          content: hook.text
         };
       });
       

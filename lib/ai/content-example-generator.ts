@@ -74,13 +74,10 @@ export async function generateExampleContent(
     // Get the prompt from Langfuse
     const promptTemplate = await getPrompt('topic-generator');
     
-    // Add JSON format instructions to the prompt
-    const jsonFormatInstructions = `\n\nOutput exactly 1 topic in this JSON format—no extra text:\n{\n"topics": [\n{\n"title": "Engaging title that could be the post's hook",\n"description": "2-3 sentences on why this fits the user's expertise, appeals to their audience, and has viral potential"\n}\n]\n}`;
-    
     // Process the prompt template with user variables
     const prompt = await processPromptTemplate(promptTemplate, {
       bio: bio || ''
-    }) + jsonFormatInstructions;
+    });
 
     // Call OpenAI API
     const response = await openai.chat.completions.create({

@@ -35,6 +35,13 @@ export default async function Page() {
       redirect('/onboarding/welcome');
     }
   } catch (error) {
+    // Check if this is a redirect error (expected behavior)
+    if (error && typeof error === 'object' && 'digest' in error && 
+        typeof error.digest === 'string' && error.digest.includes('NEXT_REDIRECT')) {
+      // This is a redirect, re-throw it to let Next.js handle it
+      throw error;
+    }
+    
     console.error(`[Homepage] Error checking onboarding status for user ${userId}:`, error);
     // If we can't check Clerk, fallback to database check
     try {
@@ -45,6 +52,13 @@ export default async function Page() {
         redirect('/onboarding/welcome');
       }
     } catch (dbError) {
+      // Check if this is a redirect error (expected behavior)
+      if (dbError && typeof dbError === 'object' && 'digest' in dbError && 
+          typeof dbError.digest === 'string' && dbError.digest.includes('NEXT_REDIRECT')) {
+        // This is a redirect, re-throw it to let Next.js handle it
+        throw dbError;
+      }
+      
       console.error(`[Homepage] Error checking database onboarding status:`, dbError);
       // As last resort, redirect to onboarding to be safe
       redirect('/onboarding/welcome');

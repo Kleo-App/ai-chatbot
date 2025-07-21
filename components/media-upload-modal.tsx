@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Button } from './ui/button';
-import { ImageIcon } from './icons';
 import { ImageCropper } from './image-cropper';
 
 interface MediaUploadModalProps {
@@ -20,7 +19,7 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
   const [showCropper, setShowCropper] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.files && event.target.files[0]) {
+    if (event.target.files?.[0]) {
       const file = event.target.files[0];
       
       // Only handle images for cropping
@@ -45,7 +44,7 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
 
   const handleDrop = (event: React.DragEvent) => {
     event.preventDefault();
-    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+    if (event.dataTransfer.files?.[0]) {
       const file = event.dataTransfer.files[0];
       
       // Only handle images for cropping
@@ -137,7 +136,7 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0 border-b pb-4">
+        <DialogHeader className="shrink-0 border-b pb-4">
           <DialogTitle className="text-lg font-medium">
             Add images, videos or documents to your post
           </DialogTitle>
@@ -174,7 +173,7 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
               className="border-b-2 border-transparent data-[state=active]:border-foreground data-[state=active]:bg-transparent rounded-none px-6 py-3"
             >
               <div className="flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="h-5 w-5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="size-5">
                   <g fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" stroke="currentColor">
                     <rect x="3" y="3" width="12" height="12" rx="2" fill="currentColor" fillOpacity="0.3" stroke="none" />
                     <path d="M15.25 8V4.75C15.25 3.645 14.355 2.75 13.25 2.75H10" />

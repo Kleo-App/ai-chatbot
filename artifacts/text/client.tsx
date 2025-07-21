@@ -14,7 +14,7 @@ import {
 import type { Suggestion } from '@/lib/db/schema';
 import { toast } from 'sonner';
 import { getSuggestions } from '../actions';
-import { useState, useEffect } from 'react';
+import { useState, } from 'react';
 
 interface TextArtifactMetadata {
   suggestions: Array<Suggestion>;

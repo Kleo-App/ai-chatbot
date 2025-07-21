@@ -36,7 +36,7 @@ export const LoggedOutHeader = ({ showJoinWaitlist = true }: LoggedOutHeaderProp
 
   return (
     <header 
-      className={`fixed top-0 left-0 right-0 w-full px-8 py-3 z-50 transition-all duration-300 ease-out ${
+      className={`fixed top-0 inset-x-0 w-full px-8 py-3 z-50 transition-all duration-300 ease-out ${
         isScrolled 
           ? 'bg-white/80 backdrop-blur-lg border-b border-gray-200/50' 
           : 'bg-transparent'

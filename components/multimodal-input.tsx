@@ -210,7 +210,7 @@ function PureMultimodalInput({
     {
       id: 'variation',
       label: 'Create a variation of this post',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2"></path><path d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z"></path></svg>
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M15.24 2h-3.894c-1.764 0-3.162 0-4.255.148c-1.126.152-2.037.472-2.755 1.193c-.719.721-1.038 1.636-1.189 2.766C3 7.205 3 8.608 3 10.379v5.838c0 1.508.92 2.8 2.227 3.342c-.067-.91-.067-2.185-.067-3.247v-5.01c0-1.281 0-2.386.118-3.27c.127-.948.413-1.856 1.147-2.593s1.639-1.024 2.583-1.152c.88-.118 1.98-.118 3.257-.118h3.07c1.276 0 2.374 0 3.255.118A3.6 3.6 0 0 0 15.24 2" /><path d="M6.6 11.397c0-2.726 0-4.089.844-4.936c.843-.847 2.2-.847 4.916-.847h2.88c2.715 0 4.073 0 4.917.847S21 8.671 21 11.397v4.82c0 2.726 0 4.089-.843 4.936c-.844.847-2.202.847-4.917.847h-2.88c-2.715 0-4.073 0-4.916-.847c-.844-.847-.844-2.21-.844-4.936z" /></svg>
     },
     {
       id: 'shorter',
@@ -225,7 +225,7 @@ function PureMultimodalInput({
     {
       id: 'ask',
       label: 'Ask anything',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12c0 1.6.376 3.112 1.043 4.453c.178.356.237.763.134 1.148l-.595 2.226a1.3 1.3 0 0 0 1.591 1.592l2.226-.596a1.63 1.63 0 0 1 1.149.133A9.96 9.96 0 0 0 12 22"></path></svg>
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2S2 6.477 2 12c0 1.6.376 3.112 1.043 4.453c.178.356.237.763.134 1.148l-.595 2.226a1.3 1.3 0 0 0 1.591 1.592l2.226-.596a1.63 1.63 0 0 1 1.149.133A9.96 9.96 0 0 0 12 22" /></svg>
     }
   ];
 
@@ -348,7 +348,7 @@ function PureMultimodalInput({
         )}
       </AnimatePresence>
 
-      {/* Quick Actions Panel */}
+                {/* Quick Actions Panel */}
       {shouldShowQuickActions && showQuickActions && (
         <AnimatePresence>
           <motion.div
@@ -358,14 +358,14 @@ function PureMultimodalInput({
             transition={{ duration: 0.2 }}
             className="relative mb-4"
           >
-            <div className="relative flex h-full w-full flex-col flex-nowrap items-center justify-between px-2">
-              <div className="bg-transparent border-divider relative flex h-full w-full flex-col overflow-hidden rounded-3xl border p-4 backdrop-blur-sm">
+            <div className="relative flex size-full flex-col flex-nowrap items-center justify-between px-2">
+              <div className="bg-transparent border-divider relative flex size-full flex-col overflow-hidden rounded-3xl border p-4 backdrop-blur-sm">
                 <div className="absolute top-2 right-2 z-10">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-8 h-8 p-0 text-muted-foreground rounded-full bg-transparent hover:bg-default/40"
+                    className="size-8 p-0 text-muted-foreground rounded-full bg-transparent hover:bg-default/40"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -379,16 +379,16 @@ function PureMultimodalInput({
                   <BoltIcon size={18} />
                   <h3 className="text-foreground text-sm font-semibold">Quick Actions</h3>
                 </div>
-                <div className="mt-5 -ml-2 flex-1 overflow-hidden">
-                  <div className="overflow-y-auto h-full w-full">
-                    <div className="w-full relative flex flex-col gap-1 overflow-clip p-0">
+                                  <div className="mt-5 -ml-2 flex-1 overflow-hidden">
+                    <div className="overflow-y-auto size-full">
+                      <div className="w-full relative flex flex-col gap-1 text-clip p-0">
                       <ul className="w-full flex flex-col gap-0.5 outline-hidden">
                         {quickActions.map((action) => (
                           <li key={action.id}>
                             <Button
                               type="button"
                               variant="ghost"
-                              className="flex group items-center justify-between w-full h-full box-border cursor-pointer bg-transparent hover:bg-default/40 p-2 rounded-lg gap-2 text-foreground"
+                              className="flex group items-center justify-between size-full box-border cursor-pointer bg-transparent hover:bg-default/40 p-2 rounded-lg gap-2 text-foreground"
                               onClick={(event) => {
                                 event.preventDefault();
                                 event.stopPropagation();
@@ -423,14 +423,14 @@ function PureMultimodalInput({
             transition={{ duration: 0.2 }}
             className="relative mb-4"
           >
-            <div className="relative flex h-full w-full flex-col flex-nowrap items-center justify-between px-2">
-              <div className="bg-transparent border-divider relative flex h-full w-full flex-col overflow-hidden rounded-3xl border p-4 backdrop-blur-sm">
+            <div className="relative flex size-full flex-col flex-nowrap items-center justify-between px-2">
+              <div className="bg-transparent border-divider relative flex size-full flex-col overflow-hidden rounded-3xl border p-4 backdrop-blur-sm">
                 <div className="absolute top-2 right-2 z-10">
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="w-8 h-8 p-0 text-muted-foreground rounded-full bg-transparent hover:bg-default/40"
+                    className="size-8 p-0 text-muted-foreground rounded-full bg-transparent hover:bg-default/40"
                     onClick={(event) => {
                       event.preventDefault();
                       event.stopPropagation();
@@ -507,7 +507,7 @@ function PureMultimodalInput({
                               Personal
                             </div>
                             <div className="flex items-center gap-2 rounded-full px-2 py-0.5 text-purple-400 bg-purple-500/10 border border-purple-500/20">
-                              <div className="h-1.5 w-1.5 rounded-full bg-purple-500"></div>
+                              <div className="size-1.5 rounded-full bg-purple-500" />
                               <span className="text-[10px] font-medium tracking-wider">{hook.category}</span>
                             </div>
                           </div>
@@ -601,7 +601,7 @@ function PureMultimodalInput({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="bg-transparent hover:bg-default/40 min-w-8 w-8 h-8 p-2 text-primary"
+                className="bg-transparent hover:bg-default/40 min-w-8 size-8 p-2 text-primary"
                 onClick={(event) => {
                   event.preventDefault();
                   event.stopPropagation();

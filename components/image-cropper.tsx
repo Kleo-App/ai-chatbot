@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, useEffect } from 'react';
-import ReactCrop, { type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
+import { default as ReactCrop, type Crop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import { Button } from './ui/button';
 import 'react-image-crop/dist/ReactCrop.css';
 
@@ -133,10 +133,10 @@ export function ImageCropper({
   };
 
   return (
-    <div className="flex h-full w-full">
+    <div className="flex size-full">
       {/* Left side - Image cropper */}
       <div className="flex-1 flex items-center justify-center p-6">
-        <div className="w-full h-full flex items-center justify-center">
+        <div className="size-full flex items-center justify-center">
           <ReactCrop
             crop={crop}
             onChange={(_, percentCrop) => setCrop(percentCrop)}
@@ -144,6 +144,7 @@ export function ImageCropper({
             aspect={aspectRatio}
             className="max-w-full max-h-full"
           >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               ref={imgRef}
               alt="Crop me"

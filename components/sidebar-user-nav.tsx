@@ -23,7 +23,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getUserProfile, updateProfileInfo } from '@/app/actions/profile-actions';
-import { UserProfile } from '@/lib/db/schema-profile';
+import type { UserProfile } from '@/lib/db/schema-profile';
 import {
   Select,
   SelectContent,
@@ -230,7 +230,7 @@ export function SidebarUserNav() {
         // Update the form data with the transcription
         setFormData(prev => ({
           ...prev,
-          [fieldName]: prev[fieldName as keyof typeof prev] + ' ' + data.transcription,
+          [fieldName]: `${prev[fieldName as keyof typeof prev]} ${data.transcription}`,
         }));
         
         toast({
@@ -320,7 +320,7 @@ export function SidebarUserNav() {
             className="cursor-pointer flex items-center gap-2"
             onClick={() => setIsSettingsOpen(true)}
           >
-            <Settings className="h-5 w-5" />
+            <Settings className="size-5" />
             Settings
           </DropdownMenuItem>
           
@@ -334,7 +334,7 @@ export function SidebarUserNav() {
                 signOut({ redirectUrl: '/' });
               }}
             >
-              <LogOut className="h-5 w-5" />
+              <LogOut className="size-5" />
               Sign out
             </button>
           </DropdownMenuItem>
@@ -385,7 +385,7 @@ export function SidebarUserNav() {
                 <div className="space-y-6">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <User className="h-5 w-5 text-muted-foreground" />
+                      <User className="size-5 text-muted-foreground" />
                       <p className="font-medium">Full Name</p>
                     </div>
                     <div className="relative">
@@ -397,13 +397,13 @@ export function SidebarUserNav() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary"
                         onClick={() => isRecording && activeField === 'fullName' ? stopRecording() : startRecording('fullName')}
                       >
                         {isRecording && activeField === 'fullName' ? (
-                          <MicOff className="h-4 w-4 text-red-500" />
+                          <MicOff className="size-4 text-red-500" />
                         ) : (
-                          <Mic className="h-4 w-4" />
+                          <Mic className="size-4" />
                         )}
                       </button>
                     </div>
@@ -411,7 +411,7 @@ export function SidebarUserNav() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <FileText className="h-5 w-5 text-muted-foreground" />
+                      <FileText className="size-5 text-muted-foreground" />
                       <p className="font-medium">Bio</p>
                     </div>
                     <div className="relative">
@@ -428,9 +428,9 @@ export function SidebarUserNav() {
                         onClick={() => isRecording && activeField === 'bio' ? stopRecording() : startRecording('bio')}
                       >
                         {isRecording && activeField === 'bio' ? (
-                          <MicOff className="h-4 w-4 text-red-500" />
+                          <MicOff className="size-4 text-red-500" />
                         ) : (
-                          <Mic className="h-4 w-4" />
+                          <Mic className="size-4" />
                         )}
                       </button>
                     </div>
@@ -438,7 +438,7 @@ export function SidebarUserNav() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <BookText className="h-5 w-5 text-muted-foreground" />
+                      <BookText className="size-5 text-muted-foreground" />
                       <p className="font-medium">Style Preference</p>
                     </div>
                     <Select
@@ -464,7 +464,7 @@ export function SidebarUserNav() {
               ) : (
                 <div className="space-y-6">
                   <div className="flex items-start gap-3">
-                    <User className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <User className="size-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="font-medium">Full Name</p>
                       <p className="text-sm text-muted-foreground">
@@ -474,7 +474,7 @@ export function SidebarUserNav() {
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <FileText className="size-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="font-medium">Bio</p>
                       <p className="text-sm text-muted-foreground">
@@ -484,7 +484,7 @@ export function SidebarUserNav() {
                   </div>
                   
                   <div className="flex items-start gap-3">
-                    <BookText className="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <BookText className="size-5 text-muted-foreground mt-0.5" />
                     <div>
                       <p className="font-medium">Style Preference</p>
                       <p className="text-sm text-muted-foreground">
@@ -497,7 +497,7 @@ export function SidebarUserNav() {
                     <h3 className="font-medium mb-4">LinkedIn Connection</h3>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <Linkedin className="h-5 w-5 text-[#0077B5]" />
+                        <Linkedin className="size-5 text-[#0077B5]" />
                         <div>
                           {linkedInStatus.isConnected ? (
                             <>
@@ -524,12 +524,12 @@ export function SidebarUserNav() {
                           <LoaderIcon size={16} />
                         ) : linkedInStatus.isConnected ? (
                           <>
-                            <Unlink className="mr-2 h-4 w-4" />
+                            <Unlink className="mr-2 size-4" />
                             Disconnect
                           </>
                         ) : (
                           <>
-                            <Linkedin className="mr-2 h-4 w-4" />
+                            <Linkedin className="mr-2 size-4" />
                             Connect
                           </>
                         )}
@@ -576,7 +576,7 @@ export function SidebarUserNav() {
                     </>
                   ) : (
                     <>
-                      <Save className="mr-2 h-4 w-4" />
+                      <Save className="mr-2 size-4" />
                       Save Changes
                     </>
                   )}

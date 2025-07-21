@@ -50,7 +50,7 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
           placeholder="Ask Kleo to create amazing LinkedIn content..."
           value={input}
           onChange={handleInput}
-          className="min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none px-4 py-4 pb-12 focus:ring-0 focus:ring-offset-0"
+          className="min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none p-4 pb-12 focus:ring-0 focus:ring-offset-0"
           rows={2}
           autoFocus
           onKeyDown={(event) => {

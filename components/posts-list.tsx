@@ -1,13 +1,10 @@
 'use client';
-
-import { useState } from 'react';
 import useSWR from 'swr';
 import Link from 'next/link';
 import { formatDistance } from 'date-fns';
 import { Button } from './ui/button';
 import { FileIcon, PlusIcon, LoaderIcon } from './icons';
-import { fetcher } from '@/lib/utils';
-import { generateUUID } from '@/lib/utils';
+import { fetcher, generateUUID } from '@/lib/utils';
 import type { Document } from '@/lib/db/schema';
 
 export function PostsList() {
@@ -37,7 +34,7 @@ export function PostsList() {
   if (!documents || documents.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4">
+        <div className="mx-auto size-12 text-muted-foreground/50 mb-4">
           <FileIcon size={48} />
         </div>
         <h3 className="text-lg font-medium mb-2">No posts yet</h3>
@@ -66,9 +63,9 @@ export function PostsList() {
 }
 
 function PostRow({ document }: { document: Document }) {
-  const truncateContent = (content: string, maxLength: number = 120) => {
+  const truncateContent = (content: string, maxLength = 120) => {
     if (content.length <= maxLength) return content;
-    return content.substring(0, maxLength) + '...';
+    return `${content.substring(0, maxLength)}...`;
   };
 
   const getPreviewContent = (content: string | null) => {
@@ -100,7 +97,7 @@ function PostRow({ document }: { document: Document }) {
       className="flex items-center gap-4 p-4 rounded-lg border bg-card cursor-pointer transition-all hover:bg-muted/50 hover:shadow-sm"
       onClick={handleRowClick}
     >
-      <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-muted/50">
+      <div className="flex items-center justify-center size-10 rounded-lg bg-muted/50">
         <span className="text-muted-foreground">
           <FileIcon size={20} />
         </span>

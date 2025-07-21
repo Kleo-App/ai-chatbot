@@ -19,21 +19,21 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
       <div className="flex items-center gap-2 px-4 py-3 bg-gray-100 border-b border-gray-200">
         {/* Traffic lights */}
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 rounded-full bg-red-500"></div>
-          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+          <div className="size-3 rounded-full bg-red-500" />
+          <div className="size-3 rounded-full bg-yellow-500" />
+          <div className="size-3 rounded-full bg-green-500" />
         </div>
         
         {/* Navigation buttons */}
         <div className="flex items-center gap-1 ml-4">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <ChevronLeft className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="size-8 p-0">
+            <ChevronLeft className="size-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <ChevronRight className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="size-8 p-0">
+            <ChevronRight className="size-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <RotateCcw className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="size-8 p-0">
+            <RotateCcw className="size-4" />
           </Button>
         </div>
 
@@ -41,8 +41,8 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
         <div className="flex-1 mx-4">
           <div className="bg-white rounded-lg px-4 py-2 text-sm text-gray-600 border border-gray-300">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
+              <div className="size-4 rounded-full bg-green-500 flex items-center justify-center">
+                <div className="size-2 bg-white rounded-full" />
               </div>
               https://kleo.so
             </div>
@@ -51,11 +51,11 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
 
         {/* Browser controls */}
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <Plus className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="size-8 p-0">
+            <Plus className="size-4" />
           </Button>
-          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-            <MoreHorizontal className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="size-8 p-0">
+            <MoreHorizontal className="size-4" />
           </Button>
         </div>
       </div>
@@ -80,7 +80,7 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
                 alt="Kleo"
                 width={24}
                 height={24}
-                className="h-6 w-6"
+                className="size-6"
               />
             )}
           </div>
@@ -93,18 +93,18 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
               className="w-full justify-start bg-blue-600 hover:bg-blue-700 text-white"
               size="sm"
             >
-              <MessageSquare className="w-4 h-4 mr-2" />
+              <MessageSquare className="size-4 mr-2" />
               {sidebarOpen && "New Chat"}
             </Button>
 
             {/* Navigation Items */}
             <div className="space-y-2">
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 cursor-pointer">
-                <History className="w-4 h-4 text-gray-600" />
+                <History className="size-4 text-gray-600" />
                 {sidebarOpen && <span className="text-sm text-gray-700">History</span>}
               </div>
               <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 cursor-pointer">
-                <Search className="w-4 h-4 text-gray-600" />
+                <Search className="size-4 text-gray-600" />
                 {sidebarOpen && <span className="text-sm text-gray-700">Search</span>}
               </div>
             </div>
@@ -136,7 +136,7 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
           {/* Sidebar Footer */}
           <div className="p-4 border-t border-gray-200">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-200 cursor-pointer">
-              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
+              <div className="size-6 rounded-full bg-blue-600 flex items-center justify-center text-white text-xs font-semibold">
                 G
               </div>
               {sidebarOpen && <span className="text-sm text-gray-700">Guest User</span>}
@@ -152,19 +152,19 @@ export function BrowserMockup({ onTriggerAuth }: BrowserMockupProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0"
+                className="size-8 p-0"
                 onClick={() => setSidebarOpen(!sidebarOpen)}
               >
-                <div className="w-4 h-4 flex flex-col justify-center space-y-1">
-                  <div className="w-4 h-0.5 bg-gray-600"></div>
-                  <div className="w-4 h-0.5 bg-gray-600"></div>
-                  <div className="w-4 h-0.5 bg-gray-600"></div>
+                <div className="size-4 flex flex-col justify-center space-y-1">
+                  <div className="w-4 h-0.5 bg-gray-600" />
+                  <div className="w-4 h-0.5 bg-gray-600" />
+                  <div className="w-4 h-0.5 bg-gray-600" />
                 </div>
               </Button>
               <h1 className="text-sm font-medium text-gray-900">New Chat</h1>
             </div>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Settings className="w-4 h-4" />
+            <Button variant="ghost" size="sm" className="size-8 p-0">
+              <Settings className="size-4" />
             </Button>
           </div>
 

@@ -262,8 +262,18 @@ export default function LoginPage() {
                     </div>
                   </div>
 
+                  {/* Sign In Button */}
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+                    disabled={isLoading || !isLoaded}
+                  >
+                    {isLoading ? 'Signing in...' : 'Sign In'}
+                  </Button>
+
                   {/* Forgot Password Link */}
-                  <div className="text-right">
+                  <div className="text-center mt-4">
                     <button
                       type="button"
                       onClick={() => {
@@ -277,30 +287,9 @@ export default function LoginPage() {
                       Forgot your password?
                     </button>
                   </div>
-
-                  {/* Sign In Button */}
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
-                    disabled={isLoading || !isLoaded}
-                  >
-                    {isLoading ? 'Signing in...' : 'Sign In'}
-                  </Button>
                 </form>
 
-                {/* Sign Up Link */}
-                <div className="mt-6 text-center">
-                  <p className="text-sm text-gray-600">
-                    Don&apos;t have an account?{' '}
-                    <Link 
-                      href="/register" 
-                      className="text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                    >
-                      Sign up
-                    </Link>
-                  </p>
-                </div>
+
               </>
             ) : (
               <>

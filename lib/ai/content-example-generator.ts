@@ -32,15 +32,6 @@ export async function generateExampleContent(
   });
   
   try {
-    
-    // Check for network connectivity before proceeding
-    try {
-      const OPENAI_API_URL = process.env.OPENAI_API_URL || 'https://api.openai.com';
-      await fetch(OPENAI_API_URL, { method: 'HEAD', signal: AbortSignal.timeout(2000) });
-    } catch (networkError) {
-      console.warn('Network connectivity issue detected with OpenAI API:', networkError);
-      return defaultContent;
-    }
 
     // If no bio is provided, return default content
     if (!bio && !jobTitle) {

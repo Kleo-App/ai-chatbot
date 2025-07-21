@@ -53,7 +53,6 @@ export async function generateContent(contentType: string): Promise<{
     // which will handle parsing internally
     const contentIdeas = await generateContentIdeas(
       userProfile.bio || '',
-      userProfile.linkedInServices || '',
       userProfile.selectedTopics,
       contentType
     );

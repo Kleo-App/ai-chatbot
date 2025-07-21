@@ -45,7 +45,6 @@ export function SidebarUserNav() {
     fullName: '',
     bio: '',
     stylePreference: '',
-    linkedInServices: '',
   });
   
   // Deepgram voice transcription states
@@ -130,16 +129,14 @@ export function SidebarUserNav() {
           if (result.success && result.profile) {
             setUserProfile(result.profile);
             
-            // Debug linkedInServices
+            // Debug profile data
             console.log('Profile data:', result.profile);
-            console.log('linkedInServices value:', result.profile.linkedInServices);
             
             // Populate form data with profile information
             setFormData({
               fullName: result.profile.fullName || '',
               bio: result.profile.bio || '',
               stylePreference: result.profile.stylePreference || '',
-              linkedInServices: result.profile.linkedInServices || '',
             });
           } else {
             throw new Error(result.error || 'Failed to load profile');
@@ -260,7 +257,6 @@ export function SidebarUserNav() {
         fullName: formData.fullName,
         bio: formData.bio,
         stylePreference: formData.stylePreference,
-        linkedInServices: formData.linkedInServices,
       });
       
       if (result.success) {
@@ -442,33 +438,6 @@ export function SidebarUserNav() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Linkedin className="h-5 w-5 text-muted-foreground" />
-                      <p className="font-medium">LinkedIn Services</p>
-                    </div>
-                    <div className="relative">
-                      <Textarea
-                        name="linkedInServices"
-                        value={formData.linkedInServices}
-                        onChange={handleInputChange}
-                        placeholder="What products or services do you sell on LinkedIn?"
-                        rows={3}
-                      />
-                      <button
-                        type="button"
-                        className="absolute right-2 top-6 text-muted-foreground hover:text-primary"
-                        onClick={() => isRecording && activeField === 'linkedInServices' ? stopRecording() : startRecording('linkedInServices')}
-                      >
-                        {isRecording && activeField === 'linkedInServices' ? (
-                          <MicOff className="h-4 w-4 text-red-500" />
-                        ) : (
-                          <Mic className="h-4 w-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
                       <BookText className="h-5 w-5 text-muted-foreground" />
                       <p className="font-medium">Style Preference</p>
                     </div>
@@ -510,16 +479,6 @@ export function SidebarUserNav() {
                       <p className="font-medium">Bio</p>
                       <p className="text-sm text-muted-foreground">
                         {userProfile.bio || 'Not set'}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <Linkedin className="h-5 w-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">LinkedIn Services</p>
-                      <p className="text-sm text-muted-foreground">
-                        {userProfile.linkedInServices || 'Not set'}
                       </p>
                     </div>
                   </div>
@@ -600,7 +559,6 @@ export function SidebarUserNav() {
                         fullName: userProfile.fullName || '',
                         bio: userProfile.bio || '',
                         stylePreference: userProfile.stylePreference || '',
-                        linkedInServices: userProfile.linkedInServices || '',
                       });
                     }
                   }}

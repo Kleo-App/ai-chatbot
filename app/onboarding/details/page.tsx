@@ -115,7 +115,7 @@ export default function KleoContentDetails() {
     <OnboardingLayout>
       <div>
         {/* Progress Header */}
-        <StepIndicator currentStep="details" />
+        <StepIndicator currentStep="content" />
         
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl sm:min-w-[768px]">

@@ -123,10 +123,18 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       
       // Format the hooks with their types
       const hookIdeas: HookIdea[] = parsedResponse.hooks.map((hook: any, index: number) => {
+        // Handle different response formats
+        // Some responses might have {type, text} structure
+        // Others might have {source, text} or just text directly
         return {
           id: index + 1,
-          source: hook.source || hook.type || `Hook ${index + 1}`, // Use source or type field from AI response
-          content: hook.text
+          source: hook.type || hook.source || (
+            index === 0 ? "Monetisable Expertise" :
+            index === 1 ? "Strategic Arbitrage" :
+            index === 2 ? "Educational" :
+            "Highly Engaging"
+          ),
+          content: hook.text || hook.content || (typeof hook === 'string' ? hook : '')
         };
       });
       

@@ -8,7 +8,7 @@ import { getUserProfile, updateOnboardingStep, completeOnboarding as completeUse
 import type { UserProfile } from '@/lib/db/schema-profile';
 
 // Define the onboarding steps
-export type OnboardingStep = 'welcome' | 'topics' | 'content' | 'style' | 'hook' | 'review' | 'complete';
+export type OnboardingStep = 'welcome' | 'about' | 'topics' | 'hook' | 'review' | 'complete';
 
 interface OnboardingContextType {
   currentStep: OnboardingStep;

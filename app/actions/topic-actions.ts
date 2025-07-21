@@ -6,6 +6,34 @@ import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-quer
 import { updateSelectedTopics } from './profile-actions';
 
 /**
+ * Save post details to user profile
+ */
+export async function updatePostDetails(postDetails: string): Promise<{
+  success: boolean;
+  error?: string;
+}> {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return { success: false, error: 'User not authenticated' };
+    }
+    
+    await updateUserProfile(userId, {
+      postDetails: postDetails,
+    });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error saving post details:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to save post details'
+    };
+  }
+}
+
+/**
  * Generate AI topic suggestions based on user profile data
  * and save them to the database
  */

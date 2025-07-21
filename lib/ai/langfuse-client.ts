@@ -132,10 +132,8 @@ Make topics specific and actionable. Each topic should be 5-10 words.`,
 Profile information:
 {{bio}}
 
-Selected topics:
+Post information:
 {{selectedTopics}}
-
-Content type: {{contentType}}
 
 Generate 5 specific content ideas for the selected content type that would be good for the user to post about on LinkedIn based on their profile and selected topics.
 
@@ -164,21 +162,36 @@ Bio: {{bio}}
 Selected topics:
 {{selectedTopics}}
 
-Content type: {{contentType}}
-Content details: {{contentDetails}}
+Post information: {{selectedTopics}}
 
-Style preference: {{stylePreference}}
+Writing style: Professional and engaging
 
-Generate 5 attention-grabbing hooks for LinkedIn posts based on the user's profile, content details, and style preference. The hooks should be designed to stop the scroll and engage the reader immediately.
+Generate 4 attention-grabbing hooks for LinkedIn posts, one for each of these specific formats. Each hook should be short (1-2 sentences max) and designed to stop the scroll:
+
+1. **Monetisable Expertise**: Focus on valuable insights, lessons learned, or expertise that demonstrates clear business value
+2. **Strategic Arbitrage**: Highlight contrarian thinking, unique perspectives, or opportunities others might miss  
+3. **Educational**: Share actionable tips, how-to insights, or knowledge that teaches something specific
+4. **Highly Engaging**: Use storytelling, personal experiences, or provocative questions that spark conversation
 
 Return the hooks as a JSON object with the following structure:
 {
   "hooks": [
     {
-      "source": "AI-generated",
+      "type": "Monetisable Expertise",
       "text": "Hook text here"
     },
-    ...
+    {
+      "type": "Strategic Arbitrage", 
+      "text": "Hook text here"
+    },
+    {
+      "type": "Educational",
+      "text": "Hook text here"
+    },
+    {
+      "type": "Highly Engaging",
+      "text": "Hook text here"
+    }
   ]
 }
 
@@ -192,7 +205,7 @@ Job Title: {{jobTitle}}
 Company: {{company}}
 
 Selected topics: {{topics}}
-Style preference: {{stylePreference}}
+Writing style: Professional and engaging
 Selected hook: {{preferredHook}}
 
 Generate 3 complete LinkedIn post ideas that start with the selected hook. Each post should be well-structured, engaging, and professional.

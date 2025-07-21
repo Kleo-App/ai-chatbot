@@ -33,38 +33,22 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       jobTitle,
       company,
       bio,
-      selectedTopics,
-      contentType,
-      contentDetails,
-      stylePreference
+      postDetails
     } = userProfile;
     
-    // Parse selected topics if available
-    let topics: any[] = [];
-    if (selectedTopics) {
-      try {
-        topics = JSON.parse(selectedTopics);
-      } catch (e) {
-        console.warn('Failed to parse selected topics');
-      }
-    }
+    // Use post details for hook generation
+    const postInformation = postDetails || '';
 
     // Get the prompt template from Langfuse
     const promptTemplate = await getPrompt('hook-generator');
   
-    // Prepare variables for the prompt template
-    const selectedTopicsText = Array.isArray(selectedTopics) ? selectedTopics.map((topic: any) => topic.title).join('\n') : '';
-    
     // Process the prompt template with variables
     const prompt = await processPromptTemplate(promptTemplate, {
       fullName: fullName || '',
       jobTitle: jobTitle || '',
       company: company || '',
       bio: bio || '',
-      selectedTopics: selectedTopicsText,
-      contentType: contentType ?? '',
-      contentDetails: contentDetails ?? '',
-      stylePreference: stylePreference ?? ''
+      selectedTopics: postInformation // Using postDetails for topic information
     });
     
     console.log('Generating hook ideas with prompt:', prompt);
@@ -75,10 +59,7 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       jobTitle,
       company,
       bio,
-      selectedTopics,
-      contentType,
-      contentDetails,
-      stylePreference
+      postDetails
     });
     
     // Skip Langfuse tracking if trace creation failed
@@ -140,25 +121,11 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
         throw new Error('Invalid response format from AI');
       }
       
-      // Format the hooks with sources
+      // Format the hooks with their types
       const hookIdeas: HookIdea[] = parsedResponse.hooks.map((hook: any, index: number) => {
-        let source = 'From Kleo AI';
-        
-        if (index === 0) {
-          source = stylePreference === 'kleo-generated' 
-            ? 'From your writing style' 
-            : stylePreference === 'jake'
-              ? 'From Jake\'s style'
-              : stylePreference === 'lara'
-                ? 'From Lara\'s style'
-                : 'From Kleo AI';
-        } else if (index === 1 && topics.length > 0) {
-          source = 'From your topic';
-        }
-        
         return {
           id: index + 1,
-          source,
+          source: hook.type, // Using the type from AI response as the source label
           content: hook.text
         };
       });
@@ -197,18 +164,23 @@ function getDefaultHookIdeas(): HookIdea[] {
   return [
     {
       id: 1,
-      source: "From your writing style",
-      content: "Burnout nearly destroyed my team — until AI became our secret weapon."
+      source: "Monetisable Expertise",
+      content: "I turned my biggest career failure into a $50k consulting framework."
     },
     {
       id: 2,
-      source: "From your topic",
-      content: "From Burnout to Brilliance: My Journey Coaching a Team from Skeptical to Supercharged with Automated AI Agents"
+      source: "Strategic Arbitrage", 
+      content: "While everyone's chasing AI, I'm building the human skills that will be irreplaceable."
     },
     {
       id: 3,
-      source: "From Kleo AI",
-      content: "The moment I realized my team was burning out wasn't when they started missing deadlines—it was when they stopped complaining about them."
+      source: "Educational",
+      content: "Here's the 3-step framework that helped me 10x my productivity in 30 days:"
+    },
+    {
+      id: 4,
+      source: "Highly Engaging",
+      content: "My biggest mistake cost me 6 months and $100k. Here's what I learned:"
     }
   ];
 }

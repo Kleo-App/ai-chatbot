@@ -204,6 +204,8 @@ function PureArtifact({
 
   const handleBackButton = useCallback(() => {
     if (openedFromPosts) {
+      // Clear the artifact state when navigating back from posts
+      setArtifact({ ...initialArtifactData, status: 'idle' });
       router.push('/posts');
     } else {
       setArtifact((currentArtifact) =>

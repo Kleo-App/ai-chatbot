@@ -12,6 +12,8 @@ import { getOrGeneratePosts, savePreferredPost } from "@/app/actions/post-action
 import type { PostIdea } from "@/lib/ai/post-generator"
 import { trackFeedback } from "@/lib/ai/langfuse-client"
 import { toast } from "sonner"
+import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function KleoReviewPublish() {
   const [selectedPost, setSelectedPost] = useState<number | null>(null)
@@ -157,54 +159,28 @@ export default function KleoReviewPublish() {
     }
   }
 
-  return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/login" />
-      </div>
-      
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        {/* Progress Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <span className="text-gray-700 font-medium">Step 8:</span>
-            <span className="text-gray-900 font-semibold">Review & publish</span>
-            <div className="flex gap-2 ml-4">
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-              <div className="w-8 h-2 bg-[#157DFF] rounded-full" />
-            </div>
+    return (
+    <OnboardingLayout currentStep="review">
+      <div className="flex w-full flex-col items-center gap-8 text-center">
+        <div className="flex w-full flex-col items-center space-y-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-muted-foreground text-xs font-medium tracking-[0.1em] uppercase">
+              Final review
+            </p>
+            <h1 className="w-full text-center text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
+              Review & publish your post
+            </h1>
+            <p className="text-gray-600 max-w-3xl">
+              Select one of the variations below to edit and preview before publishing.
+            </p>
           </div>
         </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-7xl">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Review & publish your post</h2>
-          </div>
-
-          <p className="text-gray-600 mb-6">
-            Select one of the variations below to edit and preview before publishing.
-          </p>
+        
+        <div className="w-full max-w-7xl">
 
           {/* Post Variations */}
           <div>
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 w-full">
-                <Loader2 className="size-12 text-[#157DFF] animate-spin mb-4" />
-                <p className="text-gray-600 font-medium">Generating your LinkedIn posts...</p>
-                <p className="text-gray-500 text-sm mt-2">This may take a few moments</p>
-              </div>
-            ) : error ? (
+            {error ? (
               <div className="flex flex-col items-center justify-center py-12 w-full">
                 <div className="bg-red-50 text-red-700 p-4 rounded-lg mb-4">
                   <p className="font-medium">Something went wrong</p>
@@ -216,6 +192,26 @@ export default function KleoReviewPublish() {
                 >
                   Try again
                 </Button>
+              </div>
+            ) : postVariations.length === 0 && isLoading ? (
+              // Show skeleton posts while loading
+              <div className="grid md:grid-cols-2 gap-6 w-full max-w-6xl">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Card key={index} className="bg-white/90 backdrop-blur-sm border-2 border-gray-200 animate-pulse">
+                    <CardContent className="p-6">
+                      <div className="h-4 bg-gray-200 rounded mb-4" />
+                      <div className="space-y-2 mb-4">
+                        <div className="h-3 bg-gray-200 rounded" />
+                        <div className="h-3 bg-gray-200 rounded w-5/6" />
+                        <div className="h-3 bg-gray-200 rounded w-4/6" />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-8 w-16 bg-gray-200 rounded" />
+                        <div className="h-8 w-16 bg-gray-200 rounded" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -325,17 +321,19 @@ export default function KleoReviewPublish() {
             )}
           </div>
           
-          {/* Navigation Buttons */}
-          <div className="flex justify-center gap-4 mt-6 border-t border-gray-100 pt-6">
+        </div>
+        
+        <div className="flex w-full justify-center pt-8">
+          <div className="flex justify-center gap-4">
             <Button
               onClick={handleBack}
-              className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-8 py-3 rounded-xl font-medium shadow hover:shadow-md transition-all duration-200"
+              className="bg-white/80 backdrop-blur-sm hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-6 rounded-full font-medium text-base shadow hover:shadow-md transition-all duration-200"
               disabled={isLoading || isSaving}
             >
               Back
             </Button>
             <Button
-              className="bg-[#157DFF] hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transition-all duration-200"
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-6 rounded-full font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 min-w-[200px]"
               onClick={handleComplete}
               disabled={isLoading || isSaving || !selectedPost}
             >
@@ -353,9 +351,7 @@ export default function KleoReviewPublish() {
             </Button>
           </div>
         </div>
-        
-
       </div>
-    </div>
+    </OnboardingLayout>
   )
 }

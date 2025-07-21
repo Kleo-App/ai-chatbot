@@ -37,26 +37,17 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
       fullName: userProfile.fullName,
       jobTitle: userProfile.jobTitle,
       company: userProfile.company,
-      topics: userProfile.selectedTopics,
-      stylePreference: userProfile.stylePreference,
+      postDetails: userProfile.postDetails,
       preferredHook: userProfile.preferredHook
     });
     
-    // Parse selected topics if available
-    let topics: string[] = [];
-    if (userProfile.selectedTopics) {
-      try {
-        topics = JSON.parse(userProfile.selectedTopics);
-      } catch (error) {
-        console.error('Error parsing selected topics:', error);
-      }
-    }
+    // Use post details for content generation
+    const postInformation = userProfile.postDetails || '';
     
     // Get the user's preferred hook
     const preferredHook = userProfile.preferredHook || '';
     
-    // Get the user's style preference
-    const stylePreference = userProfile.stylePreference || 'kleo';
+    // Style preference removed - using default professional style
     
     // Prepare the prompt for OpenAI
     const prompt = `
@@ -64,13 +55,11 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
       
       Create THREE distinct LinkedIn posts for ${userProfile.fullName || 'a professional'} who works as ${userProfile.jobTitle || 'a professional'} at ${userProfile.company || 'their company'}.
       
-      The posts should be about these topics: ${topics.length > 0 ? topics.join(', ') : 'professional growth, industry insights, and career development'}.
+      The posts should focus on this content: ${postInformation || 'professional growth, industry insights, and career development'}.
       
       Each post should use this hook as the opening line: "${preferredHook}"
       
-      Style preference: ${stylePreference === 'jake' ? 'Write in Jake\'s style: conversational, direct, and practical with short paragraphs and bullet points for easy reading. Use a friendly but professional tone.' : 
-      stylePreference === 'lara' ? 'Write in Lara\'s style: empathetic, story-driven, and reflective. Use personal anecdotes and emotional language to connect with readers.' : 
-      'Write in a professional, engaging style with a mix of storytelling and practical advice.'}
+      Style: Write in a professional, engaging style with a mix of storytelling and practical advice. Use clear, concise language that resonates with a business audience.
       
       For each post:
       1. Start with the provided hook
@@ -96,8 +85,8 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
       fullName: userProfile.fullName,
       jobTitle: userProfile.jobTitle,
       company: userProfile.company,
-      topics,
-      stylePreference,
+      selectedTopics: userProfile.selectedTopics,
+              // stylePreference removed
       preferredHook
     });
     

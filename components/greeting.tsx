@@ -299,7 +299,8 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
   }, []);
 
   // Show header immediately if server confirms user is logged out, otherwise wait for client-side check
-  const showHeader = isLoggedOut || (!user && isLoaded);
+  // Never show header if we have children (authenticated user with chat interface)
+  const showHeader = !children && (isLoggedOut || (!user && isLoaded));
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -403,7 +404,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
 
                 {/* Main heading */}
                 <div className="flex flex-col items-center justify-center gap-5">
-                  <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance text-center text-primary">
+                  <h1 className="text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-medium tracking-tighter text-balance text-center text-primary">
                     Kleo 2.0 thinks like you,<br />
                     <span className="inline-block">
                       <span className="inline-flex items-center">
@@ -449,20 +450,8 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
           /* Authenticated User Hero - Simpler version */
           <div className="flex-1 flex items-start justify-center px-8 pt-16 pb-12">
             <div className="w-full mx-auto text-center">
-              <div className="max-w-3xl mx-auto">
-                <div className="mb-8">
-                  <Image
-                    src="/images/kleo.svg"
-                    alt="Kleo"
-                    width={107}
-                    height={32}
-                    className="h-8 w-auto mx-auto"
-                  />
-                </div>
-              </div>
-
               {/* Input Section - for authenticated users */}
-              <div className="w-full md:max-w-3xl mx-auto px-4 mt-8">
+              <div className="w-full md:max-w-3xl mx-auto px-4">
                 <div>
                   {children || (
                     <GuestMultimodalInput 

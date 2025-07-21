@@ -2,313 +2,158 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Plus, Loader2 } from "lucide-react"
-import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
-import { generateTopics, saveSelectedTopics } from "@/app/actions/topic-actions"
-import type { TopicSuggestion } from "@/lib/ai/topic-generator"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { VoiceRecorder } from "@/components/voice-recorder"
+import { toast } from "sonner"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
+import { updatePostDetails } from "@/app/actions/topic-actions"
 
-// Default topics will be replaced by AI-generated ones
-
-export default function TopicSelector() {
-  const [selectedTopics, setSelectedTopics] = useState<number[]>([])
-  const [topics, setTopics] = useState<TopicSuggestion[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false)
-  const [customTopicTitle, setCustomTopicTitle] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const { goToStep, userProfile } = useOnboarding()
-  const router = useRouter()
+export default function PostInformationPage() {
+  const [postInformation, setPostInformation] = useState("")
+  const [isLoading, setIsLoading] = useState(false);
+  const { goToStep, userProfile } = useOnboarding();
+  const { userId } = useAuth();
+  const { user } = useUser();
+  const router = useRouter();
   
-  // Use a ref to track if topics have already been fetched to prevent multiple fetches
-  const [topicsFetched, setTopicsFetched] = useState(false);
-  
-  // Load previously selected topics from user profile
+  // Pre-fill the post information from the user's profile
   useEffect(() => {
-    if (userProfile?.selectedTopics) {
-      try {
-        const parsedSelectedTopics = JSON.parse(userProfile.selectedTopics);
-        if (Array.isArray(parsedSelectedTopics)) {
-          // Extract just the IDs for the selectedTopics state
-          const selectedIds = parsedSelectedTopics.map(topic => topic.id);
-          setSelectedTopics(selectedIds);
-        }
-      } catch (err) {
-        console.error('Error parsing selected topics:', err);
-      }
+    if (userProfile?.postDetails) {
+      setPostInformation(userProfile.postDetails);
     }
   }, [userProfile]);
-  
-  // Fetch AI-generated topics when the page loads, but only once
-  useEffect(() => {
-    // Skip if we've already fetched topics
-    if (topicsFetched || topics.length > 0) return;
-    
-    const fetchTopics = async () => {
-      setIsLoading(true);
-      try {
-        const result = await generateTopics();
-        
-        if (result.success && result.topics && result.topics.length > 0) {
-          setTopics(result.topics);
-          
-          // If we have previously selected topics, make sure they exist in our topics list
-          if (userProfile?.selectedTopics) {
-            try {
-              const parsedSelectedTopics = JSON.parse(userProfile.selectedTopics);
-              if (Array.isArray(parsedSelectedTopics) && parsedSelectedTopics.length > 0) {
-                // Add any selected topics that aren't in our generated list
-                const existingIds = result.topics.map(t => t.id);
-                const missingTopics = parsedSelectedTopics.filter(t => !existingIds.includes(t.id));
-                
-                if (missingTopics.length > 0) {
-                  setTopics(prev => [...prev, ...missingTopics]);
-                }
-              }
-            } catch (err) {
-              console.error('Error processing selected topics:', err);
-            }
-          }
-        } else {
-          console.warn('Using fallback topics due to:', result.error);
-          // Set some default topics as fallback
-          setTopics([
-            { id: 1, title: "Building scalable SaaS products", subtitle: "Default suggestion" },
-            { id: 2, title: "Modern web development techniques", subtitle: "Default suggestion" },
-            { id: 3, title: "AI-powered content creation", subtitle: "Default suggestion" },
-            { id: 4, title: "Startup fundraising strategies", subtitle: "Default suggestion" },
-            { id: 5, title: "Remote team management", subtitle: "Default suggestion" },
-          ]);
-        }
-      } catch (err) {
-        console.error('Error fetching topics:', err);
-        setError('An unexpected error occurred');
-      } finally {
-        setIsLoading(false);
-        setTopicsFetched(true); // Mark as fetched regardless of success/failure
-      }
-    };
-    
-    fetchTopics();
-    
-    // This effect should only run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const toggleTopic = (topicId: number) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topicId) ? prev.filter((id) => id !== topicId) : prev.length < 6 ? [...prev, topicId] : prev,
-    )
-  }
-  
-  const addCustomTopic = () => {
-    if (!customTopicTitle.trim()) return;
-    
-    // Create a new topic with an ID that doesn't conflict with existing ones
-    const maxId = topics.reduce((max, topic) => Math.max(max, topic.id), 0);
-    const newTopic: TopicSuggestion = {
-      id: maxId + 1,
-      title: customTopicTitle.trim(),
-      subtitle: 'Custom topic'
-    };
-    
-    // Add to topics list and select it
-    setTopics(prev => [...prev, newTopic]);
-    setSelectedTopics(prev => [...prev, newTopic.id]);
-    
-    // Reset and close dialog
-    setCustomTopicTitle('');
-    setIsCustomDialogOpen(false);
-  }
 
   const handleBack = async () => {
     try {
-      console.log('Navigating back to welcome page');
-      // Try both navigation methods to ensure it works
-      await goToStep('welcome');
-      // As a fallback, use direct router navigation
-      router.push('/onboarding/welcome');
+      await goToStep('about');
+      router.push('/onboarding/about');
     } catch (error) {
       console.error('Error navigating back:', error);
-      // If the goToStep fails, try direct navigation
-      router.push('/onboarding/welcome');
+      router.push('/onboarding/about');
     }
   }
 
+  const handleUseExample = () => {
+    const exampleContent = `I'm a software engineer who's passionate about helping developers build better products. I've been working with React and TypeScript for the past 5 years and love sharing what I've learned.
+
+Some topics I'd like to write about:
+• Best practices for clean code and maintainable architecture
+• My experience transitioning from junior to senior developer
+• Common mistakes I see in React applications and how to avoid them
+• The importance of testing and how to write effective tests
+• Career advice for developers looking to level up their skills
+
+I want to share practical insights that other developers can actually use in their day-to-day work.`;
+
+    setPostInformation(exampleContent);
+    toast.success("Example content added!");
+  };
+
   const handleNext = async () => {
-    setIsSaving(true);
+    setIsLoading(true);
     try {
-      // Get the full topic objects for the selected IDs
-      const selectedTopicObjects = topics.filter(topic => selectedTopics.includes(topic.id));
-      
-      // Convert to JSON string for storage
-      const topicsJson = JSON.stringify(selectedTopicObjects);
-      
-      // Save selected topics
-      const result = await saveSelectedTopics(topicsJson);
+      // Save the post information
+      const result = await updatePostDetails(postInformation);
       
       if (!result.success) {
-        throw new Error(result.error || 'Failed to save topics');
+        throw new Error(result.error || 'Failed to save post information');
       }
       
       // Navigate to next step
-      await goToStep('content');
-      router.push('/onboarding/content');
+      await goToStep('hook');
+      router.push('/onboarding/hook');
     } catch (error) {
-      console.error('Error saving topics:', error);
+      console.error('Error saving post information:', error);
+      toast.error('Failed to save post information');
       // Still try to navigate even if there's an error
-      router.push('/onboarding/content');
+      router.push('/onboarding/hook');
     } finally {
-      setIsSaving(false);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-    <OnboardingLayout>
-      <div>
-        {/* Progress Header */}
-        <StepIndicator currentStep="topics" />
-
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-6 w-full max-w-5xl overflow-hidden">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Select between 1 to 6 topics</h2>
+    <OnboardingLayout currentStep="topics">
+      <div className="flex w-full flex-col items-center gap-8 text-center">
+        <div className="flex w-full flex-col items-center space-y-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-muted-foreground text-xs font-medium tracking-[0.1em] uppercase">
+              Let&apos;s create your content
+            </p>
+            <h1 className="w-full text-center text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
+              Build your first post
+            </h1>
+            <p className="text-gray-600 max-w-3xl">
+              Share topics, notes, and any information we can use to build your first post.
+            </p>
           </div>
-
-          <p className="text-gray-600 mb-6">
-            Choose between 1 to 6 big themes you want to talk about on social media. These will be used to generate your content ideas every week. Don&#39;t worry, you can change these later.
-          </p>
-
-          {/* Topic Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-            {isLoading ? (
-              // Loading state - show skeleton cards
-              Array.from({ length: 5 }).map((_, index) => (
-                <Card key={`loading-${index}`} className="bg-white">
-                  <CardContent className="p-5 flex flex-col items-center justify-center min-h-[120px]">
-                    <div className="w-full h-4 bg-gray-200 rounded animate-pulse mb-2" />
-                    <div className="w-2/3 h-3 bg-gray-200 rounded animate-pulse" />
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              // Show only first 5 generated topics
-              topics.slice(0, 5).map((topic) => (
-                <Card
-                  key={topic.id}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg ${
-                    selectedTopics.includes(topic.id)
-                      ? "ring-2 ring-blue-500 bg-blue-50 border-blue-200"
-                      : "hover:border-blue-200 bg-white"
-                  }`}
-                  onClick={() => toggleTopic(topic.id)}
-                >
-                  <CardContent className="p-5">
-                    <h3 className="font-semibold text-gray-900 mb-2 leading-snug">{topic.title}</h3>
-                    <p className="text-sm text-gray-500">{topic.subtitle}</p>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-
-            {/* Add Custom Topic Card */}
-            {!isLoading && (
-              <Card 
-                className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:border-blue-200 bg-white border-2 border-dashed border-gray-300"
-                onClick={() => setIsCustomDialogOpen(true)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Plus className="size-5 text-[#157DFF]" />
-                    <h3 className="font-semibold text-gray-900 leading-snug">Add custom topic</h3>
-                  </div>
-                  <p className="text-sm text-gray-500">Create your own topic</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-          
-          {/* Selection Counter */}
-          {selectedTopics.length > 0 && (
-            <div className="text-center mb-4">
-              <p className="text-sm text-gray-600 font-medium">{selectedTopics.length} of 5 topics selected</p>
-            </div>
-          )}
         </div>
+        
+        <div className="w-full">
+          <div className="relative">
+            <div className="relative w-full max-w-2xl pt-8 mx-auto">
+              <div className="relative bg-white/90 backdrop-blur-sm border-2 border-gray-200 hover:border-gray-300 focus-within:border-[#157DFF] focus-within:ring-2 focus-within:ring-[#157DFF]/20 rounded-2xl shadow-sm transition-all duration-200">
+                <textarea
+                  value={postInformation}
+                  onChange={(e) => setPostInformation(e.target.value)}
+                  className="w-full min-h-[280px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 pb-16 placeholder:text-gray-400"
+                  placeholder="What should we write your post about?"
+                  maxLength={65000}
+                />
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
+                  <button
+                    onClick={handleUseExample}
+                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                  >
+                    Use an example
+                  </button>
+                  <VoiceRecorder 
+                    onTranscriptionComplete={(text) => {
+                      setPostInformation(prev => {
+                        const newContent = prev ? `${prev}\n${text}` : text;
+                        return newContent;
+                      });
+                      toast.success("Voice transcription added!");
+                    }} 
+                    className="flex items-center"
+                    showText={true}
+                  />
+                </div>
+              </div>
 
-        {/* Navigation Buttons */}
-        <div className="flex justify-center gap-4 mt-4">
-          <Button
-            onClick={handleBack}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
-            size="lg"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-            disabled={selectedTopics.length === 0 || isSaving}
-          >
-            {isSaving ? (
-              <>
-                <Loader2 className="mr-2 size-4 animate-spin" />
-                Saving...
-              </>
-            ) : 'Next'}
-          </Button>
+            </div>
+          </div>
+        </div>
+                
+        <div className="flex w-full justify-center pt-8">
+          <div className="flex justify-center gap-4">
+            <Button
+              onClick={handleBack}
+              className="bg-white/80 backdrop-blur-sm hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-6 rounded-full font-medium text-base shadow hover:shadow-md transition-all duration-200"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-6 rounded-full font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 min-w-[120px]"
+              size="lg"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Continue'}
+              {!isLoading && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
-      
-      {/* Custom Topic Dialog */}
-      <Dialog open={isCustomDialogOpen} onOpenChange={setIsCustomDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Add Custom Topic</DialogTitle>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Enter your custom topic..."
-              value={customTopicTitle}
-              onChange={(e) => setCustomTopicTitle(e.target.value)}
-              className="w-full"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  addCustomTopic();
-                }
-              }}
-            />
-          </div>
-          <DialogFooter>
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={() => setIsCustomDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button 
-              type="button" 
-              onClick={addCustomTopic}
-              disabled={!customTopicTitle.trim()}
-            >
-              Add Topic
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </OnboardingLayout>
-  )
+  );
 }

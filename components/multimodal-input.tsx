@@ -669,7 +669,8 @@ function PureMultimodalInput({
           </div>
         </div>
 
-        {/* Regular suggested actions for non-artifact context */}
+        {/* Temporarily hidden - Regular suggested actions for non-artifact context */}
+        {/*
         {!shouldShowQuickActions &&
           messages.length === 0 &&
           attachments.length === 0 &&
@@ -699,6 +700,7 @@ function PureMultimodalInput({
               ))}
             </div>
           )}
+        */}
       </div>
     </div>
   );

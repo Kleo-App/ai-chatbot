@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { Plus, Loader2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -12,9 +12,10 @@ import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
 import type { HookIdea } from "@/lib/ai/hook-generator"
 import { toast } from "sonner"
-import { VoiceRecorder } from "@/components/voice-recorder"
+
 import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
+
 
 // Create a user-friendly prompt that will trigger LinkedIn post creation
 function createUserFriendlyPrompt(userProfile: any, selectedHook: string): string {
@@ -35,14 +36,14 @@ export default function KleoHookSelector() {
   const [selectedHook, setSelectedHook] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingHook, setIsLoadingHook] = useState(true)
-  const [showCustomHookInput, setShowCustomHookInput] = useState(false)
+
   const [hookOptions, setHookOptions] = useState<Array<{
     id: number
     source: string
     badgeColor: string
     content: string
   }>>([]);
-  const [customHook, setCustomHook] = useState<string>("");
+
   
   const { goToStep, userProfile, completeOnboarding } = useOnboarding()
   const { userId } = useAuth()
@@ -68,7 +69,7 @@ export default function KleoHookSelector() {
           const formattedHooks = result.hooks.map((hook: HookIdea) => ({
             id: hook.id,
             source: hook.source,
-            badgeColor: "bg-[#157DFF]",
+            badgeColor: getBadgeColor(hook.source),
             content: hook.content
           }))
           
@@ -87,23 +88,27 @@ export default function KleoHookSelector() {
           setHookOptions([
             {
               id: 1,
-              source: "From your writing style",
-              badgeColor: "bg-[#157DFF]",
-              content: "Burnout nearly destroyed my team — until AI became our secret weapon.",
+              source: "Monetisable Expertise",
+              badgeColor: "bg-green-600",
+              content: "I turned my biggest career failure into a $50k consulting framework.",
             },
             {
               id: 2,
-              source: "From your topic",
-              badgeColor: "bg-[#157DFF]",
-              content:
-                "From Burnout to Brilliance: My Journey Coaching a Team from Skeptical to Supercharged with Automated AI Agents",
+              source: "Strategic Arbitrage",
+              badgeColor: "bg-purple-600",
+              content: "While everyone's chasing AI, I'm building the human skills that will be irreplaceable.",
             },
             {
               id: 3,
-              source: "From Kleo AI",
-              badgeColor: "bg-[#157DFF]",
-              content:
-                "The moment I realized my team was burning out wasn't when they started missing deadlines—it was when they stopped complaining about them.",
+              source: "Educational",
+              badgeColor: "bg-blue-600",
+              content: "Here's the 3-step framework that helped me 10x my productivity in 30 days:",
+            },
+            {
+              id: 4,
+              source: "Highly Engaging",
+              badgeColor: "bg-orange-600",
+              content: "My biggest mistake cost me 6 months and $100k. Here's what I learned:",
             },
           ])
         }
@@ -120,17 +125,17 @@ export default function KleoHookSelector() {
 
   const handleBack = async () => {
     try {
-      await goToStep('style')
-      router.push('/onboarding/style')
+      await goToStep('topics')
+      router.push('/onboarding/topics')
     } catch (error) {
-      console.error('Error navigating to style:', error)
-      router.push('/onboarding/style')
+      console.error('Error navigating to topics:', error)
+      router.push('/onboarding/topics')
     }
   }
 
   const handleNext = async () => {
-    if (!selectedHook && !customHook) {
-      toast.error("Please select a hook or enter a custom hook before proceeding")
+    if (!selectedHook) {
+      toast.error("Please select a hook before proceeding")
       return
     }
     
@@ -140,19 +145,14 @@ export default function KleoHookSelector() {
     try {
       let hookToSave = ""
       
-      if (customHook) {
-        // Use the custom hook if provided
-        hookToSave = customHook
-      } else {
-        // Find the selected hook content
-        const selectedHookContent = hookOptions.find((hook) => hook.id === selectedHook)?.content
-        
-        if (!selectedHookContent) {
-          throw new Error('Selected hook not found')
-        }
-        
-        hookToSave = selectedHookContent
+      // Find the selected hook content
+      const selectedHookContent = hookOptions.find((hook) => hook.id === selectedHook)?.content
+      
+      if (!selectedHookContent) {
+        throw new Error('Selected hook not found')
       }
+      
+      hookToSave = selectedHookContent
       
       // Save the preferred hook
       console.log('Saving hook:', hookToSave)
@@ -189,165 +189,117 @@ export default function KleoHookSelector() {
     }
   }
   
-  // Handle custom hook input change
-  const handleCustomHookChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setCustomHook(e.target.value)
-    // Deselect any selected hook when entering a custom one
-    if (e.target.value) {
-      setSelectedHook(null)
-    }
-  }
+
   
-  // Toggle custom hook input visibility
-  const toggleCustomHookInput = () => {
-    setShowCustomHookInput(!showCustomHookInput)
-    if (!showCustomHookInput) {
-      // When opening the custom hook input, deselect any selected hook
-      setSelectedHook(null)
+
+
+  const handleHookSelect = (id: number) => {
+    setSelectedHook(id);
+  };
+
+  const getBadgeColor = (source: string): string => {
+    switch (source) {
+      case "Monetisable Expertise":
+        return "bg-green-600";
+      case "Strategic Arbitrage":
+        return "bg-purple-600";
+      case "Educational":
+        return "bg-blue-600";
+      case "Highly Engaging":
+        return "bg-orange-600";
+      default:
+        return "bg-[#157DFF]";
     }
-  }
+  };
+
+
 
   return (
-    <OnboardingLayout>
-      <div>
-        {/* Progress Header */}
-        <StepIndicator currentStep="hook" />
-
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-5xl">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-200">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">Choose the hook of your post</h2>
+    <OnboardingLayout currentStep="hook">
+      <div className="flex w-full flex-col items-center gap-8 text-center">
+        <div className="flex w-full flex-col items-center space-y-6">
+          <div className="flex flex-col items-center gap-4 text-center">
+            <p className="text-muted-foreground text-xs font-medium tracking-[0.1em] uppercase">
+              Perfect your opening
+            </p>
+            <h1 className="w-full text-center text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
+              Choose the hook of your post
+            </h1>
+            <p className="text-gray-600 max-w-3xl">
+              The hook is the first thing your audience will see and is the most important part of your post.
+            </p>
           </div>
-
-          <p className="text-gray-600 mb-6">
-            The hook is the first thing your audience will see and is the most important part of your post.
-          </p>
-
+        </div>
+        
+        <div className="w-full max-w-5xl">
           {/* Hook Options */}
-          <div className="grid md:grid-cols-3 gap-5 mb-8">
-            {isLoadingHook ? (
-              // Loading state - show skeleton cards
-              <>
-                {[1, 2, 3].map((i) => (
-                  <Card key={i} className="border-2 border-gray-200 animate-pulse">
-                    <CardContent className="p-5">
-                      <div className="mb-3">
-                        <div className="h-6 w-24 bg-gray-200 rounded" />
-                      </div>
-                      <div className="h-20 bg-gray-200 rounded" />
-                    </CardContent>
-                  </Card>
-                ))}
-              </>
+          <div className="grid grid-cols-2 gap-5 mb-8">
+            {hookOptions.length === 0 && isLoadingHook ? (
+              // Show skeleton cards while loading
+              Array.from({ length: 4 }).map((_, i) => (
+                <Card key={i} className="bg-white/80 backdrop-blur-sm border-2 border-gray-200 animate-pulse">
+                  <CardContent className="p-5">
+                    <div className="mb-3">
+                      <div className="h-6 w-24 bg-gray-200 rounded" />
+                    </div>
+                    <div className="h-20 bg-gray-200 rounded" />
+                  </CardContent>
+                </Card>
+              ))
             ) : (
-              // Show actual hook options
               hookOptions.map((hook) => (
                 <Card
                   key={hook.id}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-lg border-2 ${
-                    selectedHook === hook.id ? "border-blue-500 bg-blue-50" : "border-gray-200 hover:border-blue-200"
+                  className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                    selectedHook === hook.id
+                      ? "bg-blue-50/80 backdrop-blur-sm border-[#157DFF]"
+                      : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300"
                   }`}
-                  onClick={() => setSelectedHook(selectedHook === hook.id ? null : hook.id)}
+                  onClick={() => handleHookSelect(hook.id)}
                 >
-                  <CardContent className="p-5">
+                  <CardContent className="p-4">
                     <div className="mb-3">
-                      <Badge className={`bg-[#157DFF] text-white hover:bg-blue-600`}>{hook.source}</Badge>
+                      <Badge className={`${hook.badgeColor} text-white text-xs`}>{hook.source}</Badge>
                     </div>
-
-                    <p className="text-gray-800 font-medium leading-relaxed text-center">{hook.content}</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">{hook.content}</p>
                   </CardContent>
                 </Card>
               ))
             )}
           </div>
-          
-
-          
-          {/* Custom Hook Button/Input */}
-          <div className="text-center mt-6 border-t border-gray-100 pt-6">
-            {!showCustomHookInput ? (
-              <Button
-                variant="outline"
-                className="bg-white border border-gray-200 hover:border-blue-300 hover:bg-blue-50 text-gray-700 hover:text-blue-700 px-6 py-2 rounded-lg font-medium transition-all duration-200"
-                onClick={toggleCustomHookInput}
-                disabled={isLoading}
-              >
-                <Plus className="size-4 mr-2" />
-                Add a custom hook
-              </Button>
-            ) : (
-              <div className="max-w-2xl mx-auto">
-                <div className="mb-3 text-center">
-                  <h3 className="font-semibold text-gray-800">Your custom hook:</h3>
-                </div>
-                <div className="relative">
-                  <textarea
-                    value={customHook}
-                    onChange={handleCustomHookChange}
-                    placeholder="Enter your own hook here..."
-                    className={`w-full p-4 border-2 rounded-lg ${customHook ? 'border-blue-500 bg-blue-50' : 'border-gray-200'} focus:outline-none focus:ring-2 focus:ring-blue-300`}
-                    rows={3}
-                    disabled={isLoading}
-                    autoFocus
-                  />
-                  <div className="absolute top-4 right-4 flex gap-2">
-                    <VoiceRecorder 
-                      onTranscriptionComplete={(text) => {
-                        setCustomHook(prev => {
-                          const newContent = prev ? `${prev}\n${text}` : text;
-                          return newContent;
-                        });
-                        toast.success("Voice transcription added!");
-                      }} 
-                      className="flex items-center"
-                    />
-                  </div>
-                </div>
-                <div className="mt-3 flex justify-end">
-                  <Button
-                    variant="ghost"
-                    className="text-gray-600 hover:text-gray-800 mr-2"
-                    onClick={() => {
-                      setShowCustomHookInput(false)
-                      setCustomHook('')
-                    }}
-                    disabled={isLoading}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
         
-        {/* Navigation Buttons */}
-        <div className="flex justify-center gap-4 mt-4">
-          <Button
-            onClick={handleBack}
-            className="bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-4 rounded-xl font-medium text-lg shadow hover:shadow-md transition-all duration-200"
-            size="lg"
-          >
-            Back
-          </Button>
-          <Button
-            onClick={handleNext}
-            className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
-            size="lg"
-            disabled={(!selectedHook && !customHook) || isLoading}
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="size-5 mr-2 animate-spin" />
-                Generating...
-              </>
-            ) : (
-              "Generate my post"
-            )}
-          </Button>
+        <div className="flex w-full justify-center pt-8">
+          <div className="flex justify-center gap-4">
+            <Button
+              onClick={handleBack}
+              className="bg-white/80 backdrop-blur-sm hover:bg-gray-50 text-gray-700 border border-gray-300 px-10 py-6 rounded-full font-medium text-base shadow hover:shadow-md transition-all duration-200"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button
+              onClick={handleNext}
+              className="bg-[#157DFF] hover:bg-blue-600 text-white px-10 py-6 rounded-full font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-200 min-w-[120px]"
+              size="lg"
+              disabled={!selectedHook || isLoading || isLoadingHook}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Continue'
+              )}
+              {!isLoading && (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
+                  <path d="M5 12h14"></path>
+                  <path d="m12 5 7 7-7 7"></path>
+                </svg>
+              )}
+            </Button>
+          </div>
         </div>
       </div>
     </OnboardingLayout>

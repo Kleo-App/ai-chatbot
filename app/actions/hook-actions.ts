@@ -8,9 +8,9 @@ import { generateHookIdeas, type HookIdea } from '@/lib/ai/hook-generator';
 /**
  * Get or generate hook ideas based on user profile data
  */
-export async function getOrGenerateHooks(): Promise<{ success: boolean; hooks?: HookIdea[]; error?: string }> {
+export async function getOrGenerateHooks(forceRegenerate: boolean = false): Promise<{ success: boolean; hooks?: HookIdea[]; error?: string }> {
   try {
-    console.log('Getting or generating hooks...');
+    console.log('Getting or generating hooks...', { forceRegenerate });
     
     const { userId } = await auth();
     
@@ -19,10 +19,10 @@ export async function getOrGenerateHooks(): Promise<{ success: boolean; hooks?: 
       throw new Error('User not authenticated');
     }
     
-    // First, check if hooks are already stored in the database
+    // First, check if hooks are already stored in the database (unless forcing regeneration)
     const userProfile = await getOrCreateUserProfile(userId);
     
-    if (userProfile?.generatedHooks) {
+    if (!forceRegenerate && userProfile?.generatedHooks) {
       try {
         // Parse the stored hooks
         const storedHooks = JSON.parse(userProfile.generatedHooks);

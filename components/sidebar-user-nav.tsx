@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { useState, useEffect, useRef } from 'react';
 import { 
   Settings, LogOut, User, FileText, Save, 
-  Linkedin, BookText, Mic, MicOff, Unlink
+  Linkedin, Mic, MicOff, Unlink
 } from 'lucide-react';
 
 import {
@@ -24,13 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getUserProfile, updateProfileInfo } from '@/app/actions/profile-actions';
 import type { UserProfile } from '@/lib/db/schema-profile';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+
 
 export function SidebarUserNav() {
   const router = useRouter();
@@ -44,7 +38,6 @@ export function SidebarUserNav() {
   const [formData, setFormData] = useState({
     fullName: '',
     bio: '',
-    stylePreference: '',
   });
   
   // Deepgram voice transcription states
@@ -136,7 +129,6 @@ export function SidebarUserNav() {
             setFormData({
               fullName: result.profile.fullName || '',
               bio: result.profile.bio || '',
-              stylePreference: result.profile.stylePreference || '',
             });
           } else {
             throw new Error(result.error || 'Failed to load profile');
@@ -256,7 +248,6 @@ export function SidebarUserNav() {
       const result = await updateProfileInfo({
         fullName: formData.fullName,
         bio: formData.bio,
-        stylePreference: formData.stylePreference,
       });
       
       if (result.success) {
@@ -436,30 +427,7 @@ export function SidebarUserNav() {
                     </div>
                   </div>
                   
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <BookText className="size-5 text-muted-foreground" />
-                      <p className="font-medium">Style Preference</p>
-                    </div>
-                    <Select
-                      value={formData.stylePreference}
-                      onValueChange={(value) => {
-                        setFormData(prev => ({
-                          ...prev,
-                          stylePreference: value
-                        }));
-                      }}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select a style" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Laura">Laura</SelectItem>
-                        <SelectItem value="Jake">Jake</SelectItem>
-                        <SelectItem value="custom">Custom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -483,15 +451,7 @@ export function SidebarUserNav() {
                     </div>
                   </div>
                   
-                  <div className="flex items-start gap-3">
-                    <BookText className="size-5 text-muted-foreground mt-0.5" />
-                    <div>
-                      <p className="font-medium">Style Preference</p>
-                      <p className="text-sm text-muted-foreground">
-                        {userProfile.stylePreference || 'Not set'}
-                      </p>
-                    </div>
-                  </div>
+
                   
                   <div className="border-t pt-6">
                     <h3 className="font-medium mb-4">LinkedIn Connection</h3>
@@ -558,7 +518,6 @@ export function SidebarUserNav() {
                       setFormData({
                         fullName: userProfile.fullName || '',
                         bio: userProfile.bio || '',
-                        stylePreference: userProfile.stylePreference || '',
                       });
                     }
                   }}

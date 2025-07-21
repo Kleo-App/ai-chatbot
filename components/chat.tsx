@@ -203,9 +203,11 @@ export function Chat({
         />
 
         {messages.length > 0 && (
-          <form className="flex mx-auto px-4 gap-2 w-full md:max-w-3xl pb-4 md:pb-6">
-            {formElement}
-          </form>
+          <div className="sticky bottom-0 z-10 bg-transparent border-t border-border/40">
+            <form className="flex mx-auto px-4 gap-2 w-full md:max-w-3xl py-4">
+              {formElement}
+            </form>
+          </div>
         )}
       </div>
 

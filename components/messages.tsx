@@ -1,6 +1,6 @@
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Greeting } from './greeting';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
@@ -8,6 +8,7 @@ import { motion } from 'framer-motion';
 import { useMessages } from '@/hooks/use-messages';
 import type { ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import Image from 'next/image';
 
 interface MessagesProps {
   chatId: string;
@@ -42,29 +43,47 @@ function PureMessages({
     status,
   });
 
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   useDataStream();
 
   return (
     <div
       ref={messagesContainerRef}
       className={`flex flex-col min-w-0 gap-6 flex-1 pt-4 relative ${
-        messages.length === 0 ? 'items-center justify-center' : 'overflow-y-scroll'
+        messages.length === 0 ? 'items-center justify-center' : 'overflow-y-scroll pb-4'
       }`}
     >
-      {messages.length === 0 && (
+      {messages.length === 0 && formElement && (
         <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
-          <Greeting>
-            {formElement && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="w-full"
-              >
-                {formElement}
-              </motion.div>
-            )}
-          </Greeting>
+          {/* Logo above chat input */}
+          <div className="mb-8">
+            <Image
+              src="/images/kleo.svg"
+              alt="Kleo"
+              width={107}
+              height={32}
+              className="h-8 w-auto mx-auto"
+            />
+          </div>
+          {isClient ? (
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="w-full"
+            >
+              {formElement}
+            </motion.div>
+          ) : (
+            <div className="w-full">
+              {formElement}
+            </div>
+          )}
         </div>
       )}
 

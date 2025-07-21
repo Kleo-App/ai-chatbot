@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 interface VoiceRecorderProps {
   onTranscriptionComplete: (text: string) => void;
   className?: string;
+  showText?: boolean;
 }
 
-export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecorderProps) {
+export function VoiceRecorder({ onTranscriptionComplete, className, showText = false }: VoiceRecorderProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,16 +132,33 @@ export function VoiceRecorder({ onTranscriptionComplete, className }: VoiceRecor
         type="button"
         variant={isRecording ? "destructive" : "ghost"}
         size="sm"
-        className={`size-8 p-0 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-[#157DFF] hover:text-blue-600 hover:bg-blue-50'}`}
+        className={`${showText ? 'px-3 py-2 h-auto' : 'size-8 p-0'} ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'text-[#157DFF] hover:text-blue-600 hover:bg-blue-50'}`}
         onClick={isRecording ? stopRecording : startRecording}
         disabled={isProcessing}
       >
-        {isProcessing ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : isRecording ? (
-          <Square className="size-4" />
+        {showText ? (
+          <div className="flex items-center gap-2">
+            {isProcessing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : isRecording ? (
+              <Square className="size-4" />
+            ) : (
+              <Mic className="size-4" />
+            )}
+            <span className="text-sm">
+              {isProcessing ? 'Processing...' : isRecording ? 'Stop' : 'Record'}
+            </span>
+          </div>
         ) : (
-          <Mic className="size-4" />
+          <>
+            {isProcessing ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : isRecording ? (
+              <Square className="size-4" />
+            ) : (
+              <Mic className="size-4" />
+            )}
+          </>
         )}
       </Button>
     </div>

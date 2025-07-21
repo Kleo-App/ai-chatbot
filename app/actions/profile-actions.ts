@@ -52,7 +52,7 @@ export async function updateProfileInfo(profileData: {
   jobTitle?: string;
   company?: string;
   bio?: string;
-  stylePreference?: string;
+  // stylePreference removed in style step removal
 }) {
   const { userId } = await auth();
   
@@ -102,76 +102,14 @@ export async function updateSelectedTopics(selectedTopics: string) {
   }
 }
 
-/**
- * Update content details (Step 5: Details)
- */
-export async function updateContentDetails(contentDetails: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      contentDetails,
-      lastCompletedStep: 'style',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating content details:', error);
-    return { success: false, error: 'Failed to update content details' };
-  }
-}
-
-/**
- * Update content type (Step 4: Content)
- */
-export async function updateContentType(contentType: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      contentType,
-      lastCompletedStep: 'style',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating content type:', error);
-    return { success: false, error: 'Failed to update content type' };
-  }
-}
+// Content-related functions removed in content step removal
 
 
 
 /**
  * Update style preference (Step 6: Style)
  */
-export async function updateStylePreference(stylePreference: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      stylePreference,
-      lastCompletedStep: 'hook',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating style preference:', error);
-    return { success: false, error: 'Failed to update style preference' };
-  }
-}
+// Style preference function removed in style step removal
 
 /**
  * Update preferred hook (Step 7: Hook)

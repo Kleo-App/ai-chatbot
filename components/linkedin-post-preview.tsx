@@ -145,12 +145,12 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
           <div className="border-divider bg-content1 z-20 flex h-12 max-w-full flex-wrap items-center justify-between gap-4 border-b px-2 sm:flex-row sm:px-4 md:px-6">
             {/* Left side: title */}
             <div className="flex items-center gap-3">
-              <div className="flex flex-col">
-                <div className="font-medium text-sm">{artifact?.title}</div>
+              <div className="flex flex-col text-left">
+                <div className="font-medium text-sm text-left">{artifact?.title}</div>
                 {isContentDirty ? (
-                  <div className="text-xs text-muted-foreground">Saving changes...</div>
+                  <div className="text-xs text-muted-foreground text-left">Saving changes...</div>
                 ) : document ? (
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground text-left">
                     {`Updated ${formatDistance(new Date(document.createdAt), new Date(), { addSuffix: true })}`}
                   </div>
                 ) : null}
@@ -260,7 +260,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
             {/* Post Content */}
             <div className="relative px-4 pb-4">
-              <div className="text-sm leading-relaxed text-[#000000E9] [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
+              <div className="text-sm leading-relaxed text-left text-[#000000E9] [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
                 {isCollapsed ? formatCollapsedContent(content) : formatContent(content)}
               </div>
             </div>

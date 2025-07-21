@@ -16,23 +16,16 @@ export interface ContentIdea {
 }
 
 /**
- * Generate content ideas based on user profile data and selected topics
+ * Generate content ideas based on user profile data and post information
  */
 export async function generateContentIdeas(
   bio: string | null | undefined,
-  selectedTopics: string | null | undefined,
+  postDetails: string | null | undefined,
   contentType: string
 ): Promise<ContentIdea[]> {
   try {
-    // Parse selected topics if available
-    let topics: any[] = [];
-    if (selectedTopics) {
-      try {
-        topics = JSON.parse(selectedTopics);
-      } catch (e) {
-        console.warn('Failed to parse selected topics');
-      }
-    }
+    // Use post details for content generation
+    const postInformation = postDetails || '';
 
     // Get the prompt template from Langfuse
     const promptTemplate = await getPrompt('content-generator');
@@ -44,7 +37,7 @@ export async function generateContentIdeas(
     // Process the prompt template with variables
     const prompt = await processPromptTemplate(promptTemplate, {
       bio: bio || '',
-      selectedTopics: Array.isArray(selectedTopics) ? selectedTopics.map(topic => topic.title).join('\n') : '',
+      selectedTopics: postInformation, // Using postDetails as topic information
       contentType: contentType,
       additionalInstructions: additionalInstructions
     });
@@ -54,7 +47,7 @@ export async function generateContentIdeas(
     // Create Langfuse trace for tracking
     const trace = await createTrace('generate_content_ideas', contentType, {
       bio,
-      selectedTopics,
+      postDetails,
       contentType
     });
     

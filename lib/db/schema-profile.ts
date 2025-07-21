@@ -21,11 +21,9 @@ export const userProfile = pgTable(
     generatedTopics: text('generatedTopics'),
     // AI-generated posts stored as JSON string
     generatedPosts: text('generatedPosts'),
-    // Content preferences
-    contentType: text('contentType'),
-    contentDetails: text('contentDetails'),
+    // Content preferences (contentType and contentDetails removed in migration 0023)
     postDetails: text('postDetails'),
-    stylePreference: text('stylePreference'),
+    // stylePreference removed in migration 0024
     preferredHook: text('preferredHook'),
     // AI-generated hooks stored as JSON string
     generatedHooks: text('generatedHooks'),

@@ -1,205 +1,69 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { useAuth, useUser } from "@clerk/nextjs"
-import { useRouter } from "next/navigation"
-import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
-import { checkAndCreateUser } from "@/app/actions/user-actions"
-import { VoiceRecorder } from "@/components/voice-recorder"
-import { toast } from "sonner"
-import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
+import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
-export default function KleoProfileSetup() {
-  const [combinedProfileText, setCombinedProfileText] = useState("")
+export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { goToStep, userProfile, isLoading: isProfileLoading } = useOnboarding();
-  const { userId } = useAuth();
-  const { user, isLoaded } = useUser();
-  const router = useRouter();
-  
-  // Determine if we're ready to show the page content
-  const isPageReady = !isInitializing && isLoaded && !isProfileLoading && userProfile !== null;
-  
-  useEffect(() => {
-    async function initializeProfile() {
-      if (!isLoaded || !user || !userId) return;
+  const { goToStep } = useOnboarding();
 
-      try {
-        console.log('Creating or getting user record...');
-        // Create or get the user record
-        const userResult = await checkAndCreateUser(
-          userId,
-          user.primaryEmailAddress?.emailAddress || '',
-          user.firstName || undefined,
-          user.lastName || undefined
-        );
-        console.log('User record result:', userResult);
-        
-        console.log('Initializing user profile...');
-        // Initialize the user profile
-        const profileResult = await initializeUserProfile();
-        console.log('Profile initialization result:', profileResult);
-        
-        if (!profileResult.success) {
-          throw new Error(profileResult.error || 'Failed to initialize user profile');
-        }
-        
-        setIsInitializing(false);
-      } catch (error) {
-        console.error('Error initializing profile:', error);
-        setError(error instanceof Error ? error.message : 'Failed to initialize profile');
-        setIsInitializing(false);
-      }
-    }
-
-    initializeProfile();
-  }, [isLoaded, user, userId]);
-  
-  // Pre-fill the combined profile text from the user's bio
-  useEffect(() => {
-    let combinedText = '';
-    
-    if (userProfile?.bio) {
-      combinedText = userProfile.bio;
-    }
-    
-    setCombinedProfileText(combinedText);
-  }, [userProfile]);
-
-  const handleNext = async () => {
+  const handleGetStarted = async () => {
     setIsLoading(true);
     try {
-      // Start navigation immediately to prevent flashing
-      // We'll do this in the background while transitioning
-      router.prefetch('/onboarding/topics');
-      
-      // Run these operations in parallel to speed up the process
-      const promises = [];
-      
-      // If we're still initializing, make sure to initialize the profile first
-      if (isInitializing && userId && user) {
-        promises.push(
-          checkAndCreateUser(
-            userId,
-            user.primaryEmailAddress?.emailAddress || '',
-            user.firstName || undefined,
-            user.lastName || undefined
-          ).then(() => initializeUserProfile())
-        );
-      }
-      
-      // Save the combined profile text to the user profile
-      promises.push(
-        updateProfileInfo({
-          bio: combinedProfileText,
-          // Use existing fullName from database if available, otherwise use Clerk data
-          fullName: userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : undefined),
-        })
-      );
-      
-      // Update the step in the background
-      promises.push(goToStep('topics'));
-      
-      // Navigate immediately without waiting for all operations to complete
-      router.push('/onboarding/topics');
-      
-      // Still wait for operations to complete in the background
-      await Promise.all(promises).catch(err => {
-        console.error('Background operations error:', err);
-        // Operations will continue in the background, but we've already navigated
-      });
+      await goToStep('about');
     } catch (error) {
-      console.error('Error during navigation:', error);
-      // Ensure we navigate even if there's an error
-      router.push('/onboarding/topics');
+      console.error('Error navigating to about step:', error);
+    } finally {
+      setIsLoading(false);
     }
-    // We don't need to set isLoading to false since we're navigating away
   };
 
   return (
-    <OnboardingLayout>
-      {!isPageReady ? (
-        <div className="flex-1 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full size-12 border-y-2 border-[#157DFF]" />
-          <p className="mt-4 text-[#157DFF]">Loading your profile...</p>
-        </div>
-      ) : (
-        <div>
-          {/* Progress Header */}
-          <StepIndicator currentStep="welcome" />
-          
-          {/* Profile Section */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-4 sm:p-6 md:p-8 mb-4 md:mb-6 w-full max-w-3xl">
-          {/* Combined Who is X and LinkedIn Services section */}
-          <div className="flex items-center gap-3 mb-2 md:mb-4">
-            <div className="size-10 rounded-full overflow-hidden border-2 border-blue-500">
-              <Image src="/images/kleo_square.svg" alt="Kleo" width={40} height={40} className="object-cover size-full" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900">
-              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')} and what products or services do you sell?
-            </h2>
-          </div>
-
-          <p className="text-gray-600 mb-3 md:mb-4">
-            This will be used as context information when generating content. Don&#39;t worry, you can change it later.
-          </p>
-
-          <div className="relative">
-            <Textarea
-              value={combinedProfileText}
-              onChange={(e) => setCombinedProfileText(e.target.value)}
-              className="h-[200px] sm:h-[250px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about yourself and the products or services you sell..."
-            />
-            <div className="absolute top-4 right-4 flex gap-2">
-              <VoiceRecorder 
-                onTranscriptionComplete={(text) => {
-                  setCombinedProfileText(prev => {
-                    const newContent = prev ? `${prev}\n${text}` : text;
-                    return newContent;
-                  });
-                  toast.success("Voice transcription added!");
-                }} 
-                className="flex items-center"
+    <OnboardingLayout currentStep="welcome">
+      <div className="flex w-full flex-col items-center gap-8 text-center">
+        <div className="flex w-full flex-col items-center space-y-8">
+          {/* Logo */}
+          <div className="flex flex-col items-center gap-6">
+            <div className="flex items-center justify-center">
+              <Image
+                src="/images/kleo_square.svg"
+                alt="Kleo"
+                width={80}
+                height={80}
+                className="w-20 h-20"
               />
             </div>
+            
+            <div className="flex flex-col items-center gap-4 text-center">
+              <h1 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+                Welcome to Kleo
+              </h1>
+              <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
+                Your LinkedIn AI ghostwriter trained by top creators<br />
+                for creators who hate generic content.
+              </p>
+            </div>
           </div>
         </div>
-
-        {/* Next Button */}
-        <div className="flex justify-center mt-4">
-          <div className="flex flex-col gap-3 md:gap-4 mt-2 md:mt-4">
-            {error && (
-              <div className="p-4 mb-4 text-sm text-red-700 bg-red-100 rounded-lg">
-                <p>Error: {error}</p>
-                <button 
-                  type="button"
-                  onClick={() => window.location.reload()} 
-                  className="underline mt-2"
-                >
-                  Retry
-                </button>
-              </div>
-            )}
-            <Button
-              onClick={handleNext}
-              className="w-full"
-              size="lg"
-              disabled={isLoading || isInitializing || !!error}
-            >
-              {isLoading ? 'Saving...' : isInitializing ? 'Initializing...' : 'Next'}
-            </Button>
-          </div>
+        
+        <div className="flex w-full justify-center pt-8">
+          <Button
+            onClick={handleGetStarted}
+            className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap overflow-hidden tap-highlight-transparent cursor-pointer outline-none min-w-24 gap-3 rounded-full transition-transform-colors-opacity bg-[#157DFF] text-white hover:opacity-90 h-12 px-8 py-6 text-base font-medium sm:w-[360px]"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Getting started...' : 'Get started'}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
+          </Button>
         </div>
       </div>
-    )}
     </OnboardingLayout>
   );
 }

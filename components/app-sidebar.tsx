@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, MessageSquare, History, ChevronRight, BookOpen, FileText } from 'lucide-react';
+import { Search, MessageSquare, History, ChevronRight, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarToggle } from '@/components/sidebar-toggle';
@@ -119,6 +119,8 @@ export function AppSidebar() {
               </SidebarMenuButton>
             </SidebarMenuItem>
 
+            {/* Temporarily hidden - Knowledge page */}
+            {/*
             <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
               <SidebarMenuButton
                 asChild
@@ -136,6 +138,7 @@ export function AppSidebar() {
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            */}
 
             <SidebarMenuItem className="group/menu-item whitespace-nowrap font-semibold mx-1 relative">
               <div 

@@ -6,23 +6,11 @@ import type { OnboardingStep } from '@/hooks/use-onboarding';
 // Define the steps in the onboarding flow
 const ONBOARDING_STEPS: OnboardingStep[] = [
   'welcome',
+  'about',
   'topics',
-  'content',
-  'style',
   'hook',
   'review'
 ];
-
-// Map step names to display names
-const STEP_DISPLAY_NAMES: Record<OnboardingStep, string> = {
-  'welcome': 'Welcome',
-  'topics': 'Topics',
-  'content': 'Content',
-  'style': 'Style',
-  'hook': 'Hook',
-  'review': 'Review',
-  'complete': 'Complete'
-};
 
 interface StepIndicatorProps {
   currentStep: OnboardingStep;
@@ -32,26 +20,31 @@ export function StepIndicator({ currentStep }: StepIndicatorProps) {
   // Find the index of the current step (0-based)
   const currentStepIndex = ONBOARDING_STEPS.indexOf(currentStep);
   
-  // Get the display name for the current step
-  const currentStepName = STEP_DISPLAY_NAMES[currentStep];
-  
-  // Get the step number (1-based)
-  const stepNumber = currentStepIndex + 1;
-  
   return (
-    <div className="text-center mb-10">
-      <div className="flex items-center justify-center gap-2 mb-6">
-        <span className="text-gray-700 font-medium">Step {stepNumber}:</span>
-        <span className="text-gray-900 font-semibold">{currentStepName}</span>
-        <div className="flex gap-2 ml-4">
-          {ONBOARDING_STEPS.map((step, index) => (
+    <ol className="flex">
+      {ONBOARDING_STEPS.map((step, index) => {
+        let dotClasses = "group m-2 flex h-2 w-2 flex-row rounded-full md:flex-col";
+        
+        if (index < currentStepIndex) {
+          // Completed steps - muted foreground
+          dotClasses += " bg-gray-400";
+        } else if (index === currentStepIndex) {
+          // Current step - primary color
+          dotClasses += " bg-[#157DFF]";
+        } else {
+          // Future steps - even more muted
+          dotClasses += " bg-gray-200";
+        }
+        
+        return (
+          <li key={step} className="flex-1">
             <div 
-              key={step}
-              className={`w-8 h-2 ${index <= currentStepIndex ? 'bg-[#157DFF]' : 'bg-gray-300'} rounded-full`}
+              className={dotClasses}
+              aria-current={index === currentStepIndex ? "step" : undefined}
             />
-          ))}
-        </div>
-      </div>
-    </div>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

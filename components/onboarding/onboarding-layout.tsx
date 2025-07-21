@@ -1,24 +1,67 @@
 "use client";
 
-import React, { type ReactNode } from 'react';
-import { UserButton } from "@clerk/nextjs";
+import React, { useState, useEffect } from 'react';
+import { Background } from "@/components/background";
+import { StepIndicator } from "@/components/onboarding/step-indicator";
+import type { OnboardingStep } from "@/hooks/use-onboarding";
 
 interface OnboardingLayoutProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  currentStep: OnboardingStep;
 }
 
-export function OnboardingLayout({ children }: OnboardingLayoutProps) {
+export function OnboardingLayout({ children, currentStep }: OnboardingLayoutProps) {
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    // Small delay to ensure smooth animation on step changes
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, 50);
+
+    return () => clearTimeout(timer);
+  }, [currentStep]); // Re-trigger animation when step changes
+
+  // Reset animation when step changes
+  useEffect(() => {
+    setIsVisible(false);
+  }, [currentStep]);
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-gray-100 flex flex-col">
-      {/* User button for logout in top-right corner */}
-      <div className="absolute top-6 right-6 z-10">
-        <UserButton afterSignOutUrl="/" />
+    <>
+      <Background />
+      <div className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden">
+        <div className="relative z-10 mx-auto flex min-h-screen w-full flex-col items-center justify-center">
+          <div className="flex h-full w-full max-w-6xl flex-1 items-center justify-center">
+            <div className="relative flex w-full flex-1 items-center justify-center px-4 py-12 sm:px-6">
+              <div className="flex h-full w-full flex-col items-center justify-center">
+                <div 
+                  className={`relative flex h-full w-full max-w-5xl flex-col items-center justify-center px-4 transition-all duration-700 ease-out ${
+                    isVisible 
+                      ? 'opacity-100 translate-y-0' 
+                      : 'opacity-0 translate-y-8'
+                  }`}
+                >
+                  {children}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Fixed footer with step indicator - also animated */}
+          <div 
+            className={`fixed bottom-8 left-0 right-0 z-20 transition-all duration-700 ease-out delay-300 ${
+              isVisible 
+                ? 'opacity-100 translate-y-0' 
+                : 'opacity-0 translate-y-4'
+            }`}
+          >
+            <nav aria-label="Progress" className="mx-auto flex h-[50px] shrink-0 items-center justify-center">
+              <StepIndicator currentStep={currentStep} />
+            </nav>
+          </div>
+        </div>
       </div>
-      
-      {/* Main content with scrolling enabled */}
-      <div className="flex-1 flex flex-col items-center justify-start px-4 py-8 overflow-y-auto">
-        {children}
-      </div>
-    </div>
+    </>
   );
 }

@@ -88,14 +88,7 @@ export default function PostInformationPage() {
       
       // Use default example if generation fails
       try {
-        const defaultExample = JSON.stringify({
-          topics: [
-            {
-              title: "Sharing Industry Insights and Best Practices",
-              description: "Leverage your professional experience to help others navigate common challenges. This topic aligns with your expertise and has potential to establish you as a thought leader in your field."
-            }
-          ]
-        });
+        const defaultExample = JSON.stringify(DEFAULT_EXAMPLE);
         
         const parsedDefault = JSON.parse(defaultExample);
         const topic = parsedDefault.topics[0];

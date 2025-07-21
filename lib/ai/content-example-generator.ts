@@ -115,18 +115,43 @@ export async function generateExampleContent(
       generation?.end({ output: content });
       return content;
     } catch (jsonError) {
-      // If not valid JSON, try to extract JSON from the text
-      const jsonMatch = content.match(/\{[\s\S]*\}/g);
-      if (jsonMatch) {
-        try {
-          // Try to parse the extracted JSON
-          const extractedJson = jsonMatch[0];
-          JSON.parse(extractedJson);
-          generation?.end({ output: extractedJson });
-          return extractedJson;
-        } catch (extractError) {
-          console.warn('Could not extract valid JSON from response');
+      // If not valid JSON, try a more careful extraction approach
+      try {
+        // Look for a pattern that's more likely to be a complete JSON object
+        // Starting with { and ending with }, with balanced braces in between
+        const jsonStart = content.indexOf('{');
+        if (jsonStart >= 0) {
+          let openBraces = 0;
+          let jsonEnd = -1;
+          
+          // Scan through the content to find balanced braces
+          for (let i = jsonStart; i < content.length; i++) {
+            if (content[i] === '{') openBraces++;
+            else if (content[i] === '}') {
+              openBraces--;
+              if (openBraces === 0) {
+                jsonEnd = i + 1;
+                break;
+              }
+            }
+          }
+          
+          // If we found a complete JSON object
+          if (jsonEnd > jsonStart) {
+            const extractedJson = content.substring(jsonStart, jsonEnd);
+            // Validate it's proper JSON
+            const parsed = JSON.parse(extractedJson);
+            // Verify it has the expected structure
+            if (parsed && parsed.topics && Array.isArray(parsed.topics)) {
+              generation?.end({ output: extractedJson });
+              return extractedJson;
+            }
+          }
         }
+        
+        console.warn('Could not extract valid JSON with expected structure');
+      } catch (extractError) {
+        console.warn('Error extracting JSON from response:', extractError);
       }
       
       // If all parsing attempts fail, return default content

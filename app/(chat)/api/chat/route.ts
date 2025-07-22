@@ -51,7 +51,7 @@ let globalStreamContext: ResumableStreamContext | null = null;
 
 async function getFetchedPrompt() {
   try {
-    const prompt = await langfuse.getPrompt('laura_system_prompt');
+    const prompt = await langfuse.getPrompt('lara_system_prompt');
     const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     
     // Compile the prompt with the date variable

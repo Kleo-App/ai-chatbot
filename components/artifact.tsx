@@ -340,7 +340,7 @@ function PureArtifact({
                 {viewMode === 'chat' ? (
                   <>
                     {/* Chat Header with Back/Toggle Button */}
-                    <div className="flex items-center justify-between w-full p-3 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 
@@ -404,7 +404,7 @@ function PureArtifact({
                 ) : (
                   <>
                     {/* Editor Header with Back Button */}
-                    <div className="flex items-center justify-between w-full p-3 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 

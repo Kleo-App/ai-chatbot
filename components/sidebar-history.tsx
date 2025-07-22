@@ -29,6 +29,7 @@ import useSWRInfinite from 'swr/infinite';
 import { LoaderIcon } from './icons';
 
 type GroupedChats = {
+  pinned: Chat[];
   today: Chat[];
   yesterday: Chat[];
   lastWeek: Chat[];
@@ -48,7 +49,19 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
   const oneWeekAgo = subWeeks(now, 1);
   const oneMonthAgo = subMonths(now, 1);
 
-  return chats.reduce(
+  const { pinned, unpinned } = chats.reduce<{ pinned: Chat[]; unpinned: Chat[] }>(
+    (acc, chat) => {
+      if (chat.pinned) {
+        acc.pinned.push(chat);
+      } else {
+        acc.unpinned.push(chat);
+      }
+      return acc;
+    },
+    { pinned: [], unpinned: [] }
+  );
+
+  const groupedUnpinned = unpinned.reduce(
     (groups, chat) => {
       const chatDate = new Date(chat.createdAt);
 
@@ -67,13 +80,18 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
       return groups;
     },
     {
-      today: [],
-      yesterday: [],
-      lastWeek: [],
-      lastMonth: [],
-      older: [],
-    } as GroupedChats,
+      today: [] as Chat[],
+      yesterday: [] as Chat[],
+      lastWeek: [] as Chat[],
+      lastMonth: [] as Chat[],
+      older: [] as Chat[],
+    },
   );
+
+  return {
+    pinned,
+    ...groupedUnpinned,
+  };
 };
 
 export function getChatHistoryPaginationKey(
@@ -160,6 +178,32 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
     }
   };
 
+  const handleRename = (chatId: string, newTitle: string) => {
+    mutate((chatHistories) => {
+      if (chatHistories) {
+        return chatHistories.map((chatHistory) => ({
+          ...chatHistory,
+          chats: chatHistory.chats.map((chat) =>
+            chat.id === chatId ? { ...chat, title: newTitle } : chat
+          ),
+        }));
+      }
+    }, false);
+  };
+
+  const handlePin = (chatId: string, pinned: boolean) => {
+    mutate((chatHistories) => {
+      if (chatHistories) {
+        return chatHistories.map((chatHistory) => ({
+          ...chatHistory,
+          chats: chatHistory.chats.map((chat) =>
+            chat.id === chatId ? { ...chat, pinned } : chat
+          ),
+        }));
+      }
+    }, false);
+  };
+
   if (!user) {
     return null;
   }
@@ -225,6 +269,30 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
 
                 return (
                   <div className="flex flex-col gap-4">
+                    {groupedChats.pinned.length > 0 && (
+                      <div>
+                        <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
+                          Pinned
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          {groupedChats.pinned.map((chat) => (
+                            <ChatItem
+                              key={chat.id}
+                              chat={chat}
+                              isActive={chat.id === id}
+                              onDelete={(chatId) => {
+                                setDeleteId(chatId);
+                                setShowDeleteDialog(true);
+                              }}
+                              onRename={handleRename}
+                              onPin={handlePin}
+                              setOpenMobile={setOpenMobile}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {groupedChats.today.length > 0 && (
                       <div>
                         <div className="py-1 pl-3 text-xs text-foreground sticky top-0 z-20 text-nowrap">
@@ -240,6 +308,8 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                                 setDeleteId(chatId);
                                 setShowDeleteDialog(true);
                               }}
+                              onRename={handleRename}
+                              onPin={handlePin}
                               setOpenMobile={setOpenMobile}
                             />
                           ))}
@@ -262,6 +332,8 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                                 setDeleteId(chatId);
                                 setShowDeleteDialog(true);
                               }}
+                              onRename={handleRename}
+                              onPin={handlePin}
                               setOpenMobile={setOpenMobile}
                             />
                           ))}
@@ -284,6 +356,8 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                                 setDeleteId(chatId);
                                 setShowDeleteDialog(true);
                               }}
+                              onRename={handleRename}
+                              onPin={handlePin}
                               setOpenMobile={setOpenMobile}
                             />
                           ))}
@@ -306,6 +380,8 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                                 setDeleteId(chatId);
                                 setShowDeleteDialog(true);
                               }}
+                              onRename={handleRename}
+                              onPin={handlePin}
                               setOpenMobile={setOpenMobile}
                             />
                           ))}
@@ -328,6 +404,8 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                                 setDeleteId(chatId);
                                 setShowDeleteDialog(true);
                               }}
+                              onRename={handleRename}
+                              onPin={handlePin}
                               setOpenMobile={setOpenMobile}
                             />
                           ))}
@@ -336,7 +414,7 @@ export function SidebarHistory({ commandMenu }: SidebarHistoryProps) {
                     )}
                     {/* See all button */}
                     <button
-                      className="inline-flex items-center gap-2 whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground bg-transparent hover:text-foreground disabled:hover:text-muted-foreground w-full justify-start px-3 text-xs font-semibold no-wrap pb-2 mt-1"
+                      className="inline-flex items-center gap-2 whitespace-nowrap cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none text-muted-foreground bg-transparent hover:text-foreground disabled:hover:text-muted-foreground w-full justify-start px-3 text-xs font-semibold no-wrap pb-6 mt-1"
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();

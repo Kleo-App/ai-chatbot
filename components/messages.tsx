@@ -1,6 +1,6 @@
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Greeting } from './greeting';
-import { memo, useEffect, useState } from 'react';
+import { memo } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
@@ -43,19 +43,13 @@ function PureMessages({
     status,
   });
 
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   useDataStream();
 
   return (
     <div
       ref={messagesContainerRef}
-      className={`flex flex-col min-w-0 gap-6 flex-1 pt-4 relative ${
-        messages.length === 0 ? 'items-center justify-center' : 'overflow-y-scroll pb-4'
+      className={`flex flex-col min-w-0 gap-6 flex-1 pt-4 relative bg-white ${
+        messages.length === 0 ? 'items-center justify-center -mt-16' : 'overflow-y-scroll pb-4'
       }`}
     >
       {messages.length === 0 && formElement && (
@@ -70,20 +64,9 @@ function PureMessages({
               className="h-8 w-auto mx-auto"
             />
           </div>
-          {isClient ? (
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="w-full"
-            >
-              {formElement}
-            </motion.div>
-          ) : (
-            <div className="w-full">
-              {formElement}
-            </div>
-          )}
+          <div className="w-full">
+            {formElement}
+          </div>
         </div>
       )}
 

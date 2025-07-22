@@ -25,6 +25,7 @@ import { fetcher } from '@/lib/utils';
 import { getChatHistoryPaginationKey, type ChatHistory } from './sidebar-history';
 
 type GroupedChats = {
+  pinned: Chat[];
   today: Chat[];
   yesterday: Chat[];
   lastWeek: Chat[];
@@ -39,6 +40,12 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 
   return chats.reduce(
     (groups, chat) => {
+      // Handle pinned chats first
+      if (chat.pinned) {
+        groups.pinned.push(chat);
+        return groups;
+      }
+
       const chatDate = new Date(chat.createdAt);
 
       if (isToday(chatDate)) {
@@ -56,6 +63,7 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
       return groups;
     },
     {
+      pinned: [],
       today: [],
       yesterday: [],
       lastWeek: [],
@@ -144,8 +152,33 @@ export function CommandMenu({ open, onOpenChange }: CommandMenuProps) {
           >
             <MessageSquare className="size-4 text-muted-foreground" />
             <span>Create New Chat</span>
+            <span className="ml-auto text-xs text-muted-foreground">⌘J</span>
           </CommandItem>
         </CommandGroup>
+
+        {/* Pinned */}
+        {groupedChats.pinned && groupedChats.pinned.length > 0 && (
+          <CommandGroup heading="Pinned">
+            {groupedChats.pinned.slice(0, 10).map((chat) => (
+              <CommandItem
+                key={chat.id}
+                value={`conversation:${chat.id}`}
+                onSelect={() => handleChatSelect(chat.id)}
+                className="flex items-center gap-2 h-12 px-3"
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  <div className="truncate text-primary">{chat.title}</div>
+                </div>
+                <span className="text-muted-foreground text-sm whitespace-nowrap flex items-center gap-1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-[2]">
+                    <path d="M4 20L8.5 15.5M14 20L4 10L5 9L9.06551 8.32242C10.2858 8.11904 11.3433 7.36248 11.9298 6.27324L13.2256 3.86676C13.8608 2.68717 15.4534 2.45342 16.4007 3.40075L20.5993 7.59926C21.5466 8.54658 21.3128 10.1392 20.1332 10.7744L17.7268 12.0702C16.6375 12.6567 15.881 13.7142 15.6776 14.9345L15 19L14 20Z" stroke="currentColor" strokeLinecap="square"></path>
+                  </svg>
+                  Pinned
+                </span>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
 
         {/* Today */}
         {groupedChats.today.length > 0 && (

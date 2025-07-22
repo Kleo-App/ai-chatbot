@@ -100,6 +100,7 @@ export default async function Page(props: {
           session={session}
           autoResume={true}
           initialDocument={document}
+          initialPinned={chat.pinned}
         />
         <DataStreamHandler />
       </>
@@ -117,6 +118,7 @@ export default async function Page(props: {
         session={session}
         autoResume={true}
         initialDocument={document}
+        initialPinned={chat.pinned}
       />
       <DataStreamHandler />
     </>

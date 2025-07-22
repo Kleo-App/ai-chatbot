@@ -37,6 +37,7 @@ export function Chat({
   session,
   autoResume,
   initialDocument,
+  initialPinned = false,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -46,6 +47,7 @@ export function Chat({
   session: Session;
   autoResume: boolean;
   initialDocument?: Document | null;
+  initialPinned?: boolean;
 }) {
   const { visibilityType } = useChatVisibility({
     chatId: id,
@@ -56,6 +58,7 @@ export function Chat({
   const { setDataStream } = useDataStream();
 
   const [input, setInput] = useState<string>('');
+  const [isPinned, setIsPinned] = useState<boolean>(initialPinned);
 
   const {
     messages,
@@ -132,6 +135,12 @@ export function Chat({
   );
 
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+
+  const handlePin = (pinned: boolean) => {
+    setIsPinned(pinned);
+    // Optionally revalidate sidebar history to show updated pin status
+    mutate(unstable_serialize(getChatHistoryPaginationKey));
+  };
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
   const { setArtifact } = useArtifact();
 
@@ -180,7 +189,7 @@ export function Chat({
 
   return (
     <>
-      <div className="flex flex-col min-w-0 h-dvh">
+      <div className="flex flex-col min-w-0 h-dvh bg-white relative @container/nav">
         <ChatHeader
           chatId={id}
           selectedModelId={initialChatModel}
@@ -188,9 +197,11 @@ export function Chat({
           isReadonly={isReadonly}
           session={session}
           hasMessages={messages.length > 0}
+          isPinned={isPinned}
+          onPin={handlePin}
         />
 
-        <Messages
+                <Messages
           chatId={id}
           status={status}
           votes={votes}
@@ -203,8 +214,8 @@ export function Chat({
         />
 
         {messages.length > 0 && (
-          <div className="sticky bottom-0 z-10 bg-transparent border-t border-border/40">
-            <form className="flex mx-auto px-4 gap-2 w-full md:max-w-3xl py-4">
+          <div className="sticky bottom-0 z-10 bg-white">
+            <form className="flex mx-auto px-4 gap-2 w-full md:max-w-3xl pb-4">
               {formElement}
             </form>
           </div>

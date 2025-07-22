@@ -24,6 +24,7 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useCommandMenu } from '@/hooks/use-command-menu';
 import { useArtifact, initialArtifactData } from '@/hooks/use-artifact';
+import { useNewChat } from '@/hooks/use-new-chat';
 
 export function AppSidebar() {
   const router = useRouter();
@@ -34,13 +35,14 @@ export function AppSidebar() {
   const { user } = useUser();
   const commandMenu = useCommandMenu();
   const { setArtifact } = useArtifact();
+  useNewChat();
 
   // Check if we're on a chat-related page (homepage or chat pages)
   const isChatActive = pathname === '/' || pathname.startsWith('/chat');
 
   return (
-    <Sidebar collapsible="icon" className="group-data-[side=left]:border-r-0 bg-sidebar border-r border-border">
-      <SidebarHeader className="h-12 flex flex-row items-center shrink-0 group-data-[collapsible=icon]:pt-2 relative mb-4 z-10 pointer-events-none [&>*]:pointer-events-auto">
+    <Sidebar collapsible="icon" className="bg-sidebar border-r border-border">
+      <SidebarHeader className="h-12 flex flex-row items-center shrink-0 group-data-[collapsible=icon]:pt-2 relative mb-2 z-10 pointer-events-none [&>*]:pointer-events-auto">
         <Link
           href="/"
           onClick={() => {
@@ -92,11 +94,14 @@ export function AppSidebar() {
                     : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                 }`}
               >
-                <Link href="/" onClick={() => setOpenMobile(false)}>
-                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                    <MessageSquare className="size-4" />
+                <Link href="/" onClick={() => setOpenMobile(false)} className="flex items-center justify-between w-full group/chat-link">
+                  <div className="flex items-center gap-2">
+                    <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
+                      <MessageSquare className="size-4" />
+                    </div>
+                    <span className="group-data-[collapsible=icon]:hidden">Chat</span>
                   </div>
-                  <span className="group-data-[collapsible=icon]:hidden">Chat</span>
+                  <span className="group-data-[collapsible=icon]:hidden text-xs text-muted-foreground opacity-0 group-hover/chat-link:opacity-100 transition-opacity duration-200">⌘J</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -173,7 +178,7 @@ export function AppSidebar() {
               <div style={{ overflow: 'hidden', height: historyExpanded ? 'auto' : '0', opacity: historyExpanded ? 1 : 0 }}>
                 <div className="flex flex-row mt-1 mx-1">
                   <div className="cursor-pointer ms-[8px] me-[2px] py-1">
-                    <div className="border-l border-border h-full ms-[10px] me-[4px]" />
+                    <div className="border-l border-border h-full ms-[4px] me-[4px]" />
                   </div>
                   <div className="flex flex-col gap-1 w-full min-w-0">
                     <SidebarHistory commandMenu={commandMenu} />

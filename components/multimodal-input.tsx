@@ -330,7 +330,7 @@ function PureMultimodalInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute left-1/2 bottom-28 -translate-x-1/2 z-50"
+            className="absolute left-1/2 bottom-32 -translate-x-1/2 z-50"
           >
             <Button
               data-testid="scroll-to-bottom-button"
@@ -532,42 +532,52 @@ function PureMultimodalInput({
         tabIndex={-1}
       />
 
-      {(attachments.length > 0 || uploadQueue.length > 0) && (
-        <div
-          data-testid="attachments-preview"
-          className="flex flex-row gap-2 overflow-x-scroll items-end"
-        >
-          {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
 
-          {uploadQueue.map((filename) => (
-            <PreviewAttachment
-              key={filename}
-              attachment={{
-                url: '',
-                name: filename,
-                contentType: '',
-              }}
-              isUploading={true}
-            />
-          ))}
-        </div>
-      )}
 
       <div className="relative bg-transparent border border-transparent rounded-2xl transition-all duration-150 ease-in-out">
         {/* Original input design for all contexts */}
-        <div className="relative bg-white border border-blue-100 rounded-2xl shadow-xl">
+        <div className="relative bg-white border border-blue-100 rounded-2xl shadow-xl focus-within:shadow-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white focus-within:ring-black focus-within:border-transparent transition-all duration-200">
+          {/* Image previews at the top of input */}
+          {(attachments.length > 0 || uploadQueue.length > 0) && (
+            <div className="px-4 pt-4 pb-2">
+              <div className="flex flex-row gap-2 overflow-x-auto overflow-y-visible" style={{ paddingTop: '4px', paddingRight: '4px' }}>
+                {attachments.map((attachment, index) => (
+                  <InlineImagePreview
+                    key={attachment.url}
+                    attachment={attachment}
+                    onRemove={() => {
+                      setAttachments(prev => prev.filter((_, i) => i !== index));
+                    }}
+                  />
+                ))}
+                {uploadQueue.map((filename) => (
+                  <InlineImagePreview
+                    key={filename}
+                    attachment={{
+                      url: '',
+                      name: filename,
+                      contentType: '',
+                    }}
+                    isUploading={true}
+                    onRemove={() => {}}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
           <Textarea
             data-testid="multimodal-input"
             ref={textareaRef}
-            placeholder={shouldShowQuickActions ? "Describe what you want to change..." : "Send a message..."}
+            placeholder={shouldShowQuickActions ? "Describe what you want to change..." : "Ask Kleo"}
             value={input}
             onChange={handleInput}
             className={cx(
-              'min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none px-4 py-4 pb-12 focus:ring-0 focus:ring-offset-0',
+              'rounded-2xl min-h-[110px] max-h-[calc(75dvh)] overflow-hidden resize-none !text-base bg-transparent border-none px-4 pb-12 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none',
+              (attachments.length > 0 || uploadQueue.length > 0) ? 'pt-2' : 'py-4',
               className,
             )}
+            style={{ outline: 'none', boxShadow: 'none' }}
             rows={2}
             autoFocus
             onKeyDown={(event) => {
@@ -652,6 +662,8 @@ function PureMultimodalInput({
                 <HooksIcon size={16} />
                 <span className="text-sm">Hook</span>
               </Button>
+              {/* Attachment button for artifact context */}
+              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
             </div>
           )}
 
@@ -798,3 +810,67 @@ const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
   if (prevProps.input !== nextProps.input) return false;
   return true;
 });
+
+function InlineImagePreview({
+  attachment,
+  isUploading = false,
+  onRemove,
+}: {
+  attachment: Attachment;
+  isUploading?: boolean;
+  onRemove: () => void;
+}) {
+  const { url, contentType } = attachment;
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Only show for images
+  if (!isUploading && (!contentType || !contentType.startsWith('image'))) {
+    return null;
+  }
+
+  return (
+    <div
+      className="relative group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+        {!isUploading && url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt="Attachment preview"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+            {isUploading && (
+              <div className="animate-spin">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Close button on hover */}
+      {(isHovered || isUploading) && !isUploading && (
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="absolute -top-1 -right-1 w-4 h-4 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors z-50"
+          style={{ zIndex: 50 }}
+        >
+          <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+}

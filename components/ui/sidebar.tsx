@@ -406,17 +406,63 @@ SidebarSeparator.displayName = 'SidebarSeparator';
 const SidebarContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<'div'>
->(({ className, ...props }, ref) => {
+>(({ className, children, ...props }, ref) => {
+  const [isScrolled, setIsScrolled] = React.useState(false);
+  const contentRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const element = contentRef.current;
+    if (!element) return;
+
+    const handleScroll = () => {
+      setIsScrolled(element.scrollTop > 0);
+    };
+
+    element.addEventListener('scroll', handleScroll);
+    return () => element.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Merge refs
+  React.useImperativeHandle(ref, () => contentRef.current!, []);
+
   return (
     <div
-      ref={ref}
+      ref={contentRef}
       data-sidebar="content"
       className={cn(
-        'flex min-h-0 flex-1 flex-col gap-2 overflow-auto group-data-[collapsible=icon]:overflow-hidden',
+        'flex min-h-0 flex-1 flex-col overflow-auto group-data-[collapsible=icon]:overflow-hidden grow relative overflow-x-hidden scrollbar-gutter-stable-single',
         className,
       )}
+      style={{
+        maskImage: isScrolled 
+          ? 'linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)' 
+          : 'linear-gradient(to bottom, black 0%, black 90%, transparent 100%)',
+        maskComposite: 'add',
+      }}
       {...props}
-    />
+    >
+      <div 
+        className="scroll-gradient-sentinel" 
+        style={{ 
+          height: '1px', 
+          width: '100%', 
+          top: '0px', 
+          flexShrink: 0 
+        }} 
+      />
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        {children}
+      </div>
+      <div 
+        className="scroll-gradient-sentinel" 
+        style={{ 
+          height: '1px', 
+          width: '100%', 
+          bottom: '0px', 
+          flexShrink: 0 
+        }} 
+      />
+    </div>
   );
 });
 SidebarContent.displayName = 'SidebarContent';

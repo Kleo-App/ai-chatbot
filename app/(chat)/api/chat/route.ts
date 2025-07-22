@@ -17,6 +17,8 @@ import {
   saveChat,
   saveMessages,
   getOrCreateUser,
+  updateChatTitleById,
+  updateChatPinnedById,
 } from '@/lib/db/queries';
 import { convertToUIMessages, generateUUID } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
@@ -221,7 +223,7 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
                   'updateDocument',
                   'requestSuggestions',
                 ],
-          experimental_transform: smoothStream({ chunking: 'word' }),
+          experimental_transform: smoothStream({ chunking: 'word',  }),
           tools: {
             getWeather,
             createDocument: createDocument({ session, dataStream }),
@@ -306,4 +308,42 @@ export async function DELETE(request: Request) {
   const deletedChat = await deleteChatById({ id });
 
   return Response.json(deletedChat, { status: 200 });
+}
+
+export async function PATCH(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const id = searchParams.get('id');
+
+  if (!id) {
+    return new ChatSDKError('bad_request:api').toResponse();
+  }
+
+  const { userId } = await auth();
+
+  if (!userId) {
+    return new ChatSDKError('unauthorized:chat').toResponse();
+  }
+
+  const body: { title?: string; pinned?: boolean } = await request.json();
+
+  const chat = await getChatById({ id });
+
+  if (!chat || chat.userId !== userId) {
+    return new ChatSDKError('forbidden:chat').toResponse();
+  }
+
+  // Handle title update
+  if (body.title !== undefined) {
+    if (!body.title || body.title.trim().length === 0) {
+      return new ChatSDKError('bad_request:api', 'Title is required').toResponse();
+    }
+    await updateChatTitleById({ chatId: id, title: body.title.trim() });
+  }
+
+  // Handle pinned status update
+  if (body.pinned !== undefined) {
+    await updateChatPinnedById({ chatId: id, pinned: body.pinned });
+  }
+
+  return Response.json({ success: true }, { status: 200 });
 }

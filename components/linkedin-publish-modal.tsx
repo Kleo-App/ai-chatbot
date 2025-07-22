@@ -91,8 +91,8 @@ export function LinkedInPublishModal({
 
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Post Preview */}
-          <div className="flex-1 overflow-y-auto border border-gray-100 rounded-lg bg-gray-50 dark:bg-content2 dark:border-content2 p-6">
-            <div className="max-h-full overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-[#f4f2ee] dark:bg-content2 py-6">
+            <div className="max-w-2xl w-full mx-auto px-6">
               <LinkedInPostPreview
                 content={content}
                 userProfile={userProfile}
@@ -100,6 +100,7 @@ export function LinkedInPublishModal({
                 showHeader={false}
                 showShareButton={false}
                 showDeviceToggle={false}
+                isModal={true}
               />
             </div>
           </div>

@@ -46,6 +46,7 @@ interface LinkedInPostPreviewProps {
   showDeviceToggle?: boolean;
   // Share modal props
   onShareClick?: () => void;
+  isModal?: boolean;
 }
 
 export const LinkedInPostPreview = memo(function LinkedInPostPreview({
@@ -73,6 +74,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   showDeviceToggle = true,
   // Share modal props
   onShareClick,
+  isModal = false,
 }: LinkedInPostPreviewProps) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
   const [localUploadedImages, setLocalUploadedImages] = useState<string[]>(uploadedImages);
@@ -137,8 +139,11 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     );
   };
 
+  const outerClass = isModal 
+    ? "relative flex flex-col"
+    : "border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-full";
   return (
-    <div className="border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-full">
+    <div className={outerClass}>
       {showHeader && (
         <>
           {/* Consolidated Header */}
@@ -192,7 +197,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
       )}
 
       {/* LinkedIn Post Preview */}
-      <div className="flex-1 overflow-y-auto p-6 min-h-0">
+      <div className={isModal ? "" : "flex-1 overflow-y-auto p-6 min-h-0"}>
         <div className="mx-auto max-w-2xl">
           <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto ${deviceType === 'mobile' ? 'w-[375px]' : 'w-[552px]'}`}>
             {/* Post Header */}
@@ -266,8 +271,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             </div>
 
             {/* Media Upload Area */}
-            <div className="px-4 pb-4">
-              {localUploadedImages.length > 0 ? (
+            {localUploadedImages.length > 0 && (
+              <div className="px-4 pb-4">
                 <div className="space-y-2">
                   {localUploadedImages.map((imageUrl, index) => (
                     <div key={index} className="relative rounded-lg overflow-hidden">
@@ -298,20 +303,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     </div>
                   </div>
                 </div>
-              ) : (
-                <div 
-                  className="w-full border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
-                  onClick={() => setIsMediaModalOpen(true)}
-                >
-                  <div className="flex flex-col items-center">
-                    <div className="mx-auto size-8 text-gray-400 mb-2">
-                      <ImageIcon size={32} />
-                    </div>
-                    <div className="text-sm text-gray-500">Add media to your post</div>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Post Engagement */}
             <div className="flex flex-row items-center justify-between px-4 pb-2">

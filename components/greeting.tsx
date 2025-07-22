@@ -447,21 +447,14 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
 
           </section>
         ) : (
-          /* Authenticated User Hero - Simpler version */
-          <div className="flex-1 flex items-start justify-center px-8 pt-16 pb-12">
-            <div className="w-full mx-auto text-center">
-              {/* Input Section - for authenticated users */}
-              <div className="w-full md:max-w-3xl mx-auto px-4">
-                <div>
-                  {children || (
-                    <GuestMultimodalInput 
-                      onTriggerAuth={() => setShowAuthModal(true)}
-                    />
-                  )}
-                </div>
-              </div>
+          /* Authenticated User - Direct render without padding */
+          children || (
+            <div className="flex items-center justify-center h-full">
+              <GuestMultimodalInput 
+                onTriggerAuth={() => setShowAuthModal(true)}
+              />
             </div>
-          </div>
+          )
         )}
 
         {/* Rest of the sections remain the same for logged-out users */}

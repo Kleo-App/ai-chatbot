@@ -109,6 +109,11 @@ function PureChatHeader({
     });
   };
 
+  // Don't render the header if there are no messages
+  if (!hasMessages) {
+    return null;
+  }
+
   return (
     <>
       <div className="h-24 top-0 @[80rem]/nav:h-0 @[80rem]/nav:top-8 sticky z-10 flex flex-row items-start justify-center w-full bg-gradient-to-b from-background via-background via-60% to-transparent @[80rem]/nav:from-transparent @[80rem]/nav:via-transparent -mb-10">

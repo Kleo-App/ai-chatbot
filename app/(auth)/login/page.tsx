@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSignIn } from '@clerk/nextjs';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 
-export default function LoginPage() {
+function LoginPageInner() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +20,53 @@ export default function LoginPage() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetSent, setResetSent] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [isWaitlistSubmitting, setIsWaitlistSubmitting] = useState(false);
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for redirect from failed authentication
+  useEffect(() => {
+    const redirectUrl = searchParams.get('redirect_url');
+    // If there's a redirect_url and it points to onboarding, it likely means
+    // they tried to authenticate but don't have access yet
+    if (redirectUrl && redirectUrl.includes('/onboarding')) {
+      setShowAccessDenied(true);
+    }
+  }, [searchParams]);
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail) return;
+
+    setIsWaitlistSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: waitlistEmail,
+        }),
+      });
+
+      if (response.ok) {
+        setIsWaitlistSubmitted(true);
+        setWaitlistEmail('');
+      } else {
+        throw new Error('Failed to submit to waitlist');
+      }
+    } catch (error) {
+      console.error('Error submitting to waitlist:', error);
+      setError('Failed to join waitlist. Please try again.');
+    } finally {
+      setIsWaitlistSubmitting(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,7 +90,16 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Sign-in error:', err);
       if (err.errors && err.errors.length > 0) {
-        setError(err.errors[0].message || 'Sign-in failed');
+        const errorMessage = err.errors[0].message || 'Sign-in failed';
+        // Check if this is an access-related error
+        if (errorMessage.toLowerCase().includes('account') || 
+            errorMessage.toLowerCase().includes('user') ||
+            errorMessage.toLowerCase().includes('not found') ||
+            errorMessage.toLowerCase().includes('invalid')) {
+          setShowAccessDenied(true);
+        } else {
+          setError(errorMessage);
+        }
       } else {
         setError('An unexpected error occurred. Please try again.');
       }
@@ -68,7 +123,17 @@ export default function LoginPage() {
     } catch (err: any) {
       console.error('Google sign-in error:', err);
       if (err.errors && err.errors.length > 0) {
-        setError(err.errors[0].message || 'Google sign-in failed');
+        const errorMessage = err.errors[0].message || 'Google sign-in failed';
+        // Check if this is an access-related error
+        if (errorMessage.toLowerCase().includes('account') || 
+            errorMessage.toLowerCase().includes('user') ||
+            errorMessage.toLowerCase().includes('not found') ||
+            errorMessage.toLowerCase().includes('invalid') ||
+            errorMessage.toLowerCase().includes('access')) {
+          setShowAccessDenied(true);
+        } else {
+          setError(errorMessage);
+        }
       } else {
         setError('Google sign-in failed. Please try again.');
       }
@@ -153,7 +218,117 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Login Card */}
           <div className="bg-white/80 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl p-8">
-            {!showResetForm ? (
+            {showAccessDenied ? (
+              <>
+                {/* Access Denied Message */}
+                <div className="text-center mb-8">
+                  <div className="size-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="size-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.884-.833-2.598 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                    Access Not Available Yet
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    It looks like you don&apos;t have access to Kleo yet. We are currently letting in people in waves from our waitlist.
+                  </p>
+                </div>
+
+                {!isWaitlistSubmitted ? (
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <h3 className="font-medium text-blue-900 mb-2">Join our waitlist</h3>
+                      <p className="text-blue-700 text-sm">
+                        Make sure you&apos;re on our waitlist and we&apos;ll reach out soon with access!
+                      </p>
+                    </div>
+
+                    {/* Error Message */}
+                    {error && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-600 text-sm">{error}</p>
+                      </div>
+                    )}
+
+                    {/* Waitlist Form */}
+                    <form onSubmit={handleWaitlistSubmit} className="space-y-4 mb-6">
+                      <div>
+                        <label htmlFor="waitlistEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          id="waitlistEmail"
+                          type="email"
+                          value={waitlistEmail}
+                          onChange={(e) => setWaitlistEmail(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                          placeholder="you@example.com"
+                          required
+                          disabled={isWaitlistSubmitting}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+                        disabled={isWaitlistSubmitting}
+                      >
+                        {isWaitlistSubmitting ? 'Joining Waitlist...' : 'Join Waitlist'}
+                      </Button>
+                    </form>
+
+                    <div className="text-center">
+                      <Button
+                        onClick={() => {
+                          setShowAccessDenied(false);
+                          setError('');
+                          // Clear the redirect_url from the URL
+                          const url = new URL(window.location.href);
+                          url.searchParams.delete('redirect_url');
+                          window.history.replaceState({}, '', url.toString());
+                        }}
+                        variant="ghost"
+                        size="lg"
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        Back to Sign In
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-6">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 font-medium">✓ You&apos;re on the waitlist!</p>
+                        <p className="text-green-600 text-sm mt-1">
+                          We&apos;ll reach out soon with access. Keep an eye on your inbox!
+                        </p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <Button
+                          onClick={() => {
+                            setShowAccessDenied(false);
+                            setIsWaitlistSubmitted(false);
+                            setError('');
+                            // Clear the redirect_url from the URL
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('redirect_url');
+                            window.history.replaceState({}, '', url.toString());
+                          }}
+                          variant="outline"
+                          size="lg"
+                          className="w-full"
+                        >
+                          Back to Sign In
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : !showResetForm ? (
               <>
                 {/* Login Form Header */}
                 <div className="text-center mb-8">
@@ -412,5 +587,21 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageInner />
+    </Suspense>
   );
 }

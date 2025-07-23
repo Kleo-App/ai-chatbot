@@ -7,6 +7,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { LinkedInHookProvider } from '@/context/linkedin-hook-context';
+import { SupportChat } from '@/components/support-chat';
 
 import './globals.css';
 
@@ -91,6 +92,7 @@ export default async function RootLayout({
               {children}
             </LinkedInHookProvider>
           </ThemeProvider>
+          <SupportChat />
           <Analytics />
           <SpeedInsights />
         </body>

@@ -199,9 +199,20 @@ function PureArtifact({
   );
 
   const handleEditorContentChange = useCallback((content: string) => {
-    // Pass HTML content directly to LinkedIn post preview
-    saveContent(content, true);
-  }, [saveContent]);
+    // Update artifact content immediately for instant preview (only if changed)
+    setArtifact((currentArtifact) => {
+      if (currentArtifact.content === content) {
+        return currentArtifact; // No change, don't trigger re-render
+      }
+      return {
+        ...currentArtifact,
+        content: content,
+      };
+    });
+    
+    // Save immediately without debouncing to prevent old content from overwriting new content
+    saveContent(content, false);
+  }, [saveContent, setArtifact]);
 
   const toggleViewMode = useCallback(() => {
     setViewMode(mode => mode === 'chat' ? 'editor' : 'chat');
@@ -213,14 +224,9 @@ function PureArtifact({
       setArtifact({ ...initialArtifactData, status: 'idle' });
       router.push('/posts');
     } else {
-      setArtifact((currentArtifact) =>
-        currentArtifact.status === 'streaming'
-          ? {
-              ...currentArtifact,
-              isVisible: false,
-            }
-          : { ...initialArtifactData, status: 'idle' },
-      );
+      // Clear the artifact state and navigate to start a new chat
+      setArtifact({ ...initialArtifactData, status: 'idle' });
+      router.push('/');
     }
   }, [openedFromPosts, router, setArtifact]);
 

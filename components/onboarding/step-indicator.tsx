@@ -7,9 +7,7 @@ import type { OnboardingStep } from '@/hooks/use-onboarding';
 const ONBOARDING_STEPS: OnboardingStep[] = [
   'welcome',
   'about',
-  'topics',
-  'hook',
-  'review'
+  'hook'
 ];
 
 interface StepIndicatorProps {

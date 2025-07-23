@@ -300,6 +300,8 @@ const PurePreviewMessage = ({
               }
             })}
 
+            {/* Message Actions (Copy, Upvote, Downvote) - Commented out */}
+            {/*
             {!isReadonly && (
               <MessageActions
                 key={`action-${message.id}`}
@@ -309,6 +311,7 @@ const PurePreviewMessage = ({
                 isLoading={isLoading}
               />
             )}
+            */}
           </div>
         </div>
       </motion.div>

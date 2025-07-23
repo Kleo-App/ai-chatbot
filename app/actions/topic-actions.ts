@@ -3,7 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { generateTopicSuggestions, type TopicSuggestion } from '@/lib/ai/topic-generator';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
-import { updateSelectedTopics } from './profile-actions';
+// Note: updateSelectedTopics was removed from profile-actions as topics step no longer exists
 
 /**
  * Save post details to user profile
@@ -114,11 +114,9 @@ export async function saveSelectedTopics(topicsJson: string): Promise<{
       return { success: false, error: 'User not authenticated' };
     }
     
-    const result = await updateSelectedTopics(topicsJson);
-    
-    if (!result.success) {
-      return { success: false, error: result.error || 'Failed to update topics' };
-    }
+    await updateUserProfile(userId, {
+      selectedTopics: topicsJson,
+    });
     
     return { success: true };
   } catch (error) {

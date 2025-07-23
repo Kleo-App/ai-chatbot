@@ -36,6 +36,8 @@ export function PureMessageActions({
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex flex-row gap-2">
+        {/* Copy Button - Commented out */}
+        {/*
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -62,7 +64,10 @@ export function PureMessageActions({
           </TooltipTrigger>
           <TooltipContent>Copy</TooltipContent>
         </Tooltip>
+        */}
 
+        {/* Upvote Button - Commented out */}
+        {/*
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -115,7 +120,10 @@ export function PureMessageActions({
           </TooltipTrigger>
           <TooltipContent>Upvote Response</TooltipContent>
         </Tooltip>
+        */}
 
+        {/* Downvote Button - Commented out */}
+        {/*
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -168,6 +176,7 @@ export function PureMessageActions({
           </TooltipTrigger>
           <TooltipContent>Downvote Response</TooltipContent>
         </Tooltip>
+        */}
       </div>
     </TooltipProvider>
   );

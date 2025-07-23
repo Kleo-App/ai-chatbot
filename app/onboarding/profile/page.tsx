@@ -62,10 +62,10 @@ export default function ProfileSetup() {
       });
       
       // Update step in the background
-      const stepPromise = goToStep('topics');
+      const stepPromise = goToStep('hook');
       
       // Navigate immediately without waiting
-      router.push('/onboarding/topics');
+      router.push('/onboarding/hook');
       
       // Continue processing in the background
       Promise.all([savePromise, stepPromise]).catch(error => {
@@ -96,7 +96,7 @@ export default function ProfileSetup() {
     <OnboardingLayout currentStep="about">
       <div>
         {/* Progress Header */}
-        <StepIndicator currentStep="topics" />
+        <StepIndicator currentStep="hook" />
         
         {/* Profile Section */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-8 mb-10 w-full max-w-3xl">

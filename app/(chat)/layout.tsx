@@ -17,7 +17,9 @@ export default async function Layout({
 }) {
   const { userId } = await auth();
   const cookieStore = await cookies();
-  const isCollapsed = cookieStore.get('sidebar:state')?.value !== 'true';
+  const sidebarState = cookieStore.get('sidebar:state')?.value;
+  // Default to open (true) if no cookie exists, otherwise respect the user's preference
+  const isCollapsed = sidebarState === 'false';
 
   // For unauthenticated users, show full-width layout without sidebar or header
   // (header is now integrated into the Greeting component)

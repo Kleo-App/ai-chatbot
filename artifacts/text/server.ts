@@ -1,7 +1,6 @@
 import { smoothStream, streamText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { updateDocumentPrompt } from '@/lib/ai/prompts';
 import { Langfuse } from 'langfuse';
 
 const langfuse = new Langfuse({
@@ -26,6 +25,26 @@ async function getFetchedLinkedInPrompt() {
     return { 
       compile: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.',
       toJSON: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.'
+    };
+  }
+}
+
+async function getFetchedUpdatePrompt(currentContent: string) {
+  try {
+    const prompt = await langfuse.getPrompt('update_linkedin_post');
+    
+    // Compile the prompt with the current content variable
+    const compiledPrompt = prompt.compile({ current_content: currentContent });
+    return {
+      compile: () => compiledPrompt,
+      toJSON: () => compiledPrompt || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
+    };
+  } catch (error) {
+    console.error('Failed to fetch update prompt:', error);
+    // Provide a fallback prompt if fetch fails
+    return { 
+      compile: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`,
+      toJSON: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
     };
   }
 }
@@ -67,9 +86,14 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
+    // Get the update prompt from Langfuse with current content as variable
+    const currentContent = document.content || '';
+    const prompt = await getFetchedUpdatePrompt(currentContent);
+    const systemPrompt = prompt.toJSON() || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`;
+
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
-      system: updateDocumentPrompt(document.content, 'text', document.title),
+      system: systemPrompt,
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,
       providerOptions: {

@@ -18,7 +18,14 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
 }: LinkedInPostEditorProps) {
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        // Configure paragraph to remove default margins that might conflict
+        paragraph: {
+          HTMLAttributes: {
+            class: 'mb-2',
+          },
+        },
+      }),
     ],
     content: content,
     immediatelyRender: false,
@@ -27,8 +34,12 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[400px] [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
+        class: 'focus:outline-none min-h-[400px] text-sm leading-relaxed text-[#000000E9] [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
       },
+    },
+    // Add these options to ensure consistent styling
+    parseOptions: {
+      preserveWhitespace: 'full',
     },
   });
 
@@ -207,7 +218,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
         <div className="relative px-4 pb-4">
           <EditorContent 
             editor={editor} 
-            className="h-full text-sm leading-relaxed text-[#000000E9]"
+            className="h-full"
           />
         </div>
       </div>

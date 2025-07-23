@@ -6,6 +6,7 @@ import { Background } from '@/components/background';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { SupportChat } from '@/components/support-chat';
 
 import './globals.css';
 
@@ -88,6 +89,7 @@ export default async function RootLayout({
             <Toaster position="top-center" />
             {children}
           </ThemeProvider>
+          <SupportChat />
           <Analytics />
           <SpeedInsights />
         </body>

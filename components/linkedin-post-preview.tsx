@@ -95,15 +95,31 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
         dangerouslySetInnerHTML={{ __html: text }} 
       />;
     } else {
-      // For plain text, convert newlines to <br/> tags
-      return text
-        .split('\n')
-        .map((line, index) => (
-          <span key={index}>
-            {line}
-            {index < text.split('\n').length - 1 && <br />}
-          </span>
-        ));
+      // For plain text, convert newlines to paragraphs with proper styling
+      return (
+        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
+          {text
+            .split('\n\n') // Split on double newlines for paragraphs
+            .map((paragraph, paragraphIndex) => {
+              const trimmedParagraph = paragraph.trim();
+              if (!trimmedParagraph) return null;
+              
+              return (
+                <p key={paragraphIndex} className="mb-2">
+                  {trimmedParagraph
+                    .split('\n') // Split remaining single newlines within paragraph
+                    .map((line, lineIndex) => (
+                      <span key={lineIndex}>
+                        {line}
+                        {lineIndex < trimmedParagraph.split('\n').length - 1 && <br />}
+                      </span>
+                    ))}
+                </p>
+              );
+            })
+            .filter(Boolean)}
+        </div>
+      );
     }
   };
 
@@ -114,7 +130,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     return (
       <div className="relative">
         <div 
-          className={`overflow-hidden ${deviceType === 'mobile' ? 'pr-10' : 'pr-12'}`}
+          className={`overflow-hidden ${deviceType === 'mobile' ? 'pr-10' : 'pr-12'} [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1`}
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 3,

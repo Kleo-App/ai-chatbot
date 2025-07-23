@@ -65,7 +65,7 @@ export async function updateProfileInfo(profileData: {
   try {
     const profile = await updateUserProfile(userId, {
       ...profileData,
-      lastCompletedStep: 'topics',
+      lastCompletedStep: 'about',
     });
     
     console.log('Profile after update:', profile);
@@ -79,28 +79,7 @@ export async function updateProfileInfo(profileData: {
 
 
 
-/**
- * Update selected topics (Step 3: Topics)
- */
-export async function updateSelectedTopics(selectedTopics: string) {
-  const { userId } = await auth();
-  
-  if (!userId) {
-    return { success: false, error: 'User not authenticated' };
-  }
-  
-  try {
-    const profile = await updateUserProfile(userId, {
-      selectedTopics,
-      lastCompletedStep: 'content',
-    });
-    
-    return { success: true, profile };
-  } catch (error) {
-    console.error('Error updating selected topics:', error);
-    return { success: false, error: 'Failed to update selected topics' };
-  }
-}
+// updateSelectedTopics function removed - topics step no longer exists
 
 // Content-related functions removed in content step removal
 
@@ -124,7 +103,7 @@ export async function updatePreferredHook(preferredHook: string) {
   try {
     const profile = await updateUserProfile(userId, {
       preferredHook,
-      lastCompletedStep: 'review',
+      lastCompletedStep: 'hook',
     });
     
     return { success: true, profile };

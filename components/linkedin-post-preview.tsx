@@ -151,7 +151,11 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             {/* Left side: title */}
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-left">
-                <div className="font-medium text-sm text-left">{artifact?.title}</div>
+                <div className="font-medium text-sm text-left" title={artifact?.title}>
+                  {artifact?.title && artifact.title.length > 40 
+                    ? `${artifact.title.substring(0, 40)}...` 
+                    : artifact?.title}
+                </div>
                 {isContentDirty ? (
                   <div className="text-xs text-muted-foreground text-left">Saving changes...</div>
                 ) : document ? (

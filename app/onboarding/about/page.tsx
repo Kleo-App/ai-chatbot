@@ -81,7 +81,7 @@ export default function AboutPage() {
     try {
       // Start navigation immediately to prevent flashing
       // We'll do this in the background while transitioning
-      router.prefetch('/onboarding/topics');
+      router.prefetch('/onboarding/hook');
       
       // Run these operations in parallel to speed up the process
       const promises = [];
@@ -108,10 +108,10 @@ export default function AboutPage() {
       );
       
       // Update the step in the background
-      promises.push(goToStep('topics'));
+      promises.push(goToStep('hook'));
       
       // Navigate immediately without waiting for all operations to complete
-      router.push('/onboarding/topics');
+      router.push('/onboarding/hook');
       
       // Still wait for operations to complete in the background
       await Promise.all(promises).catch(err => {
@@ -121,7 +121,7 @@ export default function AboutPage() {
     } catch (error) {
       console.error('Error during navigation:', error);
       // Ensure we navigate even if there's an error
-      router.push('/onboarding/topics');
+      router.push('/onboarding/hook');
     }
     // We don't need to set isLoading to false since we're navigating away
   };
@@ -135,7 +135,7 @@ export default function AboutPage() {
               Let&apos;s get to know you better
             </p>
             <h1 className="w-full text-center text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
-              Who is {userProfile?.fullName || (user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.firstName || user?.lastName || 'you')} and what do you do?
+              What do you want to educate on and <br /> what do you want to be known for?
             </h1>
           </div>
         </div>
@@ -146,29 +146,39 @@ export default function AboutPage() {
               <div className="relative bg-white/90 backdrop-blur-sm border-2 border-gray-200 hover:border-gray-300 focus-within:border-[#157DFF] focus-within:ring-2 focus-within:ring-[#157DFF]/20 rounded-2xl shadow-sm transition-all duration-200">
                 <textarea
                   value={combinedProfileText}
-                  onChange={(e) => setCombinedProfileText(e.target.value)}
-                  className="w-full min-h-[280px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 pb-16 placeholder:text-gray-400"
-                  placeholder="Tell us about yourself and what you do..."
-                  maxLength={65000}
+                  onChange={(e) => {
+                    const newValue = e.target.value;
+                    if (newValue.length <= 250) {
+                      setCombinedProfileText(newValue);
+                    }
+                  }}
+                  className="w-full min-h-[160px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 pb-16 placeholder:text-gray-400"
+                  placeholder="Keep it short. What you educate on and what you want to be known for."
+                  maxLength={250}
                 />
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
-                  <button
-                    onClick={handleOpenLinkedIn}
-                    className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
-                  >
-                    Open LinkedIn
-                  </button>
-                  <VoiceRecorder 
-                    onTranscriptionComplete={(text) => {
-                      setCombinedProfileText(prev => {
-                        const newContent = prev ? `${prev}\n${text}` : text;
-                        return newContent;
-                      });
-                      toast.success("Voice transcription added!");
-                    }} 
-                    className="flex items-center"
-                    showText={true}
-                  />
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-between px-4 gap-3">
+                  <div className="text-xs text-gray-500">
+                    {combinedProfileText.length}/250 characters
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleOpenLinkedIn}
+                      className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
+                    >
+                      Open LinkedIn
+                    </button>
+                    <VoiceRecorder 
+                      onTranscriptionComplete={(text) => {
+                        setCombinedProfileText(prev => {
+                          const newContent = prev ? `${prev}\n${text}` : text;
+                          return newContent.slice(0, 250); // Ensure we don't exceed character limit
+                        });
+                        toast.success("Voice transcription added!");
+                      }} 
+                      className="flex items-center"
+                      showText={true}
+                    />
+                  </div>
                 </div>
               </div>
               <div className="mt-3 text-center">
@@ -196,7 +206,7 @@ export default function AboutPage() {
           <Button
             onClick={handleNext}
             className="z-0 group relative inline-flex items-center justify-center box-border appearance-none select-none whitespace-nowrap overflow-hidden tap-highlight-transparent cursor-pointer outline-none min-w-24 gap-3 rounded-full transition-transform-colors-opacity bg-[#157DFF] text-white hover:opacity-90 h-12 px-8 py-6 text-base font-medium sm:w-[360px]"
-            disabled={isLoading || !!error}
+            disabled={isLoading || !!error || !combinedProfileText.trim()}
           >
             {isLoading ? 'Saving...' : 'Continue'}
             {!isLoading && (

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { useAuth } from "@clerk/nextjs"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
 import type { HookIdea } from "@/lib/ai/hook-generator"
@@ -47,6 +47,7 @@ export default function KleoHookSelector() {
   
   const { goToStep, userProfile, completeOnboarding } = useOnboarding()
   const { userId } = useAuth()
+  const { user } = useUser()
   const router = useRouter()
   
   // Load hooks when the component mounts
@@ -125,11 +126,11 @@ export default function KleoHookSelector() {
 
   const handleBack = async () => {
     try {
-      await goToStep('topics')
-      router.push('/onboarding/topics')
+      await goToStep('about')
+      router.push('/onboarding/about')
     } catch (error) {
-      console.error('Error navigating to topics:', error)
-      router.push('/onboarding/topics')
+      console.error('Error navigating to about:', error)
+      router.push('/onboarding/about')
     }
   }
 
@@ -250,20 +251,25 @@ export default function KleoHookSelector() {
               hookOptions.map((hook) => (
                 <Card
                   key={hook.id}
-                  className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
-                    selectedHook === hook.id
-                      ? "bg-blue-50/80 backdrop-blur-sm border-[#157DFF]"
-                      : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300"
-                  }`}
-                  onClick={() => handleHookSelect(hook.id)}
-                >
-                  <CardContent className="p-4">
-                    <div className="mb-3">
-                      <Badge className={`${hook.badgeColor} text-white text-xs`}>{hook.source}</Badge>
-                    </div>
-                    <p className="text-gray-700 text-sm leading-relaxed">{hook.content}</p>
-                  </CardContent>
-                </Card>
+                    className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
+                      selectedHook === hook.id
+                        ? "bg-blue-50/80 backdrop-blur-sm border-[#157DFF]"
+                        : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300"
+                    }`}
+                    onClick={() => handleHookSelect(hook.id)}
+                  >
+                    <CardContent className="p-4">
+                      {/* Header with tag */}
+                      <div className="mb-4">
+                        <Badge className={`${hook.badgeColor} text-white text-xs`}>{hook.source}</Badge>
+                      </div>
+                      
+                      {/* Hook text as LinkedIn post content */}
+                      <div>
+                        <p className="text-gray-800 text-sm leading-relaxed text-left">{hook.content}</p>
+                      </div>
+                    </CardContent>
+                  </Card>
               ))
             )}
           </div>

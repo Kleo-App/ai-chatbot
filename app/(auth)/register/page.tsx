@@ -1,11 +1,72 @@
 'use client';
 
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { SignUp } from '@clerk/nextjs';
 import { ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useSearchParams } from 'next/navigation';
 
-export default function RegisterPage() {
+function RegisterPageInner() {
+  const [showAccessDenied, setShowAccessDenied] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [isWaitlistSubmitting, setIsWaitlistSubmitting] = useState(false);
+  const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
+  const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
+  const searchParams = useSearchParams();
+
+  // Check for redirect from failed authentication
+  useEffect(() => {
+    const redirectUrl = searchParams.get('redirect_url');
+    // If there's a redirect_url and it points to onboarding, it likely means
+    // they tried to authenticate but don't have access yet
+    if (redirectUrl && redirectUrl.includes('/onboarding')) {
+      setShowAccessDenied(true);
+    }
+  }, [searchParams]);
+
+  const handleWaitlistSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!waitlistEmail) return;
+
+    setIsWaitlistSubmitting(true);
+    setError('');
+    
+    try {
+      const response = await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: waitlistEmail,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsWaitlistSubmitted(true);
+        setWaitlistEmail('');
+        
+        // Set appropriate message based on response
+        if (data.updated) {
+          setSuccessMessage(data.message || "You're already on the waitlist! We'll be in touch soon.");
+        } else {
+          setSuccessMessage("Thanks for joining! We'll be in touch soon.");
+        }
+      } else {
+        throw new Error('Failed to submit to waitlist');
+      }
+    } catch (error) {
+      console.error('Error submitting to waitlist:', error);
+      setError('Failed to join waitlist. Please try again.');
+    } finally {
+      setIsWaitlistSubmitting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen w-full relative overflow-hidden">
       {/* Background with gradient and animated orbs - matching homepage */}
@@ -58,45 +119,159 @@ export default function RegisterPage() {
         <div className="w-full max-w-md">
           {/* Register Card */}
           <div className="bg-white/80 backdrop-blur-lg border border-white/20 rounded-3xl shadow-2xl p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-semibold text-gray-900 mb-2">
-                Create your account
-              </h1>
-              <p className="text-gray-600">
-                Join thousands of creators using Kleo to craft amazing content
-              </p>
-            </div>
+            {showAccessDenied ? (
+              <>
+                {/* Access Denied Message */}
+                <div className="text-center mb-8">
+                  <div className="size-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="size-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.884-.833-2.598 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                    Access Not Available Yet
+                  </h1>
+                  <p className="text-gray-600 text-lg">
+                    It looks like you don&apos;t have access to Kleo yet. We are currently letting in people in waves from our waitlist.
+                  </p>
+                </div>
 
-            {/* Clerk SignUp Component with custom styling */}
-            <div className="[&_.cl-rootBox]:w-full [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-card]:border-none [&_.cl-headerTitle]:text-transparent [&_.cl-headerTitle]:h-0 [&_.cl-headerSubtitle]:text-transparent [&_.cl-headerSubtitle]:h-0 [&_.cl-socialButtonsBlockButton]:w-full [&_.cl-socialButtonsBlockButton]:justify-center [&_.cl-socialButtonsBlockButton]:border-gray-300 [&_.cl-socialButtonsBlockButton]:rounded-lg [&_.cl-socialButtonsBlockButton]:py-3 [&_.cl-socialButtonsBlockButton]:text-gray-700 [&_.cl-socialButtonsBlockButton]:hover:bg-gray-50 [&_.cl-formFieldInput]:border-gray-300 [&_.cl-formFieldInput]:rounded-lg [&_.cl-formFieldInput]:px-4 [&_.cl-formFieldInput]:py-3 [&_.cl-formFieldInput]:focus:ring-2 [&_.cl-formFieldInput]:focus:ring-blue-500 [&_.cl-formFieldInput]:focus:border-transparent [&_.cl-formButtonPrimary]:bg-blue-600 [&_.cl-formButtonPrimary]:hover:bg-blue-700 [&_.cl-formButtonPrimary]:w-full [&_.cl-formButtonPrimary]:rounded-lg [&_.cl-formButtonPrimary]:py-3 [&_.cl-formButtonPrimary]:text-lg [&_.cl-formButtonPrimary]:font-medium [&_.cl-footerActionLink]:text-blue-600 [&_.cl-footerActionLink]:hover:text-blue-700 [&_.cl-dividerLine]:border-gray-200 [&_.cl-dividerText]:text-gray-500 [&_.cl-dividerText]:bg-white [&_.cl-alternativeMethodsBlockButton]:border-gray-300 [&_.cl-alternativeMethodsBlockButton]:rounded-lg [&_.cl-alternativeMethodsBlockButton]:hover:bg-gray-50">
-              <SignUp 
-                appearance={{
-                  elements: {
-                    rootBox: "w-full",
-                    card: "bg-transparent shadow-none border-none p-0",
-                    headerTitle: "hidden",
-                    headerSubtitle: "hidden",
-                    socialButtonsBlockButton: "w-full justify-center border-gray-300 rounded-lg py-3 text-gray-700 hover:bg-gray-50 transition-colors",
-                    formFieldInput: "border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
-                    formFieldLabel: "text-sm font-medium text-gray-700 mb-2",
-                    formButtonPrimary: "bg-blue-600 hover:bg-blue-700 w-full rounded-lg py-3 text-lg font-medium transition-colors",
-                    footerActionLink: "text-blue-600 hover:text-blue-700 transition-colors",
-                    dividerLine: "border-gray-200",
-                    dividerText: "text-gray-500 bg-white px-4",
-                    alternativeMethodsBlockButton: "border-gray-300 rounded-lg hover:bg-gray-50 transition-colors",
-                    formFieldError: "text-red-600 text-sm mt-1",
-                  },
-                  layout: {
-                    socialButtonsVariant: "blockButton",
-                    socialButtonsPlacement: "top",
-                  }
-                }}
-                routing="hash"
-                signInUrl="/login"
-                forceRedirectUrl="/onboarding/welcome"
-                fallbackRedirectUrl="/onboarding/welcome"
-              />
-            </div>
+                {!isWaitlistSubmitted ? (
+                  <>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <h3 className="font-medium text-blue-900 mb-2">Join our waitlist</h3>
+                      <p className="text-blue-700 text-sm">
+                        Make sure you&apos;re on our waitlist and we&apos;ll reach out soon with access!
+                      </p>
+                    </div>
+
+                    {/* Error Message */}
+                    {error && (
+                      <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p className="text-red-600 text-sm">{error}</p>
+                      </div>
+                    )}
+
+                    {/* Waitlist Form */}
+                    <form onSubmit={handleWaitlistSubmit} className="space-y-4 mb-6">
+                      <div>
+                        <label htmlFor="waitlistEmail" className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          id="waitlistEmail"
+                          type="email"
+                          value={waitlistEmail}
+                          onChange={(e) => setWaitlistEmail(e.target.value)}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                          placeholder="you@example.com"
+                          required
+                          disabled={isWaitlistSubmitting}
+                        />
+                      </div>
+                      <Button
+                        type="submit"
+                        size="lg"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg font-medium"
+                        disabled={isWaitlistSubmitting}
+                      >
+                        {isWaitlistSubmitting ? 'Joining Waitlist...' : 'Join Waitlist'}
+                      </Button>
+                    </form>
+
+                    <div className="text-center">
+                      <Button
+                        onClick={() => {
+                          setShowAccessDenied(false);
+                          setError('');
+                          // Clear the redirect_url from the URL
+                          const url = new URL(window.location.href);
+                          url.searchParams.delete('redirect_url');
+                          window.history.replaceState({}, '', url.toString());
+                        }}
+                        variant="ghost"
+                        size="lg"
+                        className="text-gray-600 hover:text-gray-900"
+                      >
+                        Back to Sign Up
+                      </Button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-6">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-green-800 font-medium">✓ Success!</p>
+                        <p className="text-green-600 text-sm mt-1">
+                          {successMessage}
+                        </p>
+                      </div>
+                      
+                      <div className="text-center">
+                        <Button
+                          onClick={() => {
+                            setShowAccessDenied(false);
+                            setIsWaitlistSubmitted(false);
+                            setError('');
+                            // Clear the redirect_url from the URL
+                            const url = new URL(window.location.href);
+                            url.searchParams.delete('redirect_url');
+                            window.history.replaceState({}, '', url.toString());
+                          }}
+                          variant="outline"
+                          size="lg"
+                          className="w-full"
+                        >
+                          Back to Sign Up
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="text-center mb-8">
+                  <h1 className="text-3xl font-semibold text-gray-900 mb-2">
+                    Create your account
+                  </h1>
+                  <p className="text-gray-600">
+                    Join thousands of creators using Kleo to craft amazing content
+                  </p>
+                </div>
+
+                {/* Clerk SignUp Component with custom styling */}
+                <div className="[&_.cl-rootBox]:w-full [&_.cl-card]:bg-transparent [&_.cl-card]:shadow-none [&_.cl-card]:border-none [&_.cl-headerTitle]:text-transparent [&_.cl-headerTitle]:h-0 [&_.cl-headerSubtitle]:text-transparent [&_.cl-headerSubtitle]:h-0 [&_.cl-socialButtonsBlockButton]:w-full [&_.cl-socialButtonsBlockButton]:justify-center [&_.cl-socialButtonsBlockButton]:border-gray-300 [&_.cl-socialButtonsBlockButton]:rounded-lg [&_.cl-socialButtonsBlockButton]:py-3 [&_.cl-socialButtonsBlockButton]:text-gray-700 [&_.cl-socialButtonsBlockButton]:hover:bg-gray-50 [&_.cl-formFieldInput]:border-gray-300 [&_.cl-formFieldInput]:rounded-lg [&_.cl-formFieldInput]:px-4 [&_.cl-formFieldInput]:py-3 [&_.cl-formFieldInput]:focus:ring-2 [&_.cl-formFieldInput]:focus:ring-blue-500 [&_.cl-formFieldInput]:focus:border-transparent [&_.cl-formButtonPrimary]:bg-blue-600 [&_.cl-formButtonPrimary]:hover:bg-blue-700 [&_.cl-formButtonPrimary]:w-full [&_.cl-formButtonPrimary]:rounded-lg [&_.cl-formButtonPrimary]:py-3 [&_.cl-formButtonPrimary]:text-lg [&_.cl-formButtonPrimary]:font-medium [&_.cl-footerActionLink]:text-blue-600 [&_.cl-footerActionLink]:hover:text-blue-700 [&_.cl-dividerLine]:border-gray-200 [&_.cl-dividerText]:text-gray-500 [&_.cl-dividerText]:bg-white [&_.cl-alternativeMethodsBlockButton]:border-gray-300 [&_.cl-alternativeMethodsBlockButton]:rounded-lg [&_.cl-alternativeMethodsBlockButton]:hover:bg-gray-50">
+                  <SignUp 
+                    appearance={{
+                      elements: {
+                        rootBox: "w-full",
+                        card: "bg-transparent shadow-none border-none p-0",
+                        headerTitle: "hidden",
+                        headerSubtitle: "hidden",
+                        socialButtonsBlockButton: "w-full justify-center border-gray-300 rounded-lg py-3 text-gray-700 hover:bg-gray-50 transition-colors",
+                        formFieldInput: "border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors",
+                        formFieldLabel: "text-sm font-medium text-gray-700 mb-2",
+                        formButtonPrimary: "bg-blue-600 hover:bg-blue-700 w-full rounded-lg py-3 text-lg font-medium transition-colors",
+                        footerActionLink: "text-blue-600 hover:text-blue-700 transition-colors",
+                        dividerLine: "border-gray-200",
+                        dividerText: "text-gray-500 bg-white px-4",
+                        alternativeMethodsBlockButton: "border-gray-300 rounded-lg hover:bg-gray-50 transition-colors",
+                        formFieldError: "text-red-600 text-sm mt-1",
+                      },
+                      layout: {
+                        socialButtonsVariant: "blockButton",
+                        socialButtonsPlacement: "top",
+                      }
+                    }}
+                    routing="hash"
+                    signInUrl="/login"
+                    forceRedirectUrl="/onboarding/welcome"
+                    fallbackRedirectUrl="/onboarding/welcome"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           {/* Additional Info */}
@@ -113,5 +288,21 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function RegisterPageFallback() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+    </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={<RegisterPageFallback />}>
+      <RegisterPageInner />
+    </Suspense>
   );
 }

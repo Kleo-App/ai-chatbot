@@ -647,18 +647,38 @@ export async function createStreamId({
 
 export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
   try {
-    const streamIds = await db
-      .select({ id: stream.id })
+    const streams = await db
+      .select()
       .from(stream)
-      .where(eq(stream.chatId, chatId))
-      .orderBy(asc(stream.createdAt))
-      .execute();
+      .where(eq(stream.chatId, chatId));
 
-    return streamIds.map(({ id }) => id);
+    return streams.map((s) => s.id);
   } catch (error) {
     throw new ChatSDKError(
       'bad_request:database',
       'Failed to get stream ids by chat id',
+    );
+  }
+}
+
+export async function deleteMessageById({ messageId }: { messageId: string }) {
+  try {
+    // First delete any votes associated with this message
+    await db
+      .delete(vote)
+      .where(eq(vote.messageId, messageId));
+
+    // Then delete the message itself
+    const deletedMessage = await db
+      .delete(message)
+      .where(eq(message.id, messageId))
+      .returning();
+
+    return deletedMessage[0];
+  } catch (error) {
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to delete message by id',
     );
   }
 }

@@ -20,7 +20,6 @@ import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
-import { useLinkedInHook } from '@/context/linkedin-hook-context';
 
 // Type narrowing is handled by TypeScript's control flow analysis
 // The AI SDK provides proper discriminated unions for tool calls
@@ -309,58 +308,23 @@ const PurePreviewMessage = ({
               
               if (type === 'tool-linkedInHookSelector') {
                 const { toolCallId, state } = part;
-
+                let hooks: { id: number, source: string, content: string }[] = [];
+                
+                // Determine which data source to use based on state
                 if (state === 'input-available') {
-                  // Check if we have data in the input
+                  // Get hooks from input
                   const input = part.input;
-                  
-                  // Try to access hooks from various possible locations
-                  // This is a workaround until we know the exact structure
                   const possibleHooksData = (input as any)?.hooks || (input as any)?.data?.hooks;
                   
-                  // Check if we have hooks data to render
                   if (possibleHooksData && Array.isArray(possibleHooksData) && possibleHooksData.length > 0) {
-                    
-                    // Process hooks for the UI component
-                    const hooks = possibleHooksData.map((hook: any, index: number) => ({
+                    hooks = possibleHooksData.map((hook: any, index: number) => ({
                       id: hook.id || index + 1,
                       source: hook.source || 'General',
                       content: hook.content || hook.text || ''
                     }));
-                    
-                    return (
-                      <div key={toolCallId}>
-                        <LinkedInHookSelector 
-                          hooks={hooks}
-                          onHookSelect={(selectedHook) => {
-                            const hookMessage = `I've selected this hook for my LinkedIn post: "${selectedHook.content}". Please use this exact hook to write a complete LinkedIn post.`;
-                            
-                            const dataStreamEvent = new CustomEvent('append-message', {
-                              detail: { message: hookMessage }
-                            });
-                            document.dispatchEvent(dataStreamEvent);
-                          }}
-                          hookUsed={message.parts.some(p => p.type === 'tool-createDocument')}
-                        />
-                      </div>
-                    );
                   }
-                  // Fallback to skeleton if no hooks data
-                  return (
-                    <div key={toolCallId} className="skeleton">
-                      <div className="w-full max-w-3xl my-4 p-4 border border-gray-200 rounded-md animate-pulse">
-                        <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
-                        <div className="grid grid-cols-2 gap-4">
-                          {Array.from({ length: 4 }).map((_, i) => (
-                            <div key={i} className="h-24 bg-gray-200 rounded"></div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                }
-
-                if (state === 'output-available') {
+                } else if (state === 'output-available') {
+                  // Get hooks from output
                   const { output } = part;
                   
                   if ('error' in output) {
@@ -396,40 +360,40 @@ const PurePreviewMessage = ({
                     }
                   }
                   
-                  if (!rawHooks || !Array.isArray(rawHooks) || rawHooks.length === 0) {
-                    console.error('[message.tsx] Invalid hooks data received:', rawHooks);
-                    return (
-                      <div key={toolCallId} className="text-red-500 p-2 border rounded">
-                        Error: No valid hooks data found
-                      </div>
-                    );
-                  }
-                  
-                  const hooks = rawHooks.map((hook: any, index: number) => {
-                    const processedHook = {
+                  if (rawHooks && Array.isArray(rawHooks) && rawHooks.length > 0) {
+                    hooks = rawHooks.map((hook: any, index: number) => ({
                       id: hook.id || index + 1, // Use existing ID or create a new one
                       source: hook.source || 'General',
                       content: hook.content || hook.text || '' // Handle both content and text fields
-                    };
-                    
-                    return processedHook;
-                  });
-                  
-                  if (hooks.length === 0) {
-                    return (
-                      <div key={toolCallId} className="text-red-500 p-2 border rounded">
-                        Error: Failed to process hooks data
-                      </div>
-                    );
+                    }));
+                  } else {
+                    console.error('[message.tsx] Invalid hooks data received:', rawHooks);
                   }
-
+                }
+                
+                // If we have hooks data, render the selector
+                if (hooks.length > 0) {
                   return (
-                    <div key={`${toolCallId}-${Date.now()}`}>
+                    <div key={toolCallId}>
                       <LinkedInHookSelector 
                         hooks={hooks}
-                        onHookSelect={(selectedHook) => {
+                        onHookSelect={async (selectedHook) => {
                           const hookMessage = `I've selected this hook for my LinkedIn post: "${selectedHook.content}". Please use this exact hook to write a complete LinkedIn post.`;
                           
+                          // Remove the message from the UI immediately
+                          setMessages((currentMessages) => {
+                            return currentMessages.filter(msg => msg.id !== message.id);
+                          });
+                          
+                          // Delete the message from the database in the background
+                          try {
+                            const { deleteMessage } = await import('@/lib/utils/delete-message');
+                            await deleteMessage(message.id);
+                          } catch (error) {
+                            console.error('Failed to delete hook generator message:', error);
+                          }
+                          
+                          // Send the selected hook message
                           const dataStreamEvent = new CustomEvent('append-message', {
                             detail: { message: hookMessage }
                           });
@@ -441,6 +405,20 @@ const PurePreviewMessage = ({
                     </div>
                   );
                 }
+                
+                // Fallback to skeleton if no hooks data
+                return (
+                  <div key={toolCallId} className="skeleton">
+                    <div className="w-full max-w-3xl my-4 p-4 border border-gray-200 rounded-md animate-pulse">
+                      <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
                 
                 // Return a loading state if we're not in input-available or output-available state
                 return (

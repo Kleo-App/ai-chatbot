@@ -15,55 +15,81 @@ interface LinkedInHookContextType {
   isHookSelected: boolean;
 }
 
+// Utility functions for safe localStorage operations
+const safeLocalStorage = {
+  get: <T,>(key: string): T | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const item = localStorage.getItem(key);
+      return item ? JSON.parse(item) : null;
+    } catch (error) {
+      console.error(`Error getting ${key} from localStorage:`, error);
+      return null;
+    }
+  },
+  set: (key: string, value: any): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, JSON.stringify(value));
+    } catch (error) {
+      console.error(`Error setting ${key} in localStorage:`, error);
+    }
+  },
+  remove: (key: string): void => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.removeItem(key);
+    } catch (error) {
+      console.error(`Error removing ${key} from localStorage:`, error);
+    }
+  }
+};
+
+const STORAGE_KEY = 'selectedLinkedInHook';
+
 const LinkedInHookContext = createContext<LinkedInHookContextType | undefined>(undefined);
 
 export function LinkedInHookProvider({ children }: { children: ReactNode }) {
-  const [selectedHook, setSelectedHookState] = useState<LinkedInHook | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    try {
-      const savedHook = localStorage.getItem('selectedLinkedInHook');
-      if (savedHook) {
-        setSelectedHookState(JSON.parse(savedHook));
+  // Use a stable initial state with lazy initialization to prevent unnecessary rerenders
+  const [selectedHook, setSelectedHookState] = useState<LinkedInHook | null>(() => {
+    // Only try to access localStorage during client-side rendering
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved ? JSON.parse(saved) : null;
+      } catch (e) {
+        console.error('Error reading from localStorage:', e);
+        return null;
       }
-    } catch (error) {
-      console.error('Error loading selected LinkedIn hook from localStorage:', error);
-    } finally {
-      setIsLoaded(true);
     }
+    return null;
+  });
+  
+  // Track if component is mounted to prevent localStorage operations during SSR
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Mark component as mounted
+  useEffect(() => {
+    setIsMounted(true);
   }, []);
 
-  // Save to localStorage when hook changes
+  // Save to localStorage when hook changes (only after component is mounted)
   useEffect(() => {
-    if (isLoaded && selectedHook) {
-      try {
-        localStorage.setItem('selectedLinkedInHook', JSON.stringify(selectedHook));
-      } catch (error) {
-        console.error('Error saving selected LinkedIn hook to localStorage:', error);
+    if (isMounted) {
+      if (selectedHook) {
+        safeLocalStorage.set(STORAGE_KEY, selectedHook);
+      } else {
+        safeLocalStorage.remove(STORAGE_KEY);
       }
     }
-  }, [selectedHook, isLoaded]);
+  }, [selectedHook, isMounted]);
 
   const setSelectedHook = (hook: LinkedInHook | null) => {
     setSelectedHookState(hook);
-    if (!hook) {
-      try {
-        localStorage.removeItem('selectedLinkedInHook');
-      } catch (error) {
-        console.error('Error removing selected LinkedIn hook from localStorage:', error);
-      }
-    }
   };
 
   const clearSelectedHook = () => {
     setSelectedHookState(null);
-    try {
-      localStorage.removeItem('selectedLinkedInHook');
-    } catch (error) {
-      console.error('Error removing selected LinkedIn hook from localStorage:', error);
-    }
   };
 
   return (

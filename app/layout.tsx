@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Background } from '@/components/background';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 import './globals.css';
 
@@ -88,6 +89,7 @@ export default async function RootLayout({
             {children}
           </ThemeProvider>
           <Analytics />
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>

@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@clerk/nextjs';
 import { GuestMultimodalInput } from '@/components/guest-multimodal-input';
 import { AuthModal } from '@/components/auth-modal';
-import { Footer } from '@/components/footer';
+
+// Lazy load heavy components for better initial load performance
+const LazyFooter = lazy(() => import('@/components/footer').then(mod => ({ default: mod.Footer })));
 
 interface GreetingProps {
   children?: React.ReactNode; // For authenticated multimodal input
@@ -278,6 +280,24 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Trigger blue burst animation on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsBurstAnimated(true);
+    }, 300); // Small delay to ensure page is loaded
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  // Early return for authenticated users - skip all logged-out specific logic
+  if (children) {
+    return (
+      <div className="flex flex-col h-full">
+        {children}
+      </div>
+    );
+  }
+
   // Scroll to waitlist section
   const scrollToWaitlist = () => {
     const waitlistSection = document.getElementById('waitlist');
@@ -289,18 +309,11 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
     }
   };
 
-  // Trigger blue burst animation on mount
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsBurstAnimated(true);
-    }, 300); // Small delay to ensure page is loaded
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Show header immediately if server confirms user is logged out, otherwise wait for client-side check
-  // Never show header if we have children (authenticated user with chat interface)
-  const showHeader = !children && (isLoggedOut || (!user && isLoaded));
+  // Optimized rendering logic:
+  // - If server confirms user is logged out, show landing page immediately 
+  // - Otherwise, wait for client-side auth check (fallback for edge cases)
+  const shouldShowLandingPage = isLoggedOut === true || (!user && isLoaded);
+  const shouldShowHeader = shouldShowLandingPage;
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -337,7 +350,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
     <>
       <div className={`flex flex-col ${children ? 'h-full' : 'min-h-screen'}`}>
         {/* Header - only show for unauthenticated users */}
-        {showHeader && (
+        {shouldShowHeader && (
           <header 
             className={`fixed top-0 inset-x-0 w-full px-8 py-3 z-50 transition-all duration-300 ease-out ${
               isScrolled 
@@ -373,7 +386,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
         )}
 
         {/* Hero Section */}
-        {showHeader ? (
+        {shouldShowLandingPage ? (
           <section id="hero" className="w-full relative">
             <div className="relative flex flex-col items-center w-full px-6">
               {/* Background with gradient - extends to full height */}
@@ -459,7 +472,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
 
         {/* Rest of the sections remain the same for logged-out users */}
         {/* Container for testimonials and rest of site - only show for unauthenticated users */}
-        {showHeader && (
+        {shouldShowHeader && (
           <div className="w-full relative z-20 -mt-24 px-8">
             <div className="flex w-full flex-col gap-12 rounded-[20px] bg-background p-8">
             {/* Featured Testimonials Section */}
@@ -645,10 +658,12 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
         )}
 
         {/* Footer in separate container - only show for unauthenticated users */}
-        {showHeader && (
+        {shouldShowHeader && (
           <div className="w-full relative z-20 px-8 mt-6 mb-8">
             <div className="w-full rounded-[20px] border-2 border-gray-200 bg-background dark:border-gray-800 overflow-hidden">
-              <Footer />
+              <Suspense fallback={<div className="h-32 animate-pulse bg-gray-100" />}>
+                <LazyFooter />
+              </Suspense>
             </div>
           </div>
         )}

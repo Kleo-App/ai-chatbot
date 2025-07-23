@@ -118,8 +118,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   return (
     <div className="flex flex-col h-full bg-background">
       {/* LinkedIn Hook Selector */}
-      {/* Hidden debugging div */}
-      <div style={{ display: 'none' }} />
+      
       
       {/* Log debugging information */}
       {(() => {

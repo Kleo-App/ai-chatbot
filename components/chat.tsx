@@ -149,6 +149,7 @@ export function Chat({
     initialMessages,
     resumeStream,
     setMessages,
+    sendMessage,
   });
 
   // Auto-open document artifact if initialDocument is provided

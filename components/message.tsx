@@ -20,6 +20,7 @@ import { MessageReasoning } from './message-reasoning';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import { useLinkedInHook } from '@/context/linkedin-hook-context';
 
 // Type narrowing is handled by TypeScript's control flow analysis
 // The AI SDK provides proper discriminated unions for tool calls
@@ -308,12 +309,10 @@ const PurePreviewMessage = ({
               
               if (type === 'tool-linkedInHookSelector') {
                 const { toolCallId, state } = part;
-                console.log('[message.tsx] Processing linkedInHookSelector tool call, state:', state);
 
                 if (state === 'input-available') {
                   // Check if we have data in the input
                   const input = part.input;
-                  console.log('[message.tsx] Input-available state with input:', JSON.stringify(input));
                   
                   // Try to access hooks from various possible locations
                   // This is a workaround until we know the exact structure
@@ -321,7 +320,6 @@ const PurePreviewMessage = ({
                   
                   // Check if we have hooks data to render
                   if (possibleHooksData && Array.isArray(possibleHooksData) && possibleHooksData.length > 0) {
-                    console.log('[message.tsx] Rendering LinkedInHookSelector with hooks from input-available state');
                     
                     // Process hooks for the UI component
                     const hooks = possibleHooksData.map((hook: any, index: number) => ({
@@ -335,19 +333,18 @@ const PurePreviewMessage = ({
                         <LinkedInHookSelector 
                           hooks={hooks}
                           onHookSelect={(selectedHook) => {
-                            console.log('[message.tsx] Hook selected from input-available state:', selectedHook);
-                            const hookMessage = `I've selected this hook: "${selectedHook.content}". Please use this hook to write a LinkedIn post.`;
+                            const hookMessage = `I've selected this hook for my LinkedIn post: "${selectedHook.content}". Please use this exact hook to write a complete LinkedIn post.`;
                             
                             const dataStreamEvent = new CustomEvent('append-message', {
                               detail: { message: hookMessage }
                             });
                             document.dispatchEvent(dataStreamEvent);
                           }}
+                          hookUsed={message.parts.some(p => p.type === 'tool-createDocument')}
                         />
                       </div>
                     );
                   }
-                  console.log("[message.tsx] Fallback to skeleton if no hooks data")
                   // Fallback to skeleton if no hooks data
                   return (
                     <div key={toolCallId} className="skeleton">
@@ -365,8 +362,7 @@ const PurePreviewMessage = ({
 
                 if (state === 'output-available') {
                   const { output } = part;
-                  console.log('[message.tsx] Output-available state with output:', typeof output, output);
-
+                  
                   if ('error' in output) {
                     return (
                       <div
@@ -379,23 +375,16 @@ const PurePreviewMessage = ({
                   }
 
                   // Get hooks from the output with proper type checking
-                  console.log('[message.tsx] Tool output received:', JSON.stringify(output));
-                  
-                  // Check if output is directly a hooks array or has a hooks property
                   let rawHooks;
                   if (Array.isArray(output)) {
-                    console.log('[message.tsx] Output is an array');
                     rawHooks = output;
                   } else {
                     const outputObj = output as any;
-                    console.log('[message.tsx] Output keys:', Object.keys(outputObj));
                     
                     // Check all possible locations for hooks data
                     if (outputObj.hooks && Array.isArray(outputObj.hooks)) {
-                      console.log('[message.tsx] Found hooks in output.hooks');
                       rawHooks = outputObj.hooks;
                     } else if (outputObj.data && outputObj.data.hooks && Array.isArray(outputObj.data.hooks)) {
-                      console.log('[message.tsx] Found hooks in output.data.hooks');
                       rawHooks = outputObj.data.hooks;
                     } else {
                       console.log('[message.tsx] No hooks array found in expected locations');
@@ -407,9 +396,6 @@ const PurePreviewMessage = ({
                     }
                   }
                   
-                  // Process hooks for the UI component
-                  console.log('[message.tsx] Raw hooks before processing:', JSON.stringify(rawHooks));
-                  
                   if (!rawHooks || !Array.isArray(rawHooks) || rawHooks.length === 0) {
                     console.error('[message.tsx] Invalid hooks data received:', rawHooks);
                     return (
@@ -420,23 +406,16 @@ const PurePreviewMessage = ({
                   }
                   
                   const hooks = rawHooks.map((hook: any, index: number) => {
-                    console.log('[message.tsx] Processing hook:', JSON.stringify(hook));
-                    
                     const processedHook = {
                       id: hook.id || index + 1, // Use existing ID or create a new one
                       source: hook.source || 'General',
                       content: hook.content || hook.text || '' // Handle both content and text fields
                     };
                     
-                    console.log('[message.tsx] Processed hook:', JSON.stringify(processedHook));
                     return processedHook;
                   });
                   
-                  console.log('[message.tsx] Processed hooks for UI:', JSON.stringify(hooks));
-                  console.log('[message.tsx] Number of hooks after processing:', hooks.length);
-                  
                   if (hooks.length === 0) {
-                    console.error('[message.tsx] No hooks available to display!');
                     return (
                       <div key={toolCallId} className="text-red-500 p-2 border rounded">
                         Error: Failed to process hooks data
@@ -444,26 +423,18 @@ const PurePreviewMessage = ({
                     );
                   }
 
-                  console.log('[message.tsx] About to render LinkedInHookSelector with hooks:', JSON.stringify(hooks));
-                  
-                  // Force a re-render by adding a timestamp to the key
                   return (
                     <div key={`${toolCallId}-${Date.now()}`}>
                       <LinkedInHookSelector 
                         hooks={hooks}
                         onHookSelect={(selectedHook) => {
-                          console.log('[message.tsx] Hook selected:', selectedHook);
-                          // When a hook is selected, we'll append a message to the chat
-                          // This will trigger the AI to continue with the selected hook
-                          const hookMessage = `I've selected this hook: "${selectedHook.content}". Please use this hook to write a LinkedIn post.`;
+                          const hookMessage = `I've selected this hook for my LinkedIn post: "${selectedHook.content}". Please use this exact hook to write a complete LinkedIn post.`;
                           
-                          // Use the dataStream to append the message
-                          // This is handled by the useDataStream hook
                           const dataStreamEvent = new CustomEvent('append-message', {
                             detail: { message: hookMessage }
                           });
-                          console.log('[message.tsx] Dispatching append-message event');
-                          window.dispatchEvent(dataStreamEvent);
+                          
+                          document.dispatchEvent(dataStreamEvent);
                         }}
                         isReadonly={isReadonly}
                       />

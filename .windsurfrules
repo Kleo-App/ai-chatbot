@@ -1,10 +1,13 @@
 ALWAYS USE PNPM TO INSTALL PACKAGES
 
+YOU ARE TO ALWAYS USE BEST PRACTICES WHEN IT COMES TO WRITING REACT CODE
+
 # Database Migration Notes
 
 ## How to Run Migrations for the AI Chatbot Project
 
-The proper way to run migrations for this project is to use the built-in npm scripts:
+The proper way to run migrations for this project is to use the built-in npm
+scripts:
 
 1. **Generate migrations** based on schema changes:
 
@@ -42,8 +45,10 @@ npm run db:generate  # Generated the migration file
 npm run db:push      # Applied the changes to the database
 ```
 
-The UserProfile table is defined in `lib/db/schema-profile.ts` and is properly referenced in `lib/db/schema.ts`.
+The UserProfile table is defined in `lib/db/schema-profile.ts` and is properly
+referenced in `lib/db/schema.ts`.
 
 ## Environment Variables
 
-Make sure the `.env` file contains the proper `POSTGRES_URL` for database connections.
+Make sure the `.env` file contains the proper `POSTGRES_URL` for database
+connections.

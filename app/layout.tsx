@@ -6,6 +6,7 @@ import { Background } from '@/components/background';
 import { ClerkProvider } from '@clerk/nextjs';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { LinkedInHookProvider } from '@/context/linkedin-hook-context';
 
 import './globals.css';
 
@@ -84,9 +85,11 @@ export default async function RootLayout({
             forcedTheme="light"
             disableTransitionOnChange
           >
-            <Background />
-            <Toaster position="top-center" />
-            {children}
+            <LinkedInHookProvider>
+              <Background />
+              <Toaster position="top-center" />
+              {children}
+            </LinkedInHookProvider>
           </ThemeProvider>
           <Analytics />
           <SpeedInsights />

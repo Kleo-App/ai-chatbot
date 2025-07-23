@@ -1,57 +1,63 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-
-interface LinkedInHook {
-  id: number;
-  source: string;
-  content: string;
-}
+import { useLinkedInHook, LinkedInHook } from '@/context/linkedin-hook-context';
 
 interface LinkedInHookSelectorProps {
   hooks: LinkedInHook[];
   onHookSelect: (hook: LinkedInHook) => void;
   isReadonly?: boolean;
+  hookUsed?: boolean;
 }
 
 export function LinkedInHookSelector({
   hooks,
   onHookSelect,
   isReadonly = false,
-}: {
-  hooks: Array<{ id: number; source: string; content: string }>;
-  onHookSelect: (hook: { id: number; source: string; content: string }) => void;
-  isReadonly?: boolean;
-}) {
-  console.log('[linkedin-hook-selector.tsx] Rendering with hooks:', JSON.stringify(hooks)); // Check if hooks are valid
-  if (!hooks || hooks.length === 0) {
-    console.warn('LinkedInHookSelector: No hooks provided or empty hooks array');
-  } else {
-    console.log('LinkedInHookSelector: Valid hooks found, count:', hooks.length);
-  }
-
-  const [selectedHook, setSelectedHook] = useState<number | null>(null);
+  hookUsed = false,
+}: LinkedInHookSelectorProps) {
+  const { selectedHook: contextSelectedHook, setSelectedHook: setContextSelectedHook, isHookSelected } = useLinkedInHook();
+  const [selectedHookId, setSelectedHookId] = useState<number | null>(contextSelectedHook?.id || null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Log information for debugging
+  useEffect(() => {
+    if (!hooks || hooks.length === 0) {
+      console.warn('LinkedInHookSelector: No hooks provided or empty hooks array');
+    } else {
+      console.log('LinkedInHookSelector: Valid hooks found, count:', hooks.length);
+    }
+  }, [hooks]);
+  
+  // Sync with context when component mounts
+  useEffect(() => {
+    if (contextSelectedHook) {
+      setSelectedHookId(contextSelectedHook.id);
+    }
+  }, [contextSelectedHook]);
 
   const handleHookSelect = (id: number) => {
-    setSelectedHook(id);
+    setSelectedHookId(id);
   };
 
   const handleConfirmSelection = async () => {
-    if (!selectedHook) {
+    if (!selectedHookId) {
       toast.error("Please select a hook before proceeding");
       return;
     }
     
     setIsLoading(true);
     try {
-      const hook = hooks.find(h => h.id === selectedHook);
+      const hook = hooks.find(h => h.id === selectedHookId);
       if (hook) {
+        // Save to context
+        setContextSelectedHook(hook);
+        // Call the callback
         onHookSelect(hook);
       }
     } catch (error) {
@@ -77,17 +83,14 @@ export function LinkedInHookSelector({
     }
   };
 
-  console.log('[linkedin-hook-selector.tsx] Selected hook:', selectedHook);
-  console.log('[linkedin-hook-selector.tsx] Is readonly:', isReadonly);
-  console.log('[linkedin-hook-selector.tsx] Hooks length:', hooks?.length);
-
+  // Readonly view for selected hook
   if (isReadonly) {
     // If readonly, just show the selected hook
-    const hook = hooks.find(h => h.id === selectedHook) || hooks[0];
+    const hook = hooks.find(h => h.id === selectedHookId) || contextSelectedHook || hooks[0];
     return (
       <div className="w-full max-w-3xl my-4">
         <h3 className="text-lg font-medium mb-4">
-          {isReadonly && selectedHook
+          {isReadonly && (selectedHookId || contextSelectedHook)
             ? 'Selected Hook'
             : 'Select a hook for your LinkedIn post'}
         </h3>
@@ -107,12 +110,13 @@ export function LinkedInHookSelector({
   console.log('[linkedin-hook-selector.tsx] About to render hooks grid')
 
   console.log('[linkedin-hook-selector.tsx] Rendering hook cards for', hooks.length, 'hooks');
+  console.log('[linkedin-hook-selector.tsx] Selected hook ID:', selectedHookId);
   
   return (
     <div className="w-full max-w-5xl my-4">
       <div className="mb-4">
         <h3 className="text-lg font-medium mb-4">
-          {isReadonly && selectedHook
+          {isReadonly && selectedHookId
             ? 'Selected Hook'
             : 'Select a hook for your LinkedIn post'}
         </h3>
@@ -131,7 +135,7 @@ export function LinkedInHookSelector({
               <Card
                 key={hook.id}
                 className={`cursor-pointer transition-all duration-200 hover:shadow-md border-2 ${
-                  selectedHook === hook.id
+                  selectedHookId === hook.id
                     ? "bg-blue-50/80 backdrop-blur-sm border-[#157DFF]"
                     : "bg-white/80 backdrop-blur-sm border-gray-200 hover:border-gray-300"
                 }`}
@@ -152,8 +156,12 @@ export function LinkedInHookSelector({
       <div className="flex justify-end">
         <Button
           onClick={handleConfirmSelection}
-          className="bg-[#157DFF] hover:bg-blue-600 text-white px-6 py-2 rounded-full font-medium text-sm shadow hover:shadow-md transition-all duration-200"
-          disabled={!selectedHook || isLoading}
+          className={`px-6 py-2 rounded-full font-medium text-sm shadow transition-all duration-200 ${
+            hookUsed || isHookSelected
+              ? "bg-gray-400 cursor-not-allowed" 
+              : "bg-[#157DFF] hover:bg-blue-600 text-white hover:shadow-md"
+          }`}
+          disabled={!selectedHookId || isLoading || hookUsed || isHookSelected}
         >
           {isLoading ? (
             <>

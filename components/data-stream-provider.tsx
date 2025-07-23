@@ -53,11 +53,11 @@ export function useDataStream() {
     };
     
     // Add event listener
-    window.addEventListener('append-message', handleAppendMessage as EventListener);
+    document.addEventListener('append-message', handleAppendMessage as EventListener);
     
     // Clean up
     return () => {
-      window.removeEventListener('append-message', handleAppendMessage as EventListener);
+      document.removeEventListener('append-message', handleAppendMessage as EventListener);
     };
   }, [context]);
   

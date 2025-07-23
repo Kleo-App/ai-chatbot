@@ -9,6 +9,7 @@ import { Markdown } from './markdown';
 import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
+import { LinkedInHookSelector } from './linkedin-hook-selector';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -89,9 +90,15 @@ const PurePreviewMessage = ({
               </div>
             )}
 
-            {message.parts?.map((part, index) => {
+            {message.parts.map((part, idx) => {
+              const key = `${message.id}-${idx}`;
               const { type } = part;
-              const key = `message-${message.id}-part-${index}`;
+
+              // Skip rendering text parts if this message contains a linkedInHookSelector tool call
+              // This prevents duplicate content (text + cards)
+              if (type === 'text' && message.parts.some(p => p.type === 'tool-linkedInHookSelector')) {
+                return null;
+              }
 
               if (type === 'reasoning' && part.text?.trim().length > 0) {
                 return (
@@ -297,6 +304,186 @@ const PurePreviewMessage = ({
                     </div>
                   );
                 }
+              }
+              
+              if (type === 'tool-linkedInHookSelector') {
+                const { toolCallId, state } = part;
+                console.log('[message.tsx] Processing linkedInHookSelector tool call, state:', state);
+
+                if (state === 'input-available') {
+                  // Check if we have data in the input
+                  const input = part.input;
+                  console.log('[message.tsx] Input-available state with input:', JSON.stringify(input));
+                  
+                  // Try to access hooks from various possible locations
+                  // This is a workaround until we know the exact structure
+                  const possibleHooksData = (input as any)?.hooks || (input as any)?.data?.hooks;
+                  
+                  // Check if we have hooks data to render
+                  if (possibleHooksData && Array.isArray(possibleHooksData) && possibleHooksData.length > 0) {
+                    console.log('[message.tsx] Rendering LinkedInHookSelector with hooks from input-available state');
+                    
+                    // Process hooks for the UI component
+                    const hooks = possibleHooksData.map((hook: any, index: number) => ({
+                      id: hook.id || index + 1,
+                      source: hook.source || 'General',
+                      content: hook.content || hook.text || ''
+                    }));
+                    
+                    return (
+                      <div key={toolCallId}>
+                        <LinkedInHookSelector 
+                          hooks={hooks}
+                          onHookSelect={(selectedHook) => {
+                            console.log('[message.tsx] Hook selected from input-available state:', selectedHook);
+                            const hookMessage = `I've selected this hook: "${selectedHook.content}". Please use this hook to write a LinkedIn post.`;
+                            
+                            const dataStreamEvent = new CustomEvent('append-message', {
+                              detail: { message: hookMessage }
+                            });
+                            document.dispatchEvent(dataStreamEvent);
+                          }}
+                        />
+                      </div>
+                    );
+                  }
+                  console.log("[message.tsx] Fallback to skeleton if no hooks data")
+                  // Fallback to skeleton if no hooks data
+                  return (
+                    <div key={toolCallId} className="skeleton">
+                      <div className="w-full max-w-3xl my-4 p-4 border border-gray-200 rounded-md animate-pulse">
+                        <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
+                        <div className="grid grid-cols-2 gap-4">
+                          {Array.from({ length: 4 }).map((_, i) => (
+                            <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
+                if (state === 'output-available') {
+                  const { output } = part;
+                  console.log('[message.tsx] Output-available state with output:', typeof output, output);
+
+                  if ('error' in output) {
+                    return (
+                      <div
+                        key={toolCallId}
+                        className="text-red-500 p-2 border rounded"
+                      >
+                        Error: {String(output.error)}
+                      </div>
+                    );
+                  }
+
+                  // Get hooks from the output with proper type checking
+                  console.log('[message.tsx] Tool output received:', JSON.stringify(output));
+                  
+                  // Check if output is directly a hooks array or has a hooks property
+                  let rawHooks;
+                  if (Array.isArray(output)) {
+                    console.log('[message.tsx] Output is an array');
+                    rawHooks = output;
+                  } else {
+                    const outputObj = output as any;
+                    console.log('[message.tsx] Output keys:', Object.keys(outputObj));
+                    
+                    // Check all possible locations for hooks data
+                    if (outputObj.hooks && Array.isArray(outputObj.hooks)) {
+                      console.log('[message.tsx] Found hooks in output.hooks');
+                      rawHooks = outputObj.hooks;
+                    } else if (outputObj.data && outputObj.data.hooks && Array.isArray(outputObj.data.hooks)) {
+                      console.log('[message.tsx] Found hooks in output.data.hooks');
+                      rawHooks = outputObj.data.hooks;
+                    } else {
+                      console.log('[message.tsx] No hooks array found in expected locations');
+                    }
+                    
+                    // If there's a message in the output, log it
+                    if (outputObj.message) {
+                      console.log('[message.tsx] Output message:', outputObj.message);
+                    }
+                  }
+                  
+                  // Process hooks for the UI component
+                  console.log('[message.tsx] Raw hooks before processing:', JSON.stringify(rawHooks));
+                  
+                  if (!rawHooks || !Array.isArray(rawHooks) || rawHooks.length === 0) {
+                    console.error('[message.tsx] Invalid hooks data received:', rawHooks);
+                    return (
+                      <div key={toolCallId} className="text-red-500 p-2 border rounded">
+                        Error: No valid hooks data found
+                      </div>
+                    );
+                  }
+                  
+                  const hooks = rawHooks.map((hook: any, index: number) => {
+                    console.log('[message.tsx] Processing hook:', JSON.stringify(hook));
+                    
+                    const processedHook = {
+                      id: hook.id || index + 1, // Use existing ID or create a new one
+                      source: hook.source || 'General',
+                      content: hook.content || hook.text || '' // Handle both content and text fields
+                    };
+                    
+                    console.log('[message.tsx] Processed hook:', JSON.stringify(processedHook));
+                    return processedHook;
+                  });
+                  
+                  console.log('[message.tsx] Processed hooks for UI:', JSON.stringify(hooks));
+                  console.log('[message.tsx] Number of hooks after processing:', hooks.length);
+                  
+                  if (hooks.length === 0) {
+                    console.error('[message.tsx] No hooks available to display!');
+                    return (
+                      <div key={toolCallId} className="text-red-500 p-2 border rounded">
+                        Error: Failed to process hooks data
+                      </div>
+                    );
+                  }
+
+                  console.log('[message.tsx] About to render LinkedInHookSelector with hooks:', JSON.stringify(hooks));
+                  
+                  // Force a re-render by adding a timestamp to the key
+                  return (
+                    <div key={`${toolCallId}-${Date.now()}`}>
+                      <LinkedInHookSelector 
+                        hooks={hooks}
+                        onHookSelect={(selectedHook) => {
+                          console.log('[message.tsx] Hook selected:', selectedHook);
+                          // When a hook is selected, we'll append a message to the chat
+                          // This will trigger the AI to continue with the selected hook
+                          const hookMessage = `I've selected this hook: "${selectedHook.content}". Please use this hook to write a LinkedIn post.`;
+                          
+                          // Use the dataStream to append the message
+                          // This is handled by the useDataStream hook
+                          const dataStreamEvent = new CustomEvent('append-message', {
+                            detail: { message: hookMessage }
+                          });
+                          console.log('[message.tsx] Dispatching append-message event');
+                          window.dispatchEvent(dataStreamEvent);
+                        }}
+                        isReadonly={isReadonly}
+                      />
+                    </div>
+                  );
+                }
+                
+                // Return a loading state if we're not in input-available or output-available state
+                return (
+                  <div key={toolCallId} className="skeleton">
+                    <div className="w-full max-w-3xl my-4 p-4 border border-gray-200 rounded-md animate-pulse">
+                      <div className="h-6 w-48 bg-gray-200 rounded mb-4"></div>
+                      <div className="grid grid-cols-2 gap-4">
+                        {Array.from({ length: 4 }).map((_, i) => (
+                          <div key={i} className="h-24 bg-gray-200 rounded"></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
               }
             })}
 

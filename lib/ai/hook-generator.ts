@@ -17,8 +17,15 @@ export interface HookIdea {
 
 /**
  * Generate hook ideas based on user profile data and selected style
+ * @param userId - The user ID to fetch profile data
+ * @param overrideBio - Optional bio text to override the user profile bio
+ * @param overrideTopics - Optional topics to override the user profile postDetails
  */
-export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
+export async function generateHookIdeas(
+  userId: string,
+  overrideBio?: string,
+  overrideTopics?: string
+): Promise<HookIdea[]> {
   try {
     // Get user profile data
     const userProfile = await getOrCreateUserProfile(userId);
@@ -36,8 +43,9 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       postDetails
     } = userProfile;
     
-    // Use post details for hook generation
-    const postInformation = postDetails || '';
+    // Use override values if provided, otherwise use profile data
+    const userBio = overrideBio || bio || '';
+    const postInformation = overrideTopics || postDetails || '';
 
     // Get the prompt template from Langfuse
     const promptTemplate = await getPrompt('hook-generator');
@@ -47,8 +55,8 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       fullName: fullName || '',
       jobTitle: jobTitle || '',
       company: company || '',
-      bio: bio || '',
-      selectedTopics: postInformation // Using postDetails for topic information
+      bio: userBio, // Using the override bio if provided
+      selectedTopics: postInformation // Using override topics if provided
     });
     
     console.log('Generating hook ideas with prompt:', prompt);
@@ -103,7 +111,8 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       throw new Error('No content returned from AI');
     }
 
-    console.log('AI response received:', `${content.substring(0, 100)}...`);
+    console.log('AI response received:', content);
+    console.log('AI response type:', typeof content);
     
     // Record successful completion in Langfuse
     generation?.end({ output: content });

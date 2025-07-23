@@ -14,6 +14,7 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [message, setMessage] = useState('');
 
   const handleWaitlistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,8 +34,16 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
       });
 
       if (response.ok) {
+        const data = await response.json();
         setIsSubmitted(true);
         setEmail('');
+        
+        // Set appropriate message based on response
+        if (data.updated) {
+          setMessage(data.message || "You're already on the waitlist! We'll be in touch soon.");
+        } else {
+          setMessage("Thanks for joining! We'll be in touch soon.");
+        }
       } else {
         throw new Error('Failed to submit to waitlist');
       }
@@ -112,9 +121,9 @@ export function AuthModal({ isOpen, onClose }: AuthModalProps) {
             ) : (
               <div className="space-y-4 mb-6">
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-green-800 font-medium">✓ You&apos;re on the list!</p>
+                  <p className="text-green-800 font-medium">✓ Success!</p>
                   <p className="text-green-600 text-sm mt-1">
-                    We&apos;ll notify you when your spot opens up.
+                    {message}
                   </p>
                 </div>
                 <Button

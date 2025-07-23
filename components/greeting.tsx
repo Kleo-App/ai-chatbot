@@ -265,6 +265,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [message, setMessage] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const [isBurstAnimated, setIsBurstAnimated] = useState(false);
   const { user, isLoaded } = useUser();
@@ -333,8 +334,16 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
       });
 
       if (response.ok) {
+        const data = await response.json();
         setIsSubmitted(true);
         setEmail('');
+        
+        // Set appropriate message based on response
+        if (data.updated) {
+          setMessage(data.message || "You're already on the waitlist! We'll be in touch soon.");
+        } else {
+          setMessage("Thanks for joining! We'll be in touch soon.");
+        }
       } else {
         throw new Error('Failed to submit to waitlist');
       }
@@ -571,12 +580,18 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
                     disabled={isSubmitting || isSubmitted}
                   >
                     {isSubmitted 
-                      ? "✓ You're on the list!" 
+                      ? "✓ Success!" 
                       : isSubmitting 
                         ? "Joining..." 
                         : "Join the next 500 creators"
                     }
                   </Button>
+                  
+                  {isSubmitted && message && (
+                    <p className="text-green-600 text-sm text-center mt-2">
+                      {message}
+                    </p>
+                  )}
                 </form>
 
                 {isSubmitted && (

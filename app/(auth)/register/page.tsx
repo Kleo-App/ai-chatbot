@@ -14,6 +14,7 @@ function RegisterPageInner() {
   const [isWaitlistSubmitting, setIsWaitlistSubmitting] = useState(false);
   const [isWaitlistSubmitted, setIsWaitlistSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const searchParams = useSearchParams();
 
   // Check for redirect from failed authentication
@@ -31,6 +32,7 @@ function RegisterPageInner() {
     if (!waitlistEmail) return;
 
     setIsWaitlistSubmitting(true);
+    setError('');
     
     try {
       const response = await fetch('/api/waitlist', {
@@ -44,8 +46,16 @@ function RegisterPageInner() {
       });
 
       if (response.ok) {
+        const data = await response.json();
         setIsWaitlistSubmitted(true);
         setWaitlistEmail('');
+        
+        // Set appropriate message based on response
+        if (data.updated) {
+          setSuccessMessage(data.message || "You're already on the waitlist! We'll be in touch soon.");
+        } else {
+          setSuccessMessage("Thanks for joining! We'll be in touch soon.");
+        }
       } else {
         throw new Error('Failed to submit to waitlist');
       }
@@ -191,9 +201,9 @@ function RegisterPageInner() {
                   <>
                     <div className="space-y-6">
                       <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                        <p className="text-green-800 font-medium">✓ You&apos;re on the waitlist!</p>
+                        <p className="text-green-800 font-medium">✓ Success!</p>
                         <p className="text-green-600 text-sm mt-1">
-                          We&apos;ll reach out soon with access. Keep an eye on your inbox!
+                          {successMessage}
                         </p>
                       </div>
                       

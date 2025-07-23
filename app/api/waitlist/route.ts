@@ -52,17 +52,27 @@ export async function POST(request: NextRequest) {
         if (createError.statusCode === 409 || 
             (createError.json && 'message' in createError.json && 
              typeof createError.json.message === 'string' && 
-             createError.json.message.includes('already exists'))) {
+             (createError.json.message.includes('already exists') || 
+              createError.json.message.includes('already on list')))) {
           try {
             const updateResponse = await loops.updateContact(email, {
               source: 'Waitlist',
               userGroup: 'Waitlist Beta 2.0'
             });
             console.log('Contact updated successfully:', updateResponse);
-            return NextResponse.json({ success: true, updated: true });
+            return NextResponse.json({ 
+              success: true, 
+              updated: true, 
+              message: "You're already on the waitlist! We'll be in touch soon." 
+            });
           } catch (updateError) {
             console.error('Failed to update existing contact:', updateError);
-            throw updateError;
+            // Even if update fails, since they're already on the list, return success
+            return NextResponse.json({ 
+              success: true, 
+              updated: true, 
+              message: "You're already on the waitlist! We'll be in touch soon." 
+            });
           }
         }
         

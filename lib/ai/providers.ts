@@ -23,12 +23,12 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': anthropic('claude-opus-4-20250514'),
+        'chat-model': anthropic('claude-sonnet-4-20250514'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: anthropic('claude-opus-4-20250514'),
+          model: anthropic('claude-sonnet-4-20250514'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': anthropic('claude-opus-4-20250514'),
-        'artifact-model': anthropic('claude-opus-4-20250514'),
+        'title-model': anthropic('claude-sonnet-4-20250514'),
+        'artifact-model': anthropic('claude-sonnet-4-20250514'),
       },
     });

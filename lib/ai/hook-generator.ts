@@ -51,13 +51,8 @@ export async function generateHookIdeas(
       fullName: fullName || '',
       jobTitle: jobTitle || '',
       company: company || '',
-<<<<<<< HEAD
-      bio: userBio, // Using the override bio if provided
-      selectedTopics: postInformation // Using override topics if provided
-=======
       bio: bio || '',
       postInformation: postInformation
->>>>>>> 847633d (model fixes)
     });
 
     console.log('Generating hook ideas with prompt:', prompt);
@@ -104,13 +99,6 @@ export async function generateHookIdeas(
       console.error('No content returned from Anthropic');
       throw new Error('No content returned from AI model');
     }
-
-<<<<<<< HEAD
-    console.log('AI response received:', content);
-    console.log('AI response type:', typeof content);
-=======
-    console.log('Raw response from Anthropic:', content);
->>>>>>> 847633d (model fixes)
     
     // Update Langfuse generation with output
     await generation?.update({

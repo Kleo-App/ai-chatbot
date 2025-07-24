@@ -118,7 +118,7 @@ function PureChatHeader({
     <>
       <div className="h-24 top-0 @[80rem]/nav:h-0 @[80rem]/nav:top-8 sticky z-10 flex flex-row items-start justify-center w-full bg-gradient-to-b from-background via-background via-60% to-transparent @[80rem]/nav:from-transparent @[80rem]/nav:via-transparent -mb-10">
       <div className="w-full flex flex-row items-center justify-between px-4 pt-2">
-        <div className="flex flex-row items-center"></div>
+        <div className="flex flex-row items-center" />
         <div className="flex flex-row items-center gap-0.5">
           {/* New Chat Button */}
           <TooltipProvider>
@@ -151,7 +151,7 @@ function PureChatHeader({
           >
             {isPinned ? (
               <svg width="18" height="18" viewBox="-0.5 -0.5 15 15" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-black">
-                <path d="M7.23047 1.26183C7.86569 0.082389 9.45799 -0.151271 10.4053 0.796012L13.2041 3.59484C14.1514 4.54211 13.9177 6.1344 12.7383 6.76964L11.1338 7.6339C10.5893 7.9271 10.2112 8.45562 10.1094 9.06554L9.62207 11.9874L8.33301 13.2765L5 9.9425L2.1377 12.8019L1 13.0001L1.19824 11.8614L4.05664 9.00011L0.723633 5.66711L2.0127 4.37804L4.93359 3.89074C5.54368 3.78906 6.07294 3.41087 6.36621 2.86632L7.23047 1.26183Z" fill="currentColor"></path>
+                <path d="M7.23047 1.26183C7.86569 0.082389 9.45799 -0.151271 10.4053 0.796012L13.2041 3.59484C14.1514 4.54211 13.9177 6.1344 12.7383 6.76964L11.1338 7.6339C10.5893 7.9271 10.2112 8.45562 10.1094 9.06554L9.62207 11.9874L8.33301 13.2765L5 9.9425L2.1377 12.8019L1 13.0001L1.19824 11.8614L4.05664 9.00011L0.723633 5.66711L2.0127 4.37804L4.93359 3.89074C5.54368 3.78906 6.07294 3.41087 6.36621 2.86632L7.23047 1.26183Z" fill="currentColor" />
               </svg>
             ) : (
               <Pin className="h-[18px] w-[18px]" />
@@ -179,10 +179,10 @@ function PureChatHeader({
                 onSelect={() => setShowDeleteDialog(true)}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="stroke-[2] me-2">
-                  <path d="M2.99561 7H20.9956" stroke="currentColor"></path>
-                  <path d="M9.99561 11V17M13.9956 11V17" stroke="currentColor"></path>
-                  <path d="M8 6.5L8.68917 4.08792C8.87315 3.44397 9.46173 3 10.1315 3H13.8685C14.5383 3 15.1268 3.44397 15.3108 4.08792L16 6.5" stroke="currentColor"></path>
-                  <path d="M5 7L5.80098 18.2137C5.91312 19.7837 7.21944 21 8.79336 21H15.2066C16.7806 21 18.0869 19.7837 18.199 18.2137L19 7" stroke="currentColor"></path>
+                  <path d="M2.99561 7H20.9956" stroke="currentColor" />
+                  <path d="M9.99561 11V17M13.9956 11V17" stroke="currentColor" />
+                  <path d="M8 6.5L8.68917 4.08792C8.87315 3.44397 9.46173 3 10.1315 3H13.8685C14.5383 3 15.1268 3.44397 15.3108 4.08792L16 6.5" stroke="currentColor" />
+                  <path d="M5 7L5.80098 18.2137C5.91312 19.7837 7.21944 21 8.79336 21H15.2066C16.7806 21 18.0869 19.7837 18.199 18.2137L19 7" stroke="currentColor" />
                 </svg>
                 Delete chat
               </DropdownMenuItem>

@@ -2,18 +2,11 @@ import { useSWRConfig } from 'swr';
 import { useCopyToClipboard } from 'usehooks-ts';
 
 import type { Vote } from '@/lib/db/schema';
-
-import { CopyIcon, ThumbDownIcon, ThumbUpIcon } from './icons';
-import { Button } from './ui/button';
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from './ui/tooltip';
 import { memo } from 'react';
 import equal from 'fast-deep-equal';
-import { toast } from 'sonner';
 import type { ChatMessage } from '@/lib/types';
 
 export function PureMessageActions({

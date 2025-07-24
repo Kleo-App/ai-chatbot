@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import Image from "next/image"
 import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -12,8 +11,6 @@ import { useRouter } from "next/navigation"
 import { getOrGenerateHooks, savePreferredHook, getPreferredHook } from "@/app/actions/hook-actions"
 import type { HookIdea } from "@/lib/ai/hook-generator"
 import { toast } from "sonner"
-
-import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 
@@ -300,8 +297,8 @@ export default function KleoHookSelector() {
               )}
               {!isLoading && (
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
-                  <path d="M5 12h14"></path>
-                  <path d="m12 5 7 7-7 7"></path>
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
                 </svg>
               )}
             </Button>

@@ -11,14 +11,32 @@ let langfuseInstance: Langfuse | null = null;
 /**
  * Get the Langfuse client instance
  * Creates a new instance if one doesn't exist
+ * Returns null if credentials are not configured (graceful degradation)
  */
-export async function getLangfuseClient(): Promise<Langfuse> {
+export async function getLangfuseClient(): Promise<Langfuse | null> {
   if (!langfuseInstance) {
-    langfuseInstance = new Langfuse({
-      secretKey: process.env.LANGFUSE_SECRET_KEY,
-      publicKey: process.env.LANGFUSE_PUBLIC_KEY,
-      baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
-    });
+    // Check for required environment variables
+    const secretKey = process.env.LANGFUSE_SECRET_KEY;
+    const publicKey = process.env.LANGFUSE_PUBLIC_KEY;
+    const baseUrl = process.env.LANGFUSE_HOST || 'https://cloud.langfuse.com';
+
+    if (!secretKey || !publicKey) {
+      console.warn('Langfuse credentials not configured. Observability features will be disabled. Set LANGFUSE_SECRET_KEY and LANGFUSE_PUBLIC_KEY environment variables to enable Langfuse.');
+      return null;
+    }
+
+    try {
+      langfuseInstance = new Langfuse({
+        secretKey,
+        publicKey,
+        baseUrl
+      });
+      
+      console.log('Langfuse client initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize Langfuse client:', error);
+      return null;
+    }
   }
 
   return langfuseInstance;
@@ -32,7 +50,7 @@ export async function getLangfuseClient(): Promise<Langfuse> {
  */
 export async function createTrace(name: string, userId: string, metadata?: Record<string, any>) {
   try {
-    return (await getLangfuseClient()).trace({
+    return (await getLangfuseClient())?.trace({
       name,
       userId,
       metadata
@@ -53,13 +71,13 @@ export async function logError(name: string, userId: string, error: Error | stri
   try {
     const errorMessage = error instanceof Error ? error.message : String(error);
     const client = await getLangfuseClient();
-    const trace = client.trace({
+    const trace = client?.trace({
       name,
       userId,
       metadata: { error: errorMessage }
     });
     
-    trace.event({
+    trace?.event({
       name: 'error',
       level: 'ERROR',
       metadata: { error: errorMessage }
@@ -88,7 +106,13 @@ export const getPrompt = cache(async (promptName: string): Promise<string> => {
   
   try {
     // Get prompt from Langfuse
-    const prompt = await (await getLangfuseClient()).getPrompt(promptName);
+    const client = await getLangfuseClient();
+    if (!client) {
+      console.warn(`Langfuse client not available, using fallback for prompt '${promptName}'`);
+      return getFallbackPrompt(promptName);
+    }
+    
+    const prompt = await client.getPrompt(promptName);
     
     if (!prompt || !prompt.prompt) {
       console.warn(`Prompt '${promptName}' not found in Langfuse, using fallback`);
@@ -99,6 +123,15 @@ export const getPrompt = cache(async (promptName: string): Promise<string> => {
     promptCache.set(promptName, prompt.prompt);
     return prompt.prompt;
   } catch (error) {
+    // Check if it's a 401 unauthorized error
+    if (error && typeof error === 'object' && 'message' in error) {
+      const errorMessage = String(error.message);
+      if (errorMessage.includes('401') || errorMessage.includes('Unauthorized') || errorMessage.includes('Invalid credentials')) {
+        console.warn(`Langfuse authentication failed for prompt '${promptName}'. Check your credentials. Using fallback prompt.`);
+        return getFallbackPrompt(promptName);
+      }
+    }
+    
     console.error(`Error fetching prompt '${promptName}' from Langfuse:`, error);
     return getFallbackPrompt(promptName);
   }
@@ -254,6 +287,10 @@ export async function trackFeedback(
 ) {
   try {
     const client = await getLangfuseClient();
+    if (!client) {
+      console.warn('Langfuse client not available, feedback tracking disabled');
+      return false;
+    }
     
     // Create a unique ID for the score to enable updating it later if needed
     const scoreId = `feedback_${traceId}_${userId}`;

@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/anthropic':
+        specifier: 2.0.0-beta.1
+        version: 2.0.0-beta.1(zod@3.25.68)
       '@ai-sdk/openai':
         specifier: 2.0.0-beta.1
         version: 2.0.0-beta.1(zod@3.25.68)
@@ -329,6 +332,12 @@ importers:
         version: 5.8.2
 
 packages:
+
+  '@ai-sdk/anthropic@2.0.0-beta.1':
+    resolution: {integrity: sha512-bu2ei62zhP8GevfT2bXRo13i0GY0b/tpHowkkksZ7uAlbBvcz1o3O7+qWYNcYfM7lXeCuce8ygPgu7ExrfeGpg==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.49
 
   '@ai-sdk/gateway@1.0.0-beta.3':
     resolution: {integrity: sha512-g49gMSkXy94lYvl5LRh438OR/0JCG6ol0jV+iLot7cy5HLltZlGocEuauETBu4b10mDXOd7XIjTEZoQpYFMYLQ==}
@@ -4652,6 +4661,12 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@ai-sdk/anthropic@2.0.0-beta.1(zod@3.25.68)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0-beta.1
+      '@ai-sdk/provider-utils': 3.0.0-beta.1(zod@3.25.68)
+      zod: 3.25.68
 
   '@ai-sdk/gateway@1.0.0-beta.3(zod@3.25.68)':
     dependencies:

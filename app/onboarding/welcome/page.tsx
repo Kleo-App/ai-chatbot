@@ -42,8 +42,7 @@ export default function WelcomePage() {
                 Welcome to Kleo
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-                Your LinkedIn AI ghostwriter trained by top creators<br />
-                for creators who hate generic content.
+                Your LinkedIn AI ghostwriter trained by top creators for creators.
               </p>
             </div>
           </div>

@@ -99,15 +99,18 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       const { type } = delta;
 
       if (type === 'text') {
-        const { text } = delta;
+        // Handle potential undefined text property for Anthropic models
+        const textContent = 'text' in delta ? delta.text : '';
+        
+        if (textContent) {
+          draftContent += textContent;
 
-        draftContent += text;
-
-        dataStream.write({
-          type: 'data-textDelta',
-          data: text,
-          transient: true,
-        });
+          dataStream.write({
+            type: 'data-textDelta',
+            data: textContent,
+            transient: true,
+          });
+        }
       }
     }
 
@@ -158,15 +161,18 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       const { type } = delta;
 
       if (type === 'text') {
-        const { text } = delta;
+        // Handle potential undefined text property for Anthropic models
+        const textContent = 'text' in delta ? delta.text : '';
+        
+        if (textContent) {
+          draftContent += textContent;
 
-        draftContent += text;
-
-        dataStream.write({
-          type: 'data-textDelta',
-          data: text,
-          transient: true,
-        });
+          dataStream.write({
+            type: 'data-textDelta',
+            data: textContent,
+            transient: true,
+          });
+        }
       }
     }
 

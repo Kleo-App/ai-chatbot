@@ -71,14 +71,24 @@ function PureMultimodalInput({
   const adjustHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight + 2}px`;
+      const scrollHeight = textareaRef.current.scrollHeight + 2;
+      const maxHeight = 240; // 240px max height
+      
+      if (scrollHeight > maxHeight) {
+        textareaRef.current.style.height = `${maxHeight}px`;
+        textareaRef.current.style.overflowY = 'auto';
+      } else {
+        textareaRef.current.style.height = `${scrollHeight}px`;
+        textareaRef.current.style.overflowY = 'hidden';
+      }
     }
   };
 
   const resetHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '98px';
+      textareaRef.current.style.height = '110px'; // Match min-h-[110px]
+      textareaRef.current.style.overflowY = 'hidden';
     }
   };
 
@@ -285,7 +295,7 @@ function PureMultimodalInput({
             value={input}
             onChange={handleInput}
             className={cx(
-              'rounded-2xl min-h-[110px] max-h-[calc(75dvh)] overflow-hidden resize-none !text-base bg-transparent border-none px-4 pb-12 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none',
+              'rounded-t-2xl min-h-[110px] max-h-[240px] overflow-y-auto resize-none !text-base bg-transparent border-none px-4 pb-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
               (attachments.length > 0 || uploadQueue.length > 0) ? 'pt-2' : 'py-4',
               className,
             )}
@@ -309,25 +319,25 @@ function PureMultimodalInput({
             }}
           />
 
-          {/* Attachment button - show for all contexts now */}
-          <div className="absolute bottom-2 left-2">
-            <AttachmentsButton fileInputRef={fileInputRef} status={status} />
-          </div>
+          {/* Footer area to separate text from buttons */}
+          <div className="relative h-12 bg-transparent border-t border-gray-100 rounded-b-2xl">
+            {/* Attachment button */}
+            <div className="absolute bottom-2 left-2">
+              <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+            </div>
 
-          {/* Quick action buttons inside the input for artifact context */}
-          {/* Removed Quick action buttons */}
-
-          {/* Send/Stop button */}
-          <div className="absolute bottom-2 right-2">
-            {status === 'submitted' ? (
-              <StopButton stop={stop} setMessages={setMessages} />
-            ) : (
-              <SendButton
-                input={input}
-                submitForm={submitForm}
-                uploadQueue={uploadQueue}
-              />
-            )}
+            {/* Send/Stop button */}
+            <div className="absolute bottom-2 right-2">
+              {status === 'submitted' ? (
+                <StopButton stop={stop} setMessages={setMessages} />
+              ) : (
+                <SendButton
+                  input={input}
+                  submitForm={submitForm}
+                  uploadQueue={uploadQueue}
+                />
+              )}
+            </div>
           </div>
         </div>
 

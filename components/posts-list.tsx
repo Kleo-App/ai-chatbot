@@ -76,9 +76,21 @@ function PostRow({ document }: { document: Document }) {
   const getPreviewContent = (content: string | null) => {
     if (!content) return 'No content';
     
-    // Remove HTML tags for preview
-    const textContent = content.replace(/<[^>]*>/g, '');
-    return truncateContent(textContent);
+    try {
+      // Parse the content as JSON
+      const parsedContent = JSON.parse(content);
+      
+      // Extract the text field from the JSON object
+      if (parsedContent && typeof parsedContent === 'object' && parsedContent.text) {
+        return truncateContent(parsedContent.text);
+      }
+      
+      // Fallback to original content if text field is not found
+      return truncateContent(content);
+    } catch (e) {
+      // If parsing fails, return the original content
+      return truncateContent(content);
+    }
   };
 
   const formatDate = (date: Date) => {

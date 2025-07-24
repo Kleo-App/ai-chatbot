@@ -6,6 +6,7 @@ import { userProfile, type UserProfile } from './schema-profile';
 import { ChatSDKError } from '../errors';
 import { clerkClient } from '@clerk/nextjs/server';
 import { getOrCreateUser } from './queries';
+import { addOrUpdateMemory } from '../mem0Utils';
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);
@@ -118,6 +119,21 @@ export async function updateUserProfile(
       .where(eq(userProfile.userId, userId))
       .returning();
     
+    // Store profile data in Mem0 for personalization
+    try {
+      const personalizationContent = `Job Title: ${updatedProfile.jobTitle || 'Not specified'}, Company: ${updatedProfile.company || 'Not specified'}, Bio: ${updatedProfile.bio || 'Not specified'}`;
+      
+      await addOrUpdateMemory(
+        userId,
+        'personalization',
+        personalizationContent,
+        { source: 'onboarding' }
+      );
+    } catch (mem0Error) {
+      // Log but don't fail the profile update if Mem0 storage fails
+      console.error('Failed to store profile data in Mem0:', mem0Error);
+    }
+    
     return updatedProfile;
   } catch (error) {
     throw new ChatSDKError(
@@ -154,6 +170,48 @@ export async function updateUserProfileStep(
 }
 
 /**
+ * Extract goals and niche from user bio
+ * @param bio User's biography text
+ * @returns Extracted goals and niche information
+ */
+async function extractGoalsFromBio(bio: string | null): Promise<string> {
+  if (!bio) return 'No goals specified';
+  
+  // Simple extraction logic - look for keywords related to goals and niches
+  const goalKeywords = ['goal', 'aim', 'objective', 'target', 'aspire', 'want to', 'looking to'];
+  const nicheKeywords = ['industry', 'niche', 'sector', 'field', 'specialize', 'focus'];
+  
+  // Extract sentences containing goal-related keywords
+  const sentences = bio.split(/[.!?]\s+/);
+  const goalSentences = sentences.filter(sentence => 
+    goalKeywords.some(keyword => sentence.toLowerCase().includes(keyword))
+  );
+  
+  // Extract sentences containing niche-related keywords
+  const nicheSentences = sentences.filter(sentence => 
+    nicheKeywords.some(keyword => sentence.toLowerCase().includes(keyword))
+  );
+  
+  // Combine the extracted information
+  let extractedInfo = '';
+  
+  if (goalSentences.length > 0) {
+    extractedInfo += 'Goals: ' + goalSentences.join('. ') + '. ';
+  }
+  
+  if (nicheSentences.length > 0) {
+    extractedInfo += 'Niche: ' + nicheSentences.join('. ') + '.';
+  }
+  
+  // If no specific goals or niche found, use the entire bio
+  if (extractedInfo.trim() === '') {
+    extractedInfo = 'General profile: ' + bio;
+  }
+  
+  return extractedInfo;
+}
+
+/**
  * Complete the user profile onboarding
  */
 export async function completeUserProfileOnboarding(userId: string): Promise<UserProfile> {
@@ -167,6 +225,34 @@ export async function completeUserProfileOnboarding(userId: string): Promise<Use
       })
       .where(eq(userProfile.userId, userId))
       .returning();
+    
+    // Store profile data in Mem0 for personalization
+    try {
+      // First, store the complete profile information
+      const personalizationContent = `Job Title: ${completedProfile.jobTitle || 'Not specified'}, Company: ${completedProfile.company || 'Not specified'}, Bio: ${completedProfile.bio || 'Not specified'}`;
+      
+      await addOrUpdateMemory(
+        userId,
+        'personalization',
+        personalizationContent,
+        { source: 'onboarding_complete' }
+      );
+      
+      // Then, extract goals/niche from bio and store separately
+      if (completedProfile.bio) {
+        const goalsContent = await extractGoalsFromBio(completedProfile.bio);
+        
+        await addOrUpdateMemory(
+          userId,
+          'user_goals',
+          goalsContent,
+          { source: 'bio_extraction' }
+        );
+      }
+    } catch (mem0Error) {
+      // Log but don't fail the profile completion if Mem0 storage fails
+      console.error('Failed to store profile data in Mem0:', mem0Error);
+    }
     
     return completedProfile;
   } catch (error) {

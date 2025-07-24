@@ -1,13 +1,9 @@
 'use server';
 
-import OpenAI from 'openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
 import { createTrace, logError, } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface PostIdea {
   id: number;
@@ -49,56 +45,54 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
     
     // Style preference removed - using default professional style
     
-    // Prepare the prompt for OpenAI
-    const prompt = `
-      You are a professional LinkedIn content creator specializing in creating engaging, high-quality posts.
-      
-      Create THREE distinct LinkedIn posts for ${userProfile.fullName || 'a professional'} who works as ${userProfile.jobTitle || 'a professional'} at ${userProfile.company || 'their company'}.
-      
-      The posts should focus on this content: ${postInformation || 'professional growth, industry insights, and career development'}.
-      
-      Each post should use this hook as the opening line: "${preferredHook}"
-      
-      Style: Write in a professional, engaging style with a mix of storytelling and practical advice. Use clear, concise language that resonates with a business audience.
-      
-      For each post:
-      1. Start with the provided hook
-      2. Follow with a compelling opening that expands on the hook
-      3. Include a main body with valuable insights, personal experiences, or actionable advice
-      4. End with a strong conclusion and call to action or thought-provoking question
-      5. Use appropriate formatting for LinkedIn (short paragraphs, bullet points, emojis where appropriate)
-      6. Each post should be between 200-300 words
-      
-      Format your response as a JSON array with three objects, each containing:
-      - id: a number (1, 2, or 3)
-      - title: a catchy title for the post
-      - hook: the opening hook (use the provided hook)
-      - body: the main content of the post
-      - conclusion: the closing paragraph with call to action
-      - wordCount: approximate word count
-    `;
-    
-    console.log('Sending prompt to OpenAI');
-    
+    // Prepare the prompt for Anthropic
+    let prompt = `Generate 6 professional LinkedIn post ideas based on the following information:
+
+Professional Context:
+- Name: ${userProfile.fullName || 'Professional'}
+- Job Title: ${userProfile.jobTitle || 'Professional'}
+- Company: ${userProfile.company || 'Company'}
+- Post Topics/Information: ${postInformation}`;
+
+    if (preferredHook) {
+      prompt += `\n- Preferred Hook Style: ${preferredHook}`;
+    }
+
+    prompt += `
+
+Instructions:
+1. Create diverse, engaging post ideas that showcase professional expertise
+2. Each post should be unique and valuable to the professional community
+3. Include different types of content: insights, experiences, advice, industry observations
+4. Make sure each post has a compelling hook that grabs attention
+5. Keep posts authentic and professional
+
+For each post idea, provide:
+- title: A compelling title/headline
+- hook: An engaging opening line that captures attention (2-3 sentences max)
+- body: Main content with valuable insights or story (4-6 sentences)
+- conclusion: Strong closing with call-to-action or thought-provoking question (1-2 sentences)
+- wordCount: Estimated word count
+
+Return your response in this exact JSON format:
+{"ideas": [{"id": 1, "title": "Example Title", "hook": "Hook text", "body": "Body text", "conclusion": "Conclusion text", "wordCount": 150}]}`;
+
     // Create Langfuse trace for tracking
     const trace = await createTrace('generate_post_ideas', userId, {
-      fullName: userProfile.fullName,
-      jobTitle: userProfile.jobTitle,
-      company: userProfile.company,
-      selectedTopics: userProfile.selectedTopics,
-              // stylePreference removed
+      userProfile,
+      postInformation,
       preferredHook
     });
-    
+
     // Skip Langfuse tracking if trace creation failed
     if (!trace) {
       console.warn('Skipping Langfuse tracking due to trace creation failure');
     }
-    
+
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'post_ideas_generation',
-      model: 'gpt-4-turbo',
+      model: 'claude-4-sonnet-20250514',
       modelParameters: {
         temperature: 0.7,
         max_tokens: 2000
@@ -106,82 +100,84 @@ export async function generatePostIdeas(userId: string): Promise<PostIdea[]> {
       input: prompt,
     });
     
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a professional LinkedIn content creator who specializes in creating engaging, high-quality posts.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      temperature: 0.7,
-      max_tokens: 2000,
-    });
-    
-    // Extract and parse the response
-    const content = response.choices[0]?.message?.content;
-    
-    if (!content) {
-      console.error('No content returned from OpenAI');
-      generation?.end({ output: null });
-      if (trace) {
-        trace.event({
-          name: 'no_content_returned',
-          level: 'ERROR'
-        });
-      }
-      throw new Error('Failed to generate post ideas');
-    }
-    
-    // Record successful completion in Langfuse
-    generation?.end({ output: content });
-    
-    console.log('Raw response from OpenAI:', content);
-    
-    // Extract JSON from the response
-    const jsonMatch = content.match(/\[[\s\S]*\]/);
-    const jsonString = jsonMatch ? jsonMatch[0] : content;
-    
+    console.log('Sending prompt to Anthropic');
+    console.log('Full prompt:', prompt);
+
     try {
-      const postIdeas: PostIdea[] = JSON.parse(jsonString);
-      console.log('Successfully parsed post ideas:', postIdeas);
-      
-      if (trace) {
-        trace.event({
-          name: 'post_ideas_generated',
-          level: 'DEFAULT',
-          metadata: { count: postIdeas.length }
-        });
+      // Call Anthropic API using AI SDK
+      const { text } = await generateText({
+        model: anthropic('claude-4-sonnet-20250514'),
+        system: 'You are a professional LinkedIn content creator who specializes in creating engaging, high-quality posts.',
+        prompt: prompt,
+        temperature: 0.7,
+      });
+
+      // Extract and parse the response
+      const content = text;
+
+      if (!content) {
+        console.error('No content returned from Anthropic');
+        throw new Error('No content returned from AI model');
       }
-      
+
+      // Update Langfuse generation with output
+      await generation?.update({
+        output: content,
+      });
+
+      console.log('Raw response from Anthropic:', content);
+
+      // Parse the JSON response
+      let parsedResponse;
+      try {
+        // Clean up the response - remove any markdown formatting
+        const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+        parsedResponse = JSON.parse(cleanContent);
+      } catch (parseError) {
+        console.error('Error parsing Anthropic response as JSON:', parseError);
+        console.log('Raw content that failed to parse:', content);
+        
+                 // Log the error in Langfuse
+         await logError('parse_post_ideas_response', userId, parseError as Error);
+        
+        throw new Error('Failed to parse AI response as valid JSON');
+      }
+
+      if (!parsedResponse.ideas || !Array.isArray(parsedResponse.ideas)) {
+        console.error('Invalid response structure:', parsedResponse);
+        throw new Error('Invalid response structure from AI model');
+      }
+
+      // Validate and clean the response
+      const postIdeas: PostIdea[] = parsedResponse.ideas.map((idea: any, index: number) => ({
+        id: idea.id || index + 1,
+        title: idea.title || `Post Idea ${index + 1}`,
+        hook: idea.hook || '',
+        body: idea.body || '',
+        conclusion: idea.conclusion || '',
+        wordCount: idea.wordCount || 100
+      }));
+
+      console.log('Generated post ideas:', postIdeas);
+
       return postIdeas;
-    } catch (parseError) {
-      console.error('Error parsing OpenAI response as JSON:', parseError);
+
+    } catch (apiError) {
+      console.error('Error calling Anthropic API:', apiError);
       
-      if (trace) {
-        trace.event({
-          name: 'json_parse_error',
-          level: 'ERROR',
-          metadata: { error: parseError instanceof Error ? parseError.message : String(parseError) }
-        });
-      }
+             // Log the error in Langfuse
+       await logError('anthropic_api_error', userId, apiError as Error);
       
-      // Fallback to default post ideas
-      return getDefaultPostIdeas(preferredHook);
+      throw new Error('Failed to generate post ideas from AI model');
     }
+
   } catch (error) {
-    console.error('Error generating post ideas:', error);
+    console.error('Error in generatePostIdeas:', error);
     
-    // Log error to Langfuse
-    logError('generate_post_ideas_error', userId, error instanceof Error ? error.message : String(error));
+         // Log the error in Langfuse
+     await logError('generate_post_ideas', userId, error as Error);
     
-    // Return default post ideas on error
-    return getDefaultPostIdeas();
+    throw error;
   }
 }
 

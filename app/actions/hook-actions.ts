@@ -8,7 +8,7 @@ import { generateHookIdeas, type HookIdea } from '@/lib/ai/hook-generator';
 /**
  * Get or generate hook ideas based on user profile data
  */
-export async function getOrGenerateHooks(forceRegenerate: boolean = false): Promise<{ success: boolean; hooks?: HookIdea[]; error?: string }> {
+export async function getOrGenerateHooks(forceRegenerate = false): Promise<{ success: boolean; hooks?: HookIdea[]; error?: string }> {
   try {
     console.log('Getting or generating hooks...', { forceRegenerate });
     

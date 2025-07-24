@@ -197,7 +197,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     artifact={artifact}
                     currentVersionIndex={currentVersionIndex || 0}
                     handleVersionChange={handleVersionChange}
-                    isCurrentVersion={isCurrentVersion || true}
+                    isCurrentVersion={isCurrentVersion === undefined ? true : isCurrentVersion}
                     mode={mode || 'edit'}
                     metadata={metadata}
                     setMetadata={setMetadata}

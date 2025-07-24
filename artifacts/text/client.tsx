@@ -214,13 +214,11 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('next');
       },
-      isDisabled: ({ isCurrentVersion }) => {
-        if (isCurrentVersion) {
-          return true;
-        }
-
-        return false;
-      },
+      isDisabled: ({ isCurrentVersion, currentVersionIndex }) => {
+        // Check if we're at the latest version by using both flags
+        // This ensures the button is enabled when viewing previous versions
+        return isCurrentVersion === true;
+      }
     },
     {
       icon: <CopyIcon size={18} />,

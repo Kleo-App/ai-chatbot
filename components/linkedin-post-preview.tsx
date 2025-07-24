@@ -95,13 +95,13 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     if (isHTML) {
       // For HTML content, render directly with safe HTML and apply LinkedIn styling
       return <div 
-        className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1"
+        className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]"
         dangerouslySetInnerHTML={{ __html: text }} 
       />;
     } else {
       // For plain text, convert newlines to paragraphs with proper styling
       return (
-        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
+        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]">
           {text
             .split('\n\n') // Split on double newlines for paragraphs
             .map((paragraph, paragraphIndex) => {

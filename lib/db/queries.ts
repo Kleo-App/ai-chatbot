@@ -462,6 +462,43 @@ export async function deleteDocumentsByIdAfterTimestamp({
   }
 }
 
+export async function deleteDocumentById({
+  id,
+  userId,
+}: {
+  id: string;
+  userId: string;
+}) {
+  try {
+    // First verify the document belongs to the user
+    const documents = await getDocumentsById({ id });
+    const [documentData] = documents;
+
+    if (!documentData || documentData.userId !== userId) {
+      throw new ChatSDKError('forbidden:document', 'Document not found or access denied');
+    }
+
+    // Delete all suggestions for this document
+    await db
+      .delete(suggestion)
+      .where(eq(suggestion.documentId, id));
+
+    // Delete all versions of the document
+    return await db
+      .delete(document)
+      .where(eq(document.id, id))
+      .returning();
+  } catch (error) {
+    if (error instanceof ChatSDKError) {
+      throw error;
+    }
+    throw new ChatSDKError(
+      'bad_request:database',
+      'Failed to delete document',
+    );
+  }
+}
+
 export async function saveSuggestions({
   suggestions,
 }: {

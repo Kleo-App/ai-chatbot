@@ -82,4 +82,30 @@ export async function getPreferredPost(): Promise<{ success: boolean; post?: str
   }
 }
 
+/**
+ * Delete a post/document by ID
+ */
+export async function deletePost(documentId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
+    // Import the delete function
+    const { deleteDocumentById } = await import('@/lib/db/queries');
+    
+    await deleteDocumentById({ id: documentId, userId });
+    
+    return { success: true };
+  } catch (error) {
+    console.error('Error in deletePost:', error);
+    return { 
+      success: false, 
+      error: error instanceof Error ? error.message : 'An error occurred while deleting the post' 
+    };
+  }
+}
+
 

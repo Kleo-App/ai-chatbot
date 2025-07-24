@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
 import { LinkedInPostPreview } from './linkedin-post-preview';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useArtifact } from '@/hooks/use-artifact';
 
 interface LinkedInPublishModalProps {
   isOpen: boolean;
@@ -15,6 +16,7 @@ interface LinkedInPublishModalProps {
     fullName?: string;
     profileImage?: string;
   };
+  uploadedImages?: string[];
 }
 
 export function LinkedInPublishModal({
@@ -22,7 +24,9 @@ export function LinkedInPublishModal({
   onClose,
   content,
   userProfile,
+  uploadedImages = [],
 }: LinkedInPublishModalProps) {
+  const { artifact } = useArtifact();
   const [isConnected, setIsConnected] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -52,7 +56,14 @@ export function LinkedInPublishModal({
   const handleConnectLinkedIn = async () => {
     setIsConnecting(true);
     try {
-      window.location.href = '/api/linkedin/auth';
+      // Save current artifact state before redirect to preserve it across OAuth flow
+      if (artifact.isVisible) {
+        localStorage.setItem('linkedin-oauth-artifact-state', JSON.stringify(artifact));
+      }
+      
+      // Pass current URL as return parameter
+      const currentUrl = window.location.href;
+      window.location.href = `/api/linkedin/auth?returnUrl=${encodeURIComponent(currentUrl)}`;
     } catch (error) {
       toast.error('Failed to connect LinkedIn');
     } finally {
@@ -101,6 +112,7 @@ export function LinkedInPublishModal({
                 showShareButton={false}
                 showDeviceToggle={false}
                 isModal={true}
+                uploadedImages={uploadedImages}
               />
             </div>
           </div>

@@ -40,6 +40,8 @@ interface LinkedInPostPreviewProps {
   setMetadata?: any;
   // Media props
   uploadedImages?: string[];
+  onImagesChange?: (images: string[]) => void;
+  onTextChange?: (text: string) => void;
   // UI control props
   showShareButton?: boolean;
   showHeader?: boolean;
@@ -68,6 +70,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   setMetadata,
   // Media props
   uploadedImages = [],
+  onImagesChange,
+  onTextChange,
   // UI control props
   showShareButton = true,
   showHeader = true,
@@ -77,10 +81,10 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   isModal = false,
 }: LinkedInPostPreviewProps) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [localUploadedImages, setLocalUploadedImages] = useState<string[]>(uploadedImages);
 
   const handleImageUploaded = (imageUrl: string) => {
-    setLocalUploadedImages(prev => [...prev, imageUrl]);
+    const newImages = [...uploadedImages, imageUrl];
+    onImagesChange?.(newImages);
   };
 
   // Format the content to support LinkedIn-style formatting
@@ -291,10 +295,10 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             </div>
 
             {/* Media Upload Area */}
-            {localUploadedImages.length > 0 && (
+            {(uploadedImages.length > 0 || !isModal) && (
               <div className="px-4 pb-4">
                 <div className="space-y-2">
-                  {localUploadedImages.map((imageUrl, index) => (
+                  {uploadedImages.map((imageUrl, index) => (
                     <div key={index} className="relative rounded-lg overflow-hidden">
                       <Image 
                         src={imageUrl} 
@@ -303,25 +307,32 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                         width={552}
                         height={320}
                       />
-                      <button
-                        onClick={() => setLocalUploadedImages(prev => prev.filter((_, i) => i !== index))}
-                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
-                      >
-                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                      {!isModal && (
+                        <button
+                          onClick={() => {
+                            const newImages = uploadedImages.filter((_, i) => i !== index);
+                            onImagesChange?.(newImages);
+                          }}
+                          className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                        >
+                          <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))}
-                  <div 
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
-                    onClick={() => setIsMediaModalOpen(true)}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-gray-500">
-                      <ImageIcon size={20} />
-                      <span className="text-sm">Add another image</span>
+                  {!isModal && (
+                    <div 
+                      className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
+                      onClick={() => setIsMediaModalOpen(true)}
+                    >
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <ImageIcon size={20} />
+                        <span className="text-sm">{uploadedImages.length > 0 ? 'Add another image' : 'Add image'}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -386,11 +397,13 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
       </div>
 
       {/* Media Upload Modal */}
-      <MediaUploadModal 
-        open={isMediaModalOpen} 
-        onOpenChange={setIsMediaModalOpen}
-        onImageUploaded={handleImageUploaded}
-      />
+      {!isModal && (
+        <MediaUploadModal 
+          open={isMediaModalOpen} 
+          onOpenChange={setIsMediaModalOpen}
+          onImageUploaded={handleImageUploaded}
+        />
+      )}
     </div>
   );
 }); 

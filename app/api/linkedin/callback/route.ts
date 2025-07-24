@@ -24,7 +24,15 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/chat?error=linkedin_auth_failed', request.url));
   }
 
-  if (!code || state !== userId) {
+  // Parse state to extract userId and returnUrl
+  let stateData: { userId: string; returnUrl: string };
+  try {
+    stateData = JSON.parse(state || '{}');
+  } catch {
+    return NextResponse.redirect(new URL('/chat?error=invalid_request', request.url));
+  }
+
+  if (!code || stateData.userId !== userId) {
     return NextResponse.redirect(new URL('/chat?error=invalid_request', request.url));
   }
 
@@ -100,9 +108,20 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    return NextResponse.redirect(new URL('/chat?linkedin_connected=true', request.url));
+    // Redirect back to the original URL with success parameter
+    const returnUrl = stateData.returnUrl || '/';
+    const redirectUrl = new URL(returnUrl, request.url);
+    redirectUrl.searchParams.set('linkedin_connected', 'true');
+    
+    return NextResponse.redirect(redirectUrl.toString());
   } catch (error) {
     console.error('LinkedIn OAuth error:', error);
-    return NextResponse.redirect(new URL('/chat?error=linkedin_connection_failed', request.url));
+    
+    // On error, redirect back to return URL with error parameter
+    const returnUrl = stateData?.returnUrl || '/chat';
+    const redirectUrl = new URL(returnUrl, request.url);
+    redirectUrl.searchParams.set('error', 'linkedin_connection_failed');
+    
+    return NextResponse.redirect(redirectUrl.toString());
   }
 }

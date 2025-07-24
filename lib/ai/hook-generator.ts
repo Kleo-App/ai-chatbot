@@ -1,13 +1,9 @@
 'use server';
 
-import OpenAI from 'openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
 import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
 import { getOrCreateUserProfile } from '@/lib/db/profile-queries';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface HookIdea {
   id: number;
@@ -55,30 +51,35 @@ export async function generateHookIdeas(
       fullName: fullName || '',
       jobTitle: jobTitle || '',
       company: company || '',
+<<<<<<< HEAD
       bio: userBio, // Using the override bio if provided
       selectedTopics: postInformation // Using override topics if provided
+=======
+      bio: bio || '',
+      postInformation: postInformation
+>>>>>>> 847633d (model fixes)
     });
-    
+
     console.log('Generating hook ideas with prompt:', prompt);
-    
+
     // Create Langfuse trace for tracking
     const trace = await createTrace('generate_hook_ideas', userId, {
       fullName,
       jobTitle,
       company,
       bio,
-      postDetails
+      postInformation
     });
-    
+
     // Skip Langfuse tracking if trace creation failed
     if (!trace) {
       console.warn('Skipping Langfuse tracking due to trace creation failure');
     }
 
     // Create Langfuse generation span
-    const generation = trace?.generation({
+    const generation = await trace?.generation({
       name: 'hook_ideas_generation',
-      model: 'gpt-4-turbo',
+      model: 'claude-4-sonnet-20250514',
       modelParameters: {
         temperature: 0.7,
         max_tokens: 1000
@@ -86,91 +87,75 @@ export async function generateHookIdeas(
       input: prompt,
     });
     
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert LinkedIn content strategist who helps professionals create engaging hooks for their posts. Always respond with valid JSON format containing an array of hook ideas.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    console.log('Sending prompt to Anthropic');
+
+    // Call Anthropic API using AI SDK
+    const { text } = await generateText({
+      model: anthropic('claude-4-sonnet-20250514'),
+      system: 'You are an expert LinkedIn content strategist who helps professionals create engaging hooks for their posts. Always respond with valid JSON format containing an array of hook ideas.',
+      prompt: prompt,
       temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
     });
 
-    // Parse the response
-    const content = response.choices[0]?.message?.content;
+    // Extract and parse the response
+    const content = text;
+
     if (!content) {
-      generation?.end({ output: null });
-      throw new Error('No content returned from AI');
+      console.error('No content returned from Anthropic');
+      throw new Error('No content returned from AI model');
     }
 
+<<<<<<< HEAD
     console.log('AI response received:', content);
     console.log('AI response type:', typeof content);
+=======
+    console.log('Raw response from Anthropic:', content);
+>>>>>>> 847633d (model fixes)
     
-    // Record successful completion in Langfuse
-    generation?.end({ output: content });
+    // Update Langfuse generation with output
+    await generation?.update({
+      output: content,
+    });
 
     // Parse the JSON response
+    let parsedResponse;
     try {
-      const parsedResponse = JSON.parse(content);
+      // Clean up the response - remove any markdown formatting
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      parsedResponse = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('Error parsing Anthropic response as JSON:', parseError);
+      console.log('Raw content that failed to parse:', content);
       
-      if (!parsedResponse.hooks || !Array.isArray(parsedResponse.hooks)) {
-        trace?.event({
-          name: 'invalid_response_format',
-          level: 'ERROR',
-          metadata: { content }
-        });
-        throw new Error('Invalid response format from AI');
-      }
+      // Log the error in Langfuse
+      await logError('parse_hook_ideas_response', userId, parseError as Error);
       
-      // Format the hooks with their types
-      const hookIdeas: HookIdea[] = parsedResponse.hooks.map((hook: any, index: number) => {
-        // Handle different response formats
-        // Some responses might have {type, text} structure
-        // Others might have {source, text} or just text directly
-        return {
-          id: index + 1,
-          source: hook.type || hook.source || (
-            index === 0 ? "Monetisable Expertise" :
-            index === 1 ? "Strategic Arbitrage" :
-            index === 2 ? "Educational" :
-            "Highly Engaging"
-          ),
-          content: hook.text || hook.content || (typeof hook === 'string' ? hook : '')
-        };
-      });
-      
-      trace?.event({
-        name: 'hooks_generated',
-        level: 'DEFAULT',
-        metadata: { count: hookIdeas.length }
-      });
-      
-      return hookIdeas;
-    } catch (error) {
-      console.error('Failed to parse AI response:', error);
-      trace?.event({
-        name: 'parse_error',
-        level: 'ERROR',
-        metadata: { error: error instanceof Error ? error.message : String(error) }
-      });
-      throw new Error('Failed to parse AI response');
+      throw new Error('Failed to parse AI response as valid JSON');
     }
+      
+    if (!parsedResponse.hooks || !Array.isArray(parsedResponse.hooks)) {
+      console.error('Invalid response structure:', parsedResponse);
+      throw new Error('Invalid response structure from AI model');
+    }
+
+    // Validate and clean the response
+    const hookIdeas: HookIdea[] = parsedResponse.hooks.map((hook: any, index: number) => ({
+      id: hook.id || index + 1,
+      source: hook.source || hook.category || 'Generated',
+      content: hook.content || hook.text || hook.hook || ''
+    }));
+
+    console.log('Generated hook ideas:', hookIdeas);
+
+    return hookIdeas;
+
   } catch (error) {
-    console.error('Error generating hook ideas:', error);
+    console.error('Error in generateHookIdeas:', error);
     
-    // Log error to Langfuse
-    logError('generate_hook_ideas_error', userId, error instanceof Error ? error : String(error));
+    // Log the error in Langfuse
+    await logError('generate_hook_ideas', userId, error as Error);
     
-    // Return default hooks if there's an error
-    return getDefaultHookIdeas();
+    throw error;
   }
 }
 

@@ -31,7 +31,6 @@ import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
 import { geolocation } from '@vercel/functions';
-import { Langfuse } from 'langfuse';
 import {
   createResumableStreamContext,
   type ResumableStreamContext,
@@ -39,19 +38,23 @@ import {
 import { after } from 'next/server';
 import { ChatSDKError } from '@/lib/errors';
 import type { UserType } from '@/lib/types';
+import { getLangfuseClient } from '@/lib/ai/langfuse-client';
 
 export const maxDuration = 60;
-
-const langfuse = new Langfuse({
-  secretKey: process.env.LANGFUSE_SECRET_KEY,
-  publicKey: process.env.LANGFUSE_PUBLIC_KEY,
-  baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
-});
 
 let globalStreamContext: ResumableStreamContext | null = null;
 
 async function getFetchedPrompt() {
   try {
+    const langfuse = await getLangfuseClient();
+    if (!langfuse) {
+      console.warn('Langfuse not available, using fallback system prompt');
+      return {
+        compile: () => 'You are Lara, an AI assistant designed to help with various tasks. Be helpful, concise, and professional in your responses.',
+        toJSON: () => 'You are Lara, an AI assistant designed to help with various tasks. Be helpful, concise, and professional in your responses.'
+      };
+    }
+    
     const prompt = await langfuse.getPrompt('lara_system_prompt');
     const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
     
@@ -61,11 +64,11 @@ async function getFetchedPrompt() {
       toJSON: () => prompt.compile({ date: today })
     };
   } catch (error) {
-    console.error('Failed to fetch prompt:', error);
+    console.error('Failed to fetch system prompt:', error);
     // Provide a fallback prompt if fetch fails
-    return { 
-      compile: () => 'You are a helpful assistant.',
-      toJSON: () => 'You are a helpful assistant.' 
+    return {
+      compile: () => 'You are Lara, an AI assistant designed to help with various tasks. Be helpful, concise, and professional in your responses.',
+      toJSON: () => 'You are Lara, an AI assistant designed to help with various tasks. Be helpful, concise, and professional in your responses.'
     };
   }
 }
@@ -207,7 +210,7 @@ export async function POST(request: Request) {
 
 ${documentContext.content}
 
-When the user asks to make changes, you MUST use the updateDocument tool with the ID "${documentContext.id}" to modify this existing artifact rather than creating a new one. Always reference and build upon the existing content when making edits.`;
+When the user asks to make changes, you MUST use the updateDocument tool with the ID "${documentContext.id}" to modify this existing artifact rather than creating a new one. Keep the content the same unless the user asks for specific changes.`;
         }
         
         const result = streamText({

@@ -1,12 +1,8 @@
 'use server';
 
-import OpenAI from 'openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
 import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface TopicSuggestion {
   id: number;
@@ -42,111 +38,83 @@ export async function generateTopicSuggestions(
     // Create Langfuse generation span
     const generation = await trace?.generation({
       name: 'topic_suggestions_generation',
-      model: 'gpt-4-turbo',
+      model: 'claude-4-sonnet-20250514',
       modelParameters: {
         temperature: 0.7,
         max_tokens: 1000
       },
       input: prompt,
     });
-    
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert LinkedIn content strategist who helps professionals create engaging content topics.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+
+    console.log('Sending prompt to Anthropic');
+
+    // Call Anthropic API using AI SDK
+    const { text } = await generateText({
+      model: anthropic('claude-4-sonnet-20250514'),
+      system: 'You are an expert content strategist who helps professionals identify relevant topics for their industry and expertise.',
+      prompt: prompt,
       temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
     });
 
-    // Parse the response
-    const content = response.choices[0]?.message?.content;
+    // Extract and parse the response
+    const content = text;
+
     if (!content) {
-      generation?.end({ output: null });
-      trace?.event({
-        name: 'no_content_returned',
-        level: 'ERROR'
-      });
-      throw new Error('No content returned from AI');
+      console.error('No content returned from Anthropic');
+      throw new Error('No content returned from AI model');
     }
-    
-    // Record successful completion in Langfuse
-    generation?.end({ output: content });
+
+    // Update Langfuse generation with output
+    await generation?.update({
+      output: content,
+    });
+
+    console.log('Raw response from Anthropic:', content);
 
     // Parse the JSON response
-    const parsedContent = JSON.parse(content);
-    console.log('AI response:', parsedContent);
-    
+    let parsedResponse;
+    try {
+      // Clean up the response - remove any markdown formatting
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      parsedResponse = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('Error parsing Anthropic response as JSON:', parseError);
+      console.log('Raw content that failed to parse:', content);
+      
+      // Log the error in Langfuse
+      await logError('parse_topic_suggestions_response', bio || 'anonymous', parseError as Error);
+      
+      throw new Error('Failed to parse AI response as valid JSON');
+    }
+
     // Handle different possible response formats
-    let topicsArray: Array<{title: string}> = [];
+    let topicSuggestions: TopicSuggestion[] = [];
     
-    if (Array.isArray(parsedContent)) {
-      // If the response is directly an array
-      topicsArray = parsedContent;
-    } else if (parsedContent.topics && Array.isArray(parsedContent.topics)) {
-      // If the response has a topics property that is an array
-      topicsArray = parsedContent.topics;
-    } else if (typeof parsedContent === 'object') {
-      // If the response is an object with properties that could be topics
-      // Extract any array or convert object properties to an array
-      const possibleArrays = Object.values(parsedContent).filter(val => Array.isArray(val));
-      if (possibleArrays.length > 0) {
-        topicsArray = possibleArrays[0];
-      } else {
-        // Last resort: try to extract properties that might be topic objects
-        const topicObjects = Object.values(parsedContent).filter(val => 
-          typeof val === 'object' && val !== null && 'title' in val
-        );
-        if (topicObjects.length > 0) {
-          topicsArray = topicObjects as Array<{title: string}>;
-        }
-      }
+    if (parsedResponse.topics && Array.isArray(parsedResponse.topics)) {
+      topicSuggestions = parsedResponse.topics;
+    } else if (parsedResponse.suggestions && Array.isArray(parsedResponse.suggestions)) {
+      topicSuggestions = parsedResponse.suggestions;
+    } else if (Array.isArray(parsedResponse)) {
+      topicSuggestions = parsedResponse;
     }
-    
-    // If we still don't have topics, create default ones
-    if (topicsArray.length === 0) {
-      console.warn('Could not extract topics from AI response, using defaults');
-      trace?.event({
-        name: 'fallback_to_default',
-        level: 'WARNING'
-      });
-      return Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        title: `Topic suggestion ${i + 1}`,
-        subtitle: 'Default suggestion'
-      }));
-    }
-    
-    // Map the topics to the expected format
-    const result = topicsArray.map((topic: any, index: number) => ({
-      id: index + 1,
+
+    // Validate and clean the response
+    const result: TopicSuggestion[] = topicSuggestions.map((topic: any, index: number) => ({
+      id: topic.id || index + 1,
       title: topic.title || `Topic ${index + 1}`,
-      subtitle: 'AI-generated for you'
+      subtitle: topic.subtitle || topic.description || ''
     }));
-    
-    trace?.event({
-      name: 'topics_extracted',
-      level: 'DEFAULT',
-      metadata: { count: topicsArray.length }
-    });
-    
+
+    console.log('Generated topic suggestions:', result);
+
     return result;
+
   } catch (error) {
-    console.error('Error generating topic suggestions:', error);
+    console.error('Error in generateTopicSuggestions:', error);
     
-    // Log error to Langfuse
-    logError('generate_topic_suggestions_error', bio || 'anonymous', error instanceof Error ? error : String(error));
+    // Log the error in Langfuse
+    await logError('generate_topic_suggestions', bio || 'anonymous', error as Error);
     
-    // Return empty array if there's an error
-    return [];
+    throw error;
   }
 }

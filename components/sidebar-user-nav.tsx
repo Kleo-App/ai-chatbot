@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { useState, useEffect, useRef } from 'react';
 import { 
   Settings, LogOut, User, FileText, Save, 
-  Linkedin, Mic, MicOff, Unlink, Camera, Upload
+  Linkedin, Mic, MicOff, Unlink, Camera, 
 } from 'lucide-react';
 
 import {

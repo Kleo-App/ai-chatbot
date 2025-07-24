@@ -33,7 +33,7 @@ function LoginPageInner() {
     const redirectUrl = searchParams.get('redirect_url');
     // If there's a redirect_url and it points to onboarding, it likely means
     // they tried to authenticate but don't have access yet
-    if (redirectUrl && redirectUrl.includes('/onboarding')) {
+    if (redirectUrl?.includes('/onboarding')) {
       setShowAccessDenied(true);
     }
   }, [searchParams]);
@@ -603,7 +603,7 @@ function LoginPageInner() {
 function LoginPageFallback() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
     </div>
   );
 }

@@ -193,21 +193,31 @@ function PureArtifact({
     [document, debouncedHandleContentChange, handleContentChange],
   );
 
-  const handleEditorContentChange = useCallback((content: string) => {
+  const handleEditorContentChange = useCallback((newTextContent: string) => {
+    // Get existing images from current artifact content
+    const existingImages = getImagesFromArtifact(artifact.content);
+    
+    // Create new content structure with updated text and existing images
+    const newContentData = {
+      text: newTextContent,
+      images: existingImages
+    };
+    const newContent = JSON.stringify(newContentData);
+
     // Update artifact content immediately for instant preview (only if changed)
     setArtifact((currentArtifact) => {
-      if (currentArtifact.content === content) {
+      if (currentArtifact.content === newContent) {
         return currentArtifact; // No change, don't trigger re-render
       }
       return {
         ...currentArtifact,
-        content: content,
+        content: newContent,
       };
     });
     
     // Save immediately without debouncing to prevent old content from overwriting new content
-    saveContent(content, false);
-  }, [saveContent, setArtifact]);
+    saveContent(newContent, false);
+  }, [saveContent, setArtifact, artifact.content]);
 
   const toggleViewMode = useCallback(() => {
     setViewMode(mode => mode === 'chat' ? 'editor' : 'chat');
@@ -230,6 +240,32 @@ function PureArtifact({
     if (!documents[index]) return '';
     return documents[index].content ?? '';
   }
+
+  // Helper function to extract text content from JSON format
+  const getTextContentFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+        return parsed.text;
+      }
+    } catch {
+      // Content is not JSON, return as is
+    }
+    return content;
+  };
+
+  // Helper function to get images from content
+  const getImagesFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'images' in parsed) {
+        return parsed.images || [];
+      }
+    } catch {
+      // Content is not JSON
+    }
+    return [];
+  };
 
   const handleVersionChange = (type: 'next' | 'prev' | 'toggle' | 'latest') => {
     if (!documents) return;
@@ -437,7 +473,7 @@ function PureArtifact({
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <LinkedInPostEditor
-                        content={isCurrentVersion ? artifact.content : getDocumentContentById(currentVersionIndex)}
+                        content={isCurrentVersion ? getTextContentFromArtifact(artifact.content) : getTextContentFromArtifact(getDocumentContentById(currentVersionIndex))}
                         onContentChange={handleEditorContentChange}
                         onToggleView={toggleViewMode}
                       />

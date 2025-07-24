@@ -34,7 +34,7 @@ export default async function Page() {
       
       redirect('/onboarding/welcome');
     }
-  } catch (error) {
+  } catch (error: any) {
     // Check if this is a redirect error (expected behavior)
     if (error && typeof error === 'object' && 'digest' in error && 
         typeof error.digest === 'string' && error.digest.includes('NEXT_REDIRECT')) {
@@ -97,9 +97,5 @@ export default async function Page() {
     </>
   );
 
-  return (
-    <Greeting isLoggedOut={false}>
-      {chatComponent}
-    </Greeting>
-  );
+  return <Greeting>{chatComponent}</Greeting>;
 }

@@ -165,7 +165,7 @@ export default function AboutPage() {
                       onClick={handleOpenLinkedIn}
                       className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
                     >
-                      Open LinkedIn
+                      Copy from LinkedIn
                     </button>
                     <VoiceRecorder 
                       onTranscriptionComplete={(text) => {

@@ -81,15 +81,36 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       }
     }
 
-    return draftContent;
+    // Return JSON format with text and empty images array
+    return JSON.stringify({
+      text: draftContent,
+      images: []
+    });
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
-    // Get the update prompt from Langfuse with current content as variable
+    // Parse current content to extract text and images
     const currentContent = document.content || '';
-    const prompt = await getFetchedUpdatePrompt(currentContent);
-    const systemPrompt = prompt.toJSON() || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`;
+    let currentTextContent = '';
+    let currentImages: string[] = [];
+    
+    try {
+      const parsed = JSON.parse(currentContent);
+      if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+        currentTextContent = parsed.text;
+        currentImages = parsed.images || [];
+      } else {
+        currentTextContent = currentContent;
+      }
+    } catch {
+      // Content is not JSON, treat as plain text
+      currentTextContent = currentContent;
+    }
+
+    // Get the update prompt from Langfuse with current content as variable
+    const prompt = await getFetchedUpdatePrompt(currentTextContent);
+    const systemPrompt = prompt.toJSON() || `Update the following LinkedIn post based on the user's request. Current content: ${currentTextContent}. Make the requested changes while maintaining the professional tone and social media format.`;
 
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
@@ -100,7 +121,7 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
         openai: {
           prediction: {
             type: 'content',
-            content: document.content,
+            content: currentTextContent,
           },
         },
       },
@@ -122,6 +143,10 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       }
     }
 
-    return draftContent;
+    // Return JSON format with updated text and preserved images
+    return JSON.stringify({
+      text: draftContent,
+      images: currentImages
+    });
   },
 });

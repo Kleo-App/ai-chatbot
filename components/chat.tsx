@@ -114,7 +114,10 @@ export function Chat({
 
   const searchParams = useSearchParams();
   const query = searchParams.get('query');
+  const linkedinConnected = searchParams.get('linkedin_connected');
+  const error = searchParams.get('error');
   const hasProcessedQueryRef = useRef(false);
+  const hasProcessedLinkedInRef = useRef(false);
 
   useEffect(() => {
     if (query && !hasProcessedQueryRef.current) {
@@ -143,6 +146,48 @@ export function Chat({
   };
   const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
   const { setArtifact } = useArtifact();
+
+  // Handle LinkedIn connection success/error messages
+  useEffect(() => {
+    if ((linkedinConnected === 'true' || error) && !hasProcessedLinkedInRef.current) {
+      hasProcessedLinkedInRef.current = true;
+      
+      // Restore artifact state if it was saved before OAuth redirect (for both success and error cases)
+      const savedArtifactState = localStorage.getItem('linkedin-oauth-artifact-state');
+      if (savedArtifactState) {
+        try {
+          const artifactState = JSON.parse(savedArtifactState);
+          setArtifact(artifactState);
+          localStorage.removeItem('linkedin-oauth-artifact-state');
+        } catch (error) {
+          console.error('Failed to restore artifact state:', error);
+        }
+      }
+      
+      if (linkedinConnected === 'true') {
+        toast({
+          type: 'success',
+          description: 'LinkedIn connected successfully!',
+        });
+      } else if (error === 'linkedin_connection_failed') {
+        toast({
+          type: 'error',
+          description: 'Failed to connect LinkedIn. Please try again.',
+        });
+      } else if (error === 'linkedin_auth_failed') {
+        toast({
+          type: 'error',
+          description: 'LinkedIn authentication failed. Please try again.',
+        });
+      }
+
+      // Clean up URL parameters
+      const url = new URL(window.location.href);
+      url.searchParams.delete('linkedin_connected');
+      url.searchParams.delete('error');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [linkedinConnected, error, setArtifact]);
 
   useAutoResume({
     autoResume,

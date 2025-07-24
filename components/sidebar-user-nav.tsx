@@ -5,7 +5,7 @@ import { useUser, useClerk } from '@clerk/nextjs';
 import { useState, useEffect, useRef } from 'react';
 import { 
   Settings, LogOut, User, FileText, Save, 
-  Linkedin, Mic, MicOff, Unlink
+  Linkedin, Mic, MicOff, Unlink, Camera, Upload
 } from 'lucide-react';
 
 import {
@@ -24,21 +24,27 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { getUserProfile, updateProfileInfo } from '@/app/actions/profile-actions';
 import type { UserProfile } from '@/lib/db/schema-profile';
+import { useArtifact } from '@/hooks/use-artifact';
 
 
 export function SidebarUserNav() {
   const router = useRouter();
   const { user, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const { artifact } = useArtifact();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '',
     bio: '',
   });
+  
+  // File input ref for profile image upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Deepgram voice transcription states
   const [isRecording, setIsRecording] = useState(false);
@@ -74,7 +80,14 @@ export function SidebarUserNav() {
   const handleLinkedInConnect = async () => {
     setIsLinkedInLoading(true);
     try {
-      window.location.href = '/api/linkedin/auth';
+      // Save current artifact state before redirect to preserve it across OAuth flow
+      if (artifact.isVisible) {
+        localStorage.setItem('linkedin-oauth-artifact-state', JSON.stringify(artifact));
+      }
+      
+      // Pass current URL as return parameter
+      const currentUrl = window.location.href;
+      window.location.href = `/api/linkedin/auth?returnUrl=${encodeURIComponent(currentUrl)}`;
     } catch (error) {
       toast({
         type: 'error',
@@ -274,6 +287,90 @@ export function SidebarUserNav() {
     }
   };
 
+  // Handle profile image upload
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        type: 'error',
+        description: 'Please select a valid image file.',
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        type: 'error',
+        description: 'Image size must be less than 5MB.',
+      });
+      return;
+    }
+
+    setIsUploadingImage(true);
+    
+    try {
+      // Use Clerk's setProfileImage method
+      await user.setProfileImage({ file });
+      
+      // Reload user data to get updated imageUrl
+      await user.reload();
+      
+      toast({
+        type: 'success',
+        description: 'Profile image updated successfully!',
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      toast({
+        type: 'error',
+        description: 'Failed to update profile image. Please try again.',
+      });
+    } finally {
+      setIsUploadingImage(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Handle image upload button click
+  const handleImageUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  // Handle image removal
+  const handleImageRemove = async () => {
+    if (!user) return;
+
+    setIsUploadingImage(true);
+    
+    try {
+      // Remove profile image by passing null
+      await user.setProfileImage({ file: null });
+      
+      // Reload user data
+      await user.reload();
+      
+      toast({
+        type: 'success',
+        description: 'Profile image removed successfully!',
+      });
+    } catch (error) {
+      console.error('Error removing profile image:', error);
+      toast({
+        type: 'error',
+        description: 'Failed to remove profile image. Please try again.',
+      });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
   if (!isLoaded) {
     return (
       <div className="flex items-center justify-center h-10">
@@ -347,14 +444,39 @@ export function SidebarUserNav() {
             <div className="py-4">
               {/* User Avatar and Name */}
               <div className="flex items-center gap-4 mb-6">
-                <Image
-                  src={user.imageUrl || `https://avatar.vercel.sh/${user.emailAddresses[0]?.emailAddress}`}
-                  alt={user.emailAddresses[0]?.emailAddress ?? 'User Avatar'}
-                  width={64}
-                  height={64}
-                  className="rounded-full"
-                />
-                <div>
+                <div className="relative">
+                  <Image
+                    src={user.imageUrl || `https://avatar.vercel.sh/${user.emailAddresses[0]?.emailAddress}`}
+                    alt={user.emailAddresses[0]?.emailAddress ?? 'User Avatar'}
+                    width={64}
+                    height={64}
+                    className="rounded-full"
+                  />
+                  {/* Upload overlay */}
+                  <button
+                    type="button"
+                    onClick={handleImageUploadClick}
+                    disabled={isUploadingImage}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200 disabled:opacity-100"
+                  >
+                    {isUploadingImage ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Camera className="h-6 w-6 text-white" />
+                    )}
+                  </button>
+                  
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                </div>
+                
+                <div className="flex-1">
                   <h2 className="text-xl font-semibold">
                     {isEditing ? (
                       <Input
@@ -369,6 +491,33 @@ export function SidebarUserNav() {
                     )}
                   </h2>
                   <p className="text-sm text-muted-foreground">{user.emailAddresses[0]?.emailAddress}</p>
+                  
+                  {/* Profile image actions */}
+                  {!isEditing && (
+                    <div className="flex gap-2 mt-2">
+                      <button
+                        type="button"
+                        onClick={handleImageUploadClick}
+                        disabled={isUploadingImage}
+                        className="text-xs text-blue-600 hover:text-blue-700 disabled:text-gray-400 transition-colors"
+                      >
+                        {isUploadingImage ? 'Uploading...' : 'Change photo'}
+                      </button>
+                      {user.hasImage && (
+                        <>
+                          <span className="text-xs text-gray-300">•</span>
+                          <button
+                            type="button"
+                            onClick={handleImageRemove}
+                            disabled={isUploadingImage}
+                            className="text-xs text-red-600 hover:text-red-700 disabled:text-gray-400 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
               

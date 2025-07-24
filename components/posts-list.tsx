@@ -1,10 +1,13 @@
 'use client';
-import useSWR from 'swr';
+import { useState } from 'react';
+import useSWR, { mutate } from 'swr';
 import Link from 'next/link';
 import { formatDistance } from 'date-fns';
 import { Button } from './ui/button';
-import { FileIcon, PlusIcon, LoaderIcon } from './icons';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
+import { FileIcon, PlusIcon, LoaderIcon, TrashIcon } from './icons';
 import { fetcher, generateUUID } from '@/lib/utils';
+import { deletePost } from '@/app/actions/post-actions';
 import type { Document } from '@/lib/db/schema';
 
 export function PostsList() {
@@ -63,6 +66,8 @@ export function PostsList() {
 }
 
 function PostRow({ document }: { document: Document }) {
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const truncateContent = (content: string, maxLength = 120) => {
     if (content.length <= maxLength) return content;
     return `${content.substring(0, maxLength)}...`;
@@ -86,10 +91,34 @@ function PostRow({ document }: { document: Document }) {
     }).format(new Date(date));
   };
 
-  const handleRowClick = () => {
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't navigate if clicking on action buttons
+    if ((e.target as HTMLElement).closest('[data-action-button]')) {
+      return;
+    }
+    
     // Generate a new chat ID and navigate to it with the document
     const chatId = generateUUID();
     window.location.href = `/chat/${chatId}?documentId=${document.id}`;
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deletePost(document.id);
+      if (result.success) {
+        // Revalidate the posts list
+        mutate('/api/posts');
+      } else {
+        console.error('Failed to delete post:', result.error);
+        // You could add a toast notification here
+      }
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      // You could add a toast notification here
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -121,6 +150,46 @@ function PostRow({ document }: { document: Document }) {
             addSuffix: true 
           })}
         </div>
+      </div>
+
+      <div 
+        className="flex items-center gap-2" 
+        data-action-button
+        onClick={(e) => e.stopPropagation()}
+      >
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="size-8 p-0 text-muted-foreground hover:text-destructive"
+              disabled={isDeleting}
+            >
+              <TrashIcon size={16} />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Post</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete &ldquo;{document.title}&rdquo;? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </div>
   );

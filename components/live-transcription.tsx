@@ -41,6 +41,10 @@ export function LiveTranscription({
 
   // Track utterances for accumulating transcripts across pauses
   const accumulatedTranscriptRef = useRef<string>("");
+  // Track interim results separately to reduce UI flickering
+  const interimResultRef = useRef<string>("");
+  // Use a debounce timer to smooth updates
+  const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   const startTranscription = async () => {
     try {
@@ -49,6 +53,7 @@ export function LiveTranscription({
       setIsProcessing(true);
       // Reset accumulated transcript when starting a new recording
       accumulatedTranscriptRef.current = "";
+      interimResultRef.current = "";
       
       // Get Deepgram API key from environment variable
       const deepgramApiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
@@ -63,9 +68,13 @@ export function LiveTranscription({
       const connection = deepgram.listen.live({
         model: "nova-2",
         language: "en-US",
-        smart_format: false,
+        smart_format: true,
         interim_results: true,
         utterance_detection: true,
+        endpointing: 1000, // Use milliseconds for endpointing (1 second pause detection)
+        vad_events: true,
+        punctuate: true,
+        numerals: true,
       });
 
       // Set up connection event handlers
@@ -94,7 +103,7 @@ export function LiveTranscription({
           };
           
           // Start recording
-          mediaRecorder.start(250); // Send audio chunks every 250ms
+          mediaRecorder.start(500); // Send audio chunks every 500ms for smoother experience
           
           setIsListening(true);
           setIsProcessing(false);
@@ -112,13 +121,30 @@ export function LiveTranscription({
         const isUtteranceEnd = data.speech_final || false;
         
         if (receivedTranscript) {
+          // Clear any pending update timer
+          if (updateTimerRef.current) {
+            clearTimeout(updateTimerRef.current);
+            updateTimerRef.current = null;
+          }
+          
           // If this is the end of an utterance (pause in speech), accumulate it
           if (isUtteranceEnd || isFinal) {
+            // This is a final result, add it to our accumulated transcript
             accumulatedTranscriptRef.current = (accumulatedTranscriptRef.current + " " + receivedTranscript).trim();
+            interimResultRef.current = ""; // Clear interim results
+            
+            // Update the UI with the final transcript
             setTranscript(accumulatedTranscriptRef.current);
           } else {
-            // For ongoing speech, show current utterance plus accumulated text
-            setTranscript((accumulatedTranscriptRef.current + " " + receivedTranscript).trim());
+            // This is an interim result, store it separately
+            interimResultRef.current = receivedTranscript;
+            
+            // Debounce the UI update to reduce flickering
+            updateTimerRef.current = setTimeout(() => {
+              // For ongoing speech, show accumulated text plus current interim result
+              const fullTranscript = (accumulatedTranscriptRef.current + " " + interimResultRef.current).trim();
+              setTranscript(fullTranscript);
+            }, 150); // Slightly longer delay to smooth updates
           }
         }
       });
@@ -165,6 +191,12 @@ export function LiveTranscription({
     
     // Clear resources
     resourcesRef.current = null;
+    
+    // Clear any pending update timer
+    if (updateTimerRef.current) {
+      clearTimeout(updateTimerRef.current);
+      updateTimerRef.current = null;
+    }
   };
 
   // Cleanup on unmount
@@ -172,6 +204,12 @@ export function LiveTranscription({
     return () => {
       if (resourcesRef.current) {
         stopTranscription();
+      }
+      
+      // Additional cleanup for any pending timers
+      if (updateTimerRef.current) {
+        clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = null;
       }
     };
   }, []);

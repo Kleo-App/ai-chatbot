@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@deepgram/sdk';
 
 // This endpoint creates a temporary token for client-side real-time transcription
 export async function GET(request: NextRequest) {

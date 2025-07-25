@@ -15,7 +15,6 @@ import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 export default function AboutPage() {
   const [combinedProfileText, setCombinedProfileText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [originalText, setOriginalText] = useState<string>("");
   const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

@@ -3,7 +3,7 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { default as StarterKit } from '@tiptap/starter-kit';
 import { Button } from './ui/button';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useRef } from 'react';
 
 interface LinkedInPostEditorProps {
   content: string;
@@ -16,6 +16,9 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   onContentChange,
   onToggleView,
 }: LinkedInPostEditorProps) {
+  const isInternalUpdateRef = useRef(false);
+  const contentRef = useRef(content);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -30,7 +33,14 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
     content: content,
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
-      onContentChange(editor.getHTML());
+      const newContent = editor.getHTML();
+      
+      // Mark this as an internal update to prevent circular updates
+      isInternalUpdateRef.current = true;
+      contentRef.current = newContent;
+      
+      onContentChange(newContent);
+
     },
     editorProps: {
       attributes: {
@@ -44,10 +54,23 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
+    // Only update if:
+    // 1. Editor exists
+    // 2. Content is different from what's currently in the editor
+    // 3. This is not an internal update (from user typing)
+    // 4. Content is different from our last known content
+    if (
+      editor && 
+      content !== editor.getHTML() && 
+      !isInternalUpdateRef.current &&
+      content !== contentRef.current
+    ) {
+      // Update our content reference
+      contentRef.current = content;
+      
       // Convert content to proper HTML structure for TipTap
       const convertToEditorFormat = (inputContent: string) => {
-        console.log('Raw content received:', inputContent);
+        console.log('External content update:', inputContent);
         
         // Handle HTML content with spans/br structure (from preview)
         if (inputContent.includes('<span>') && inputContent.includes('<br>')) {
@@ -93,8 +116,15 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
       };
       
       const formattedContent = convertToEditorFormat(content);
-      console.log('Converted content:', formattedContent);
-      editor.commands.setContent(formattedContent);
+      console.log('Setting content from external source:', formattedContent);
+      
+      // Use emitUpdate: false to prevent triggering onUpdate during external content set
+      editor.commands.setContent(formattedContent, {
+        emitUpdate: false,
+        parseOptions: {
+          preserveWhitespace: 'full',
+        },
+      });
     }
   }, [content, editor]);
 

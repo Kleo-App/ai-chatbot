@@ -182,7 +182,7 @@ const PurePreviewMessage = ({
                   const { input } = part;
                   return (
                     <div key={toolCallId}>
-                      <DocumentPreview isReadonly={isReadonly} args={input["text"]} />
+                      <DocumentPreview isReadonly={isReadonly} args={input} />
                     </div>
                   );
                 }

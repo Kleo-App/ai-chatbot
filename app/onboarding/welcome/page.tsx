@@ -4,7 +4,6 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
-import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function WelcomePage() {
@@ -43,8 +42,7 @@ export default function WelcomePage() {
                 Welcome to Kleo
               </h1>
               <p className="text-xl text-muted-foreground max-w-2xl leading-relaxed">
-                Your LinkedIn AI ghostwriter trained by top creators<br />
-                for creators who hate generic content.
+                Your LinkedIn AI ghostwriter trained by top creators for creators.
               </p>
             </div>
           </div>
@@ -58,8 +56,8 @@ export default function WelcomePage() {
           >
             {isLoading ? 'Getting started...' : 'Get started'}
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
-              <path d="M5 12h14"></path>
-              <path d="m12 5 7 7-7 7"></path>
+              <path d="M5 12h14" />
+              <path d="m12 5 7 7-7 7" />
             </svg>
           </Button>
         </div>

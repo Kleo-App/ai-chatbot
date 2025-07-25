@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { openai } from '@ai-sdk/openai';
+import { anthropic } from '@ai-sdk/anthropic';
 import {
   artifactModel,
   chatModel,
@@ -23,15 +23,12 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': openai('gpt-4o'),
+        'chat-model': anthropic('claude-sonnet-4-20250514'),
         'chat-model-reasoning': wrapLanguageModel({
-          model: openai('gpt-4o'),
+          model: anthropic('claude-sonnet-4-20250514'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'title-model': openai('gpt-4o-mini'),
-        'artifact-model': openai('gpt-4o'),
-      },
-      imageModels: {
-        'small-model': openai.imageModel('dall-e-3'),
+        'title-model': anthropic('claude-sonnet-4-20250514'),
+        'artifact-model': anthropic('claude-sonnet-4-20250514'),
       },
     });

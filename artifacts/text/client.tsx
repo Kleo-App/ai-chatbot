@@ -14,7 +14,7 @@ import {
 import type { Suggestion } from '@/lib/db/schema';
 import { toast } from 'sonner';
 import { getSuggestions } from '../actions';
-import { useState, } from 'react';
+import React, { useState, } from 'react';
 
 interface TextArtifactMetadata {
   suggestions: Array<Suggestion>;
@@ -42,6 +42,27 @@ function TextArtifactContent({
   const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('desktop');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [parsedTextContent, setParsedTextContent] = useState<string>(content);
+
+  // Parse content to extract text and images when content changes
+  React.useEffect(() => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'text' in parsed && 'images' in parsed) {
+        setParsedTextContent(parsed.text);
+        setUploadedImages(parsed.images || []);
+      } else {
+        // Fallback for old format or plain text
+        setParsedTextContent(content);
+        setUploadedImages([]);
+      }
+    } catch {
+      // Content is not JSON, treat as plain text
+      setParsedTextContent(content);
+      setUploadedImages([]);
+    }
+  }, [content]);
 
   const handleToggleDevice = () => {
     setDeviceType(prevType => prevType === 'desktop' ? 'mobile' : 'desktop');
@@ -53,6 +74,29 @@ function TextArtifactContent({
 
   const handleClosePublishModal = () => {
     setIsPublishModalOpen(false);
+  };
+
+  // Helper to save content with images
+  const saveContentWithImages = (textContent: string, images: string[]) => {
+    if (typeof onSaveContent === 'function') {
+      const contentData = {
+        text: textContent,
+        images: images
+      };
+      onSaveContent(JSON.stringify(contentData), false); // Don't debounce for immediate save
+    }
+  };
+
+  // Save images whenever they change
+  const handleImagesChange = (newImages: string[]) => {
+    setUploadedImages(newImages);
+    saveContentWithImages(parsedTextContent, newImages);
+  };
+
+  // Save text content when it changes (from editing in preview)
+  const handleTextContentChange = (newTextContent: string) => {
+    setParsedTextContent(newTextContent);
+    saveContentWithImages(newTextContent, uploadedImages);
   };
 
   if (isLoading) {
@@ -81,7 +125,7 @@ function TextArtifactContent({
   return (
     <>
       <LinkedInPostPreview
-        content={content}
+        content={parsedTextContent}
         userProfile={userProfile}
         deviceType={deviceType}
         onToggleDevice={handleToggleDevice}
@@ -96,14 +140,18 @@ function TextArtifactContent({
         mode={mode}
         metadata={metadata}
         setMetadata={setMetadata}
-                onShareClick={() => setIsPublishModalOpen(true)}
+        uploadedImages={uploadedImages}
+        onImagesChange={handleImagesChange}
+        onTextChange={handleTextContentChange}
+        onShareClick={() => setIsPublishModalOpen(true)}
       />
       
       <LinkedInPublishModal
         isOpen={isPublishModalOpen}
         onClose={handleClosePublishModal}
-        content={content}
+        content={parsedTextContent}
         userProfile={userProfile}
+        uploadedImages={uploadedImages}
       />
       </>
     );
@@ -166,13 +214,11 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
       onClick: ({ handleVersionChange }) => {
         handleVersionChange('next');
       },
-      isDisabled: ({ isCurrentVersion }) => {
-        if (isCurrentVersion) {
-          return true;
-        }
-
-        return false;
-      },
+      isDisabled: ({ isCurrentVersion, currentVersionIndex }) => {
+        // Check if we're at the latest version by using both flags
+        // This ensures the button is enabled when viewing previous versions
+        return isCurrentVersion === true;
+      }
     },
     {
       icon: <CopyIcon size={18} />,

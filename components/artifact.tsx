@@ -193,21 +193,31 @@ function PureArtifact({
     [document, debouncedHandleContentChange, handleContentChange],
   );
 
-  const handleEditorContentChange = useCallback((content: string) => {
+  const handleEditorContentChange = useCallback((newTextContent: string) => {
+    // Get existing images from current artifact content
+    const existingImages = getImagesFromArtifact(artifact.content);
+    
+    // Create new content structure with updated text and existing images
+    const newContentData = {
+      text: newTextContent,
+      images: existingImages
+    };
+    const newContent = JSON.stringify(newContentData);
+
     // Update artifact content immediately for instant preview (only if changed)
     setArtifact((currentArtifact) => {
-      if (currentArtifact.content === content) {
+      if (currentArtifact.content === newContent) {
         return currentArtifact; // No change, don't trigger re-render
       }
       return {
         ...currentArtifact,
-        content: content,
+        content: newContent,
       };
     });
     
     // Save immediately without debouncing to prevent old content from overwriting new content
-    saveContent(content, false);
-  }, [saveContent, setArtifact]);
+    saveContent(newContent, false);
+  }, [saveContent, setArtifact, artifact.content]);
 
   const toggleViewMode = useCallback(() => {
     setViewMode(mode => mode === 'chat' ? 'editor' : 'chat');
@@ -230,6 +240,32 @@ function PureArtifact({
     if (!documents[index]) return '';
     return documents[index].content ?? '';
   }
+
+  // Helper function to extract text content from JSON format
+  const getTextContentFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+        return parsed.text;
+      }
+    } catch {
+      // Content is not JSON, return as is
+    }
+    return content;
+  };
+
+  // Helper function to get images from content
+  const getImagesFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'images' in parsed) {
+        return parsed.images || [];
+      }
+    } catch {
+      // Content is not JSON
+    }
+    return [];
+  };
 
   const handleVersionChange = (type: 'next' | 'prev' | 'toggle' | 'latest') => {
     if (!documents) return;
@@ -311,7 +347,7 @@ function PureArtifact({
 
           {!isMobile && (
             <motion.div
-              className="relative w-2/5 bg-muted dark:bg-background h-dvh shrink-0"
+              className="relative w-2/5 bg-white h-dvh shrink-0"
               initial={{ opacity: 0, x: 10, scale: 1 }}
               animate={{
                 opacity: 1,
@@ -346,7 +382,7 @@ function PureArtifact({
                 {viewMode === 'chat' ? (
                   <>
                     {/* Chat Header with Back/Toggle Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 
@@ -399,7 +435,7 @@ function PureArtifact({
                         setAttachments={setAttachments}
                         messages={messages}
                         sendMessage={sendMessage}
-                        className="bg-background dark:bg-muted"
+                        className="bg-white dark:bg-white"
                         setMessages={setMessages}
                         selectedVisibilityType={selectedVisibilityType}
                         isArtifactContext={true}
@@ -410,7 +446,7 @@ function PureArtifact({
                 ) : (
                   <>
                     {/* Editor Header with Back Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 
@@ -437,7 +473,7 @@ function PureArtifact({
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <LinkedInPostEditor
-                        content={isCurrentVersion ? artifact.content : getDocumentContentById(currentVersionIndex)}
+                        content={isCurrentVersion ? getTextContentFromArtifact(artifact.content) : getTextContentFromArtifact(getDocumentContentById(currentVersionIndex))}
                         onContentChange={handleEditorContentChange}
                         onToggleView={toggleViewMode}
                       />
@@ -449,7 +485,7 @@ function PureArtifact({
           )}
 
           <motion.div
-            className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll md:border-l dark:border-zinc-700 border-zinc-200"
+            className="fixed bg-white h-dvh flex flex-col overflow-y-scroll"
             initial={
               isMobile
                 ? {
@@ -556,7 +592,7 @@ function PureArtifact({
               </div>
             )}
 
-            <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">
+            <div className="bg-white h-full overflow-y-scroll !max-w-full items-center">
               <artifactDefinition.content
                 title={artifact.title}
                 content={

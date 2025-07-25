@@ -1,24 +1,36 @@
 import { smoothStream, streamText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { Langfuse } from 'langfuse';
-
-const langfuse = new Langfuse({
-  secretKey: process.env.LANGFUSE_SECRET_KEY,
-  publicKey: process.env.LANGFUSE_PUBLIC_KEY,
-  baseUrl: process.env.LANGFUSE_HOST || 'https://us.cloud.langfuse.com'
-});
+import { getLangfuseClient } from '@/lib/ai/langfuse-client';
 
 async function getFetchedLinkedInPrompt() {
   try {
-    const prompt = await langfuse.getPrompt('linkedin_post_writer');
-    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    const langfuse = await getLangfuseClient();
+    if (!langfuse) {
+      console.warn('Langfuse not available, using fallback LinkedIn prompt');
+      return { 
+        compile: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.',
+        toJSON: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.'
+      };
+    }
     
-    // Compile the prompt with the date variable
-    return {
-      compile: () => prompt.compile({ date: today }),
-      toJSON: () => prompt.compile({ date: today })
-    };
+    try {
+      const prompt = await langfuse.getPrompt('linkedin_post_writer');
+      const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      
+      // Compile the prompt with the date variable
+      return {
+        compile: () => prompt.compile({ date: today }),
+        toJSON: () => prompt.compile({ date: today })
+      };
+    } catch (langfuseError) {
+      // Handle Langfuse-specific errors (like 401)
+      console.warn('Langfuse LinkedIn prompt fetch failed, using fallback:', langfuseError);
+      return { 
+        compile: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.',
+        toJSON: () => 'Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.'
+      };
+    }
   } catch (error) {
     console.error('Failed to fetch LinkedIn prompt:', error);
     // Provide a fallback prompt if fetch fails
@@ -31,14 +43,32 @@ async function getFetchedLinkedInPrompt() {
 
 async function getFetchedUpdatePrompt(currentContent: string) {
   try {
-    const prompt = await langfuse.getPrompt('update_linkedin_post');
+    const langfuse = await getLangfuseClient();
+    if (!langfuse) {
+      console.warn('Langfuse not available, using fallback update prompt');
+      return { 
+        compile: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`,
+        toJSON: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
+      };
+    }
     
-    // Compile the prompt with the current content variable
-    const compiledPrompt = prompt.compile({ current_content: currentContent });
-    return {
-      compile: () => compiledPrompt,
-      toJSON: () => compiledPrompt || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
-    };
+    try {
+      const prompt = await langfuse.getPrompt('update_linkedin_post');
+      
+      // Compile the prompt with the current content variable
+      const compiledPrompt = prompt.compile({ current_content: currentContent });
+      return {
+        compile: () => compiledPrompt,
+        toJSON: () => compiledPrompt || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
+      };
+    } catch (langfuseError) {
+      // Handle Langfuse-specific errors (like 401)
+      console.warn('Langfuse prompt fetch failed, using fallback:', langfuseError);
+      return { 
+        compile: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`,
+        toJSON: () => `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`
+      };
+    }
   } catch (error) {
     console.error('Failed to fetch update prompt:', error);
     // Provide a fallback prompt if fetch fails
@@ -69,27 +99,51 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       const { type } = delta;
 
       if (type === 'text') {
-        const { text } = delta;
+        // Handle potential undefined text property for Anthropic models
+        const textContent = 'text' in delta ? delta.text : '';
+        
+        if (textContent) {
+          draftContent += textContent;
 
-        draftContent += text;
-
-        dataStream.write({
-          type: 'data-textDelta',
-          data: text,
-          transient: true,
-        });
+          dataStream.write({
+            type: 'data-textDelta',
+            data: textContent,
+            transient: true,
+          });
+        }
       }
     }
 
-    return draftContent;
+    // Return JSON format with text and empty images array
+    return JSON.stringify({
+      text: draftContent,
+      images: []
+    });
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
-    // Get the update prompt from Langfuse with current content as variable
+    // Parse current content to extract text and images
     const currentContent = document.content || '';
-    const prompt = await getFetchedUpdatePrompt(currentContent);
-    const systemPrompt = prompt.toJSON() || `Update the following LinkedIn post based on the user's request. Current content: ${currentContent}. Make the requested changes while maintaining the professional tone and social media format.`;
+    let currentTextContent = '';
+    let currentImages: string[] = [];
+    
+    try {
+      const parsed = JSON.parse(currentContent);
+      if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+        currentTextContent = parsed.text;
+        currentImages = parsed.images || [];
+      } else {
+        currentTextContent = currentContent;
+      }
+    } catch {
+      // Content is not JSON, treat as plain text
+      currentTextContent = currentContent;
+    }
+
+    // Get the update prompt from Langfuse with current content as variable
+    const prompt = await getFetchedUpdatePrompt(currentTextContent);
+    const systemPrompt = prompt.toJSON() || `Update the following LinkedIn post based on the user's request. Current content: ${currentTextContent}. Make the requested changes while keeping everything else the same.`;
 
     const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
@@ -97,11 +151,8 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,
       providerOptions: {
-        openai: {
-          prediction: {
-            type: 'content',
-            content: document.content,
-          },
+        anthropic: {
+          cacheControl: { type: 'ephemeral' },
         },
       },
     });
@@ -110,18 +161,25 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
       const { type } = delta;
 
       if (type === 'text') {
-        const { text } = delta;
+        // Handle potential undefined text property for Anthropic models
+        const textContent = 'text' in delta ? delta.text : '';
+        
+        if (textContent) {
+          draftContent += textContent;
 
-        draftContent += text;
-
-        dataStream.write({
-          type: 'data-textDelta',
-          data: text,
-          transient: true,
-        });
+          dataStream.write({
+            type: 'data-textDelta',
+            data: textContent,
+            transient: true,
+          });
+        }
       }
     }
 
-    return draftContent;
+    // Return JSON format with updated text and preserved images
+    return JSON.stringify({
+      text: draftContent,
+      images: currentImages
+    });
   },
 });

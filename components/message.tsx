@@ -1,12 +1,10 @@
 'use client';
-import cx from 'classnames';
 import { AnimatePresence, motion } from 'framer-motion';
 import { memo, useState } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import { DocumentToolCall, DocumentToolResult } from './document';
 import { PencilEditIcon } from './icons';
 import { Markdown } from './markdown';
-import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import equal from 'fast-deep-equal';
@@ -128,7 +126,7 @@ const PurePreviewMessage = ({
                       <div
                         data-testid="message-content"
                         className={cn('flex flex-col gap-4', {
-                          'bg-primary text-primary-foreground px-3 py-2 rounded-xl text-left':
+                          'bg-background border text-gray-900 px-3 py-2 rounded-xl text-left':
                             message.role === 'user',
                           'text-left': message.role === 'assistant',
                         })}

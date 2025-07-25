@@ -8,10 +8,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // Get the return URL from query parameters, default to current page
+  const searchParams = request.nextUrl.searchParams;
+  const returnUrl = searchParams.get('returnUrl') || '/';
+
   // LinkedIn OAuth 2.0 parameters
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const redirectUri = process.env.LINKEDIN_REDIRECT_URI;
-  const state = userId; // Use userId as state for security
+  
+  // Encode state with both userId and returnUrl for security and redirect handling
+  const state = JSON.stringify({ userId, returnUrl });
   const scope = 'openid profile email w_member_social'; // LinkedIn API scopes
 
   if (!clientId || !redirectUri) {

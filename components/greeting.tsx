@@ -221,7 +221,7 @@ const CountdownTimer = () => {
   });
 
   useEffect(() => {
-    const targetDate = new Date('2025-08-05T00:00:00').getTime();
+    const targetDate = new Date('2025-08-14T00:00:00').getTime();
 
     const updateCountdown = () => {
       const now = new Date().getTime();

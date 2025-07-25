@@ -1,14 +1,16 @@
 import { PreviewMessage, ThinkingMessage } from './message';
 import { Greeting } from './greeting';
-import { memo } from 'react';
+import { memo, useState, useCallback } from 'react';
 import type { Vote } from '@/lib/db/schema';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import { motion } from 'framer-motion';
 import { useMessages } from '@/hooks/use-messages';
-import type { ChatMessage } from '@/lib/types';
+import type { ChatMessage, Attachment } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
 import Image from 'next/image';
+import { FileIcon } from 'lucide-react';
+import { toast } from './toast';
 
 interface MessagesProps {
   chatId: string;
@@ -20,6 +22,8 @@ interface MessagesProps {
   isReadonly: boolean;
   isArtifactVisible: boolean;
   formElement?: React.ReactNode;
+  attachments?: Array<Attachment>;
+  setAttachments?: React.Dispatch<React.SetStateAction<Array<Attachment>>>;
 }
 
 function PureMessages({
@@ -31,6 +35,8 @@ function PureMessages({
   regenerate,
   isReadonly,
   formElement,
+  attachments = [],
+  setAttachments,
 }: MessagesProps) {
   const {
     containerRef: messagesContainerRef,
@@ -44,16 +50,16 @@ function PureMessages({
   });
 
   useDataStream();
-
+  
   return (
     <div
       ref={messagesContainerRef}
       className={`flex flex-col min-w-0 gap-6 flex-1 pt-4 relative bg-white ${
-        messages.length === 0 ? 'items-center justify-center -mt-16' : 'overflow-y-scroll pb-4'
+        messages.length === 0 ? 'items-center justify-center -mt-16 md:-mt-16' : 'overflow-y-scroll pb-4 px-4'
       }`}
     >
       {messages.length === 0 && formElement && (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+        <div className="w-full max-w-3xl mx-auto px-4 flex flex-col items-center">
           {/* Logo above chat input */}
           <div className="mb-8">
             <Image
@@ -111,6 +117,8 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
   if (prevProps.messages.length !== nextProps.messages.length) return false;
   if (!equal(prevProps.messages, nextProps.messages)) return false;
   if (!equal(prevProps.votes, nextProps.votes)) return false;
+  if (prevProps.isReadonly !== nextProps.isReadonly) return false;
+  if (!equal(prevProps.attachments, nextProps.attachments)) return false;
 
   return false;
 });

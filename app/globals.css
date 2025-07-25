@@ -24,7 +24,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 35 20% 97%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
     --card-foreground: 240 10% 3.9%;
@@ -49,6 +49,8 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --custom-bg: 35 20% 97%; /* #f8f7f6 */
+    --sidebar-active: 0 0% 2% / 0.039; /* #0505050a */
   }
 
   .dark {
@@ -76,6 +78,8 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --custom-bg: 240 10% 3.9%; /* Keep dark background in dark mode */
+    --sidebar-active: 0 0% 80% / 0.1; /* Lighter version for dark mode */
   }
 }
 
@@ -85,6 +89,60 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Sidebar active menu item styling */
+@layer components {
+  .sidebar-menu-active {
+    background-color: hsl(var(--sidebar-active)) !important;
+  }
+
+  .sidebar-menu-hover:hover {
+    background-color: hsl(var(--sidebar-active)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Make sure active items don't have black text by default */
+  .sidebar-menu-active {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  /* Only make text black on hover */
+  .sidebar-menu-active:hover {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  /* Override base sidebar menu button active states */
+  [data-sidebar="sidebar"] [data-sidebar="menu-button"][data-active="true"] {
+    background-color: hsl(var(--sidebar-active)) !important;
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  /* Override any remaining sidebar menu button hover and active states */
+  [data-sidebar="sidebar"] [data-sidebar="menu-button"]:hover {
+    background-color: hsl(var(--sidebar-active)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  [data-sidebar="sidebar"]
+    [data-sidebar="menu-button"][data-state="open"]:hover {
+    background-color: hsl(var(--sidebar-active)) !important;
+    color: hsl(var(--foreground)) !important;
+  }
+
+  [data-sidebar="sidebar"] [data-sidebar="menu-button"]:active {
+    background-color: hsl(var(--sidebar-active)) !important;
+  }
+
+  [data-sidebar="sidebar"] [data-sidebar="menu-button"][aria-expanded="true"] {
+    background-color: hsl(var(--sidebar-active)) !important;
+  }
+
+  /* Ensure active menu button hover gets the foreground color */
+  [data-sidebar="sidebar"]
+    [data-sidebar="menu-button"][data-active="true"]:hover {
+    color: hsl(var(--foreground)) !important;
   }
 }
 
@@ -166,4 +224,11 @@
 
 .ProseMirror em {
   font-style: italic !important;
+}
+
+/* Hide Fernand chat widget on mobile devices */
+@media (max-width: 767px) {
+  .fernand__launcher {
+    display: none !important;
+  }
 }

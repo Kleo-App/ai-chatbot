@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import Image from "next/image"
 import { useOnboarding } from "@/hooks/use-onboarding"
 import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
@@ -10,7 +9,6 @@ import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-
 import { checkAndCreateUser } from "@/app/actions/user-actions"
 import { VoiceRecorder } from "@/components/voice-recorder"
 import { toast } from "sonner"
-import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function AboutPage() {
@@ -72,9 +70,7 @@ export default function AboutPage() {
     setCombinedProfileText(combinedText);
   }, [userProfile]);
 
-  const handleOpenLinkedIn = () => {
-    window.open('https://www.linkedin.com/in/me/', '_blank');
-  };
+
 
   const handleNext = async () => {
     setIsLoading(true);
@@ -146,32 +142,17 @@ export default function AboutPage() {
               <div className="relative bg-white/90 backdrop-blur-sm border-2 border-gray-200 hover:border-gray-300 focus-within:border-[#157DFF] focus-within:ring-2 focus-within:ring-[#157DFF]/20 rounded-2xl shadow-sm transition-all duration-200">
                 <textarea
                   value={combinedProfileText}
-                  onChange={(e) => {
-                    const newValue = e.target.value;
-                    if (newValue.length <= 250) {
-                      setCombinedProfileText(newValue);
-                    }
-                  }}
+                  onChange={(e) => setCombinedProfileText(e.target.value)}
                   className="w-full min-h-[160px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 pb-16 placeholder:text-gray-400"
-                  placeholder="Keep it short. What you educate on and what you want to be known for."
-                  maxLength={250}
+                  placeholder="What you educate on and what you want to be known for."
                 />
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-between px-4 gap-3">
-                  <div className="text-xs text-gray-500">
-                    {combinedProfileText.length}/250 characters
-                  </div>
+                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={handleOpenLinkedIn}
-                      className="text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200 font-medium"
-                    >
-                      Open LinkedIn
-                    </button>
                     <VoiceRecorder 
                       onTranscriptionComplete={(text) => {
                         setCombinedProfileText(prev => {
                           const newContent = prev ? `${prev}\n${text}` : text;
-                          return newContent.slice(0, 250); // Ensure we don't exceed character limit
+                          return newContent;
                         });
                         toast.success("Voice transcription added!");
                       }} 
@@ -211,8 +192,8 @@ export default function AboutPage() {
             {isLoading ? 'Saving...' : 'Continue'}
             {!isLoading && (
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
-                <path d="M5 12h14"></path>
-                <path d="m12 5 7 7-7 7"></path>
+                <path d="M5 12h14" />
+                <path d="m12 5 7 7-7 7" />
               </svg>
             )}
           </Button>

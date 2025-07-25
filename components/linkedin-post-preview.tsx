@@ -40,6 +40,8 @@ interface LinkedInPostPreviewProps {
   setMetadata?: any;
   // Media props
   uploadedImages?: string[];
+  onImagesChange?: (images: string[]) => void;
+  onTextChange?: (text: string) => void;
   // UI control props
   showShareButton?: boolean;
   showHeader?: boolean;
@@ -68,6 +70,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   setMetadata,
   // Media props
   uploadedImages = [],
+  onImagesChange,
+  onTextChange,
   // UI control props
   showShareButton = true,
   showHeader = true,
@@ -77,10 +81,10 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   isModal = false,
 }: LinkedInPostPreviewProps) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
-  const [localUploadedImages, setLocalUploadedImages] = useState<string[]>(uploadedImages);
 
   const handleImageUploaded = (imageUrl: string) => {
-    setLocalUploadedImages(prev => [...prev, imageUrl]);
+    const newImages = [...uploadedImages, imageUrl];
+    onImagesChange?.(newImages);
   };
 
   // Format the content to support LinkedIn-style formatting
@@ -91,13 +95,13 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     if (isHTML) {
       // For HTML content, render directly with safe HTML and apply LinkedIn styling
       return <div 
-        className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1"
+        className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]"
         dangerouslySetInnerHTML={{ __html: text }} 
       />;
     } else {
       // For plain text, convert newlines to paragraphs with proper styling
       return (
-        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
+        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]">
           {text
             .split('\n\n') // Split on double newlines for paragraphs
             .map((paragraph, paragraphIndex) => {
@@ -157,7 +161,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
   const outerClass = isModal 
     ? "relative flex flex-col"
-    : "border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-full";
+    : "border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-[calc(100%-1rem)] m-2";
   return (
     <div className={outerClass}>
       {showHeader && (
@@ -193,7 +197,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     artifact={artifact}
                     currentVersionIndex={currentVersionIndex || 0}
                     handleVersionChange={handleVersionChange}
-                    isCurrentVersion={isCurrentVersion || true}
+                    isCurrentVersion={isCurrentVersion === undefined ? true : isCurrentVersion}
                     mode={mode || 'edit'}
                     metadata={metadata}
                     setMetadata={setMetadata}
@@ -218,8 +222,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
       {/* LinkedIn Post Preview */}
       <div className={isModal ? "" : "flex-1 overflow-y-auto p-6 min-h-0"}>
-        <div className="mx-auto max-w-2xl">
-          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto ${deviceType === 'mobile' ? 'w-[375px]' : 'w-[552px]'}`}>
+        <div className="mx-auto w-full px-4 md:max-w-2xl md:px-0">
+          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto w-full max-w-[375px] md:max-w-[552px]`}>
             {/* Post Header */}
             <div className="flex flex-row justify-between px-4 pt-3 pb-2">
               <div className="flex flex-row gap-2">
@@ -291,10 +295,10 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             </div>
 
             {/* Media Upload Area */}
-            {localUploadedImages.length > 0 && (
+            {(uploadedImages.length > 0 || !isModal) && (
               <div className="px-4 pb-4">
                 <div className="space-y-2">
-                  {localUploadedImages.map((imageUrl, index) => (
+                  {uploadedImages.map((imageUrl, index) => (
                     <div key={index} className="relative rounded-lg overflow-hidden">
                       <Image 
                         src={imageUrl} 
@@ -303,25 +307,32 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                         width={552}
                         height={320}
                       />
-                      <button
-                        onClick={() => setLocalUploadedImages(prev => prev.filter((_, i) => i !== index))}
-                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
-                      >
-                        <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
+                      {!isModal && (
+                        <button
+                          onClick={() => {
+                            const newImages = uploadedImages.filter((_, i) => i !== index);
+                            onImagesChange?.(newImages);
+                          }}
+                          className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                        >
+                          <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      )}
                     </div>
                   ))}
-                  <div 
-                    className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
-                    onClick={() => setIsMediaModalOpen(true)}
-                  >
-                    <div className="flex items-center justify-center gap-2 text-gray-500">
-                      <ImageIcon size={20} />
-                      <span className="text-sm">Add another image</span>
+                  {!isModal && (
+                    <div 
+                      className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
+                      onClick={() => setIsMediaModalOpen(true)}
+                    >
+                      <div className="flex items-center justify-center gap-2 text-gray-500">
+                        <ImageIcon size={20} />
+                        <span className="text-sm">{uploadedImages.length > 0 ? 'Add another image' : 'Add image'}</span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             )}
@@ -386,11 +397,13 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
       </div>
 
       {/* Media Upload Modal */}
-      <MediaUploadModal 
-        open={isMediaModalOpen} 
-        onOpenChange={setIsMediaModalOpen}
-        onImageUploaded={handleImageUploaded}
-      />
+      {!isModal && (
+        <MediaUploadModal 
+          open={isMediaModalOpen} 
+          onOpenChange={setIsMediaModalOpen}
+          onImageUploaded={handleImageUploaded}
+        />
+      )}
     </div>
   );
 }); 

@@ -1,12 +1,8 @@
 'use server';
 
-import OpenAI from 'openai';
+import { anthropic } from '@ai-sdk/anthropic';
+import { generateText } from 'ai';
 import { createTrace, logError, getPrompt, processPromptTemplate } from './langfuse-client';
-
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
 
 export interface ContentIdea {
   category: string;
@@ -48,9 +44,10 @@ export async function generateContentIdeas(
     const trace = await createTrace('generate_content_ideas', contentType, {
       bio,
       postDetails,
-      contentType
+      contentType,
+      additionalInstructions
     });
-    
+
     // Skip Langfuse tracking if trace creation failed
     if (!trace) {
       console.warn('Skipping Langfuse tracking due to trace creation failure');
@@ -59,95 +56,79 @@ export async function generateContentIdeas(
     // Create Langfuse generation span
     const generation = await trace?.generation({
       name: 'content_ideas_generation',
-      model: 'gpt-4-turbo',
+      model: 'claude-4-sonnet-20250514',
       modelParameters: {
         temperature: 0.7,
-        max_tokens: 1000
+        max_tokens: 1500
       },
       input: prompt,
     });
 
-    // Call OpenAI API
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an expert LinkedIn content strategist who helps professionals create engaging content ideas tailored to their expertise and goals. Always respond with valid JSON format containing an array of content ideas.'
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
+    console.log('Sending prompt to Anthropic');
+
+    // Call Anthropic API using AI SDK
+    const { text } = await generateText({
+      model: anthropic('claude-4-sonnet-20250514'),
+      system: 'You are a professional content strategist who specializes in creating engaging content ideas for business professionals.',
+      prompt: prompt,
       temperature: 0.7,
-      max_tokens: 1000,
-      response_format: { type: 'json_object' }
     });
 
-    // Parse the response
-    const content = response.choices[0]?.message?.content;
+    // Extract and parse the response
+    const content = text;
+
     if (!content) {
-      generation?.end({ output: null });
-      throw new Error('No content returned from AI');
+      console.error('No content returned from Anthropic');
+      throw new Error('No content returned from AI model');
     }
 
-    console.log('AI response received:', `${content.substring(0, 100)}...`);
-    
-    // Record successful completion in Langfuse
-    generation?.end({ output: content });
+    // Update Langfuse generation with output
+    await generation?.update({
+      output: content,
+    });
+
+    console.log('Raw response from Anthropic:', content);
 
     // Parse the JSON response
-    const parsedContent = JSON.parse(content);
-    
-    // Handle different possible response formats
-    let contentIdeas: ContentIdea[] = [];
-    
-    if (parsedContent.ideas && Array.isArray(parsedContent.ideas)) {
-      contentIdeas = parsedContent.ideas;
-    } else if (Array.isArray(parsedContent)) {
-      contentIdeas = parsedContent;
-    } else if (typeof parsedContent === 'object') {
-      // Try to extract content ideas from the object
-      const possibleArrays = Object.values(parsedContent).filter(val => 
-        Array.isArray(val) && val.length > 0 && 
-        typeof val[0] === 'object' && 'title' in val[0]
-      );
+    let parsedResponse;
+    try {
+      // Clean up the response - remove any markdown formatting
+      const cleanContent = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      parsedResponse = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error('Error parsing Anthropic response as JSON:', parseError);
+      console.log('Raw content that failed to parse:', content);
       
-      if (possibleArrays.length > 0) {
-        contentIdeas = possibleArrays[0] as ContentIdea[];
-      }
+      // Log the error in Langfuse
+      await logError('parse_content_ideas_response', contentType, parseError as Error);
+      
+      throw new Error('Failed to parse AI response as valid JSON');
     }
-    
-    // If we couldn't extract content ideas, return default ones
-    if (contentIdeas.length === 0) {
-      console.warn('Could not extract content ideas from AI response, using defaults');
-      trace?.event({
-        name: 'fallback_to_default',
-        level: 'WARNING'
-      });
-      return getDefaultContentIdeas(contentType);
+
+    if (!parsedResponse.ideas || !Array.isArray(parsedResponse.ideas)) {
+      console.error('Invalid response structure:', parsedResponse);
+      throw new Error('Invalid response structure from AI model');
     }
-    
-    // Ensure all required fields are present
-    const result = contentIdeas.map(idea => ({
-      category: contentType,
-      title: idea.title || `Content idea for ${contentType}`,
-      description: idea.description || 'A compelling content idea tailored to your expertise and audience.',
+
+    // Validate and clean the response
+    const contentIdeas: ContentIdea[] = parsedResponse.ideas.map((idea: any, index: number) => ({
+      category: idea.category || contentType,
+      title: idea.title || `Content Idea ${index + 1}`,
+      description: idea.description || '',
       tag: idea.tag || 'CONTENT'
     }));
-    
-    // End the trace successfully
-    
-    return result;
+
+    console.log('Generated content ideas:', contentIdeas);
+
+    return contentIdeas;
+
   } catch (error) {
-    console.error('Error generating content ideas:', error);
+    console.error('Error in generateContentIdeas:', error);
     
-    // Log error to Langfuse
-    logError('generate_content_ideas_error', contentType, error instanceof Error ? error : String(error));
+    // Log the error in Langfuse
+    await logError('generate_content_ideas', contentType, error as Error);
     
-    // Return default content ideas if there's an error
-    return getDefaultContentIdeas(contentType);
+    throw error;
   }
 }
 

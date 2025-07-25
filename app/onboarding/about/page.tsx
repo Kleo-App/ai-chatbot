@@ -8,14 +8,18 @@ import { useRouter } from "next/navigation"
 import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
 import { checkAndCreateUser } from "@/app/actions/user-actions"
 import { VoiceRecorder } from "@/components/voice-recorder"
+import { LiveTranscription } from "@/components/live-transcription"
 import { toast } from "sonner"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function AboutPage() {
-  const [combinedProfileText, setCombinedProfileText] = useState("")
-  const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [combinedProfileText, setCombinedProfileText] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [originalText, setOriginalText] = useState<string>("");
+  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
   const { goToStep, userProfile, isLoading: isProfileLoading } = useOnboarding();
   const { userId } = useAuth();
   const { user, isLoaded } = useUser();
@@ -148,16 +152,26 @@ export default function AboutPage() {
                 />
                 <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
                   <div className="flex items-center gap-3">
-                    <VoiceRecorder 
+                    <LiveTranscription
+                      onTranscriptionUpdate={(text) => {
+                        // First time receiving text, store the original content
+                        if (!isTranscribing && text.trim()) {
+                          setOriginalText(combinedProfileText || '');
+                          setIsTranscribing(true);
+                        }
+                        
+                        // Only update with the current transcription, replacing the previous transcription
+                        if (isTranscribing && text.trim()) {
+                          setCombinedProfileText(originalText + (originalText ? ' ' : '') + text);
+                        }
+                      }}
                       onTranscriptionComplete={(text) => {
-                        setCombinedProfileText(prev => {
-                          const newContent = prev ? `${prev}\n${text}` : text;
-                          return newContent;
-                        });
-                        toast.success("Voice transcription added!");
-                      }} 
+                        // Reset the transcribing state when done
+                        setIsTranscribing(false);
+                        toast.success("Transcription added!");
+                      }}
                       className="flex items-center"
-                      showText={true}
+                      showText={false}
                     />
                   </div>
                 </div>

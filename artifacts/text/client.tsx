@@ -64,8 +64,8 @@ function TextArtifactContent({
     }
   }, [content]);
 
-  const handleToggleDevice = () => {
-    setDeviceType(prevType => prevType === 'desktop' ? 'mobile' : 'desktop');
+  const handleToggleDevice = (deviceType: 'mobile' | 'desktop') => {
+    setDeviceType(deviceType);
   };
 
   const handleToggleCollapsed = () => {

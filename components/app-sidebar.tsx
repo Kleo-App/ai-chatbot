@@ -57,7 +57,7 @@ export function AppSidebar() {
             alt="Kleo"
             width={28}
             height={28}
-            className="size-7 opacity-90 hover:opacity-100 shrink-0"
+            className="size-7 shrink-0"
           />
         </Link>
       </SidebarHeader>

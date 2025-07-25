@@ -22,11 +22,12 @@ export default async function Page(props: {
     redirect('/login');
   }
 
+  // Always try to get existing chat first
   let chat = await getChatById({ id });
   let document = null;
 
-  // If no chat exists but we have a documentId, create a new chat for editing the document
-  if (!chat && documentId) {
+  // If we have a documentId, fetch the document
+  if (documentId) {
     document = await getDocumentById({ id: documentId });
     
     if (!document) {
@@ -36,12 +37,16 @@ export default async function Page(props: {
     if (document.userId !== userId) {
       return notFound();
     }
+  }
 
-    // Create a new chat for this document
+  // If no chat exists, create one
+  if (!chat) {
+    const title = document ? `Edit: ${document.title}` : 'New Chat';
+    
     await saveChat({
       id,
       userId,
-      title: `Edit: ${document.title}`,
+      title,
       visibility: 'private',
     });
 
@@ -52,23 +57,9 @@ export default async function Page(props: {
     notFound();
   }
 
-  if (chat.visibility === 'private') {
-    if (userId !== chat.userId) {
-      return notFound();
-    }
-  }
-
-  // If we have a documentId but no document yet, fetch it
-  if (documentId && !document) {
-    document = await getDocumentById({ id: documentId });
-    
-    if (!document) {
-      notFound();
-    }
-
-    if (document.userId !== userId) {
-      return notFound();
-    }
+  // Check permissions
+  if (chat.visibility === 'private' && userId !== chat.userId) {
+    return notFound();
   }
 
   // Create a session-like object for compatibility
@@ -79,6 +70,7 @@ export default async function Page(props: {
     },
   };
 
+  // ALWAYS fetch messages for this chat ID, regardless of when the chat was created
   const messagesFromDb = await getMessagesByChatId({
     id,
   });

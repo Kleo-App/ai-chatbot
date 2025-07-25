@@ -228,7 +228,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
           }`}>
             {/* Post Header */}
             <div className="flex flex-row justify-between px-4 pt-3 pb-2">
-              <div className="flex flex-row gap-2">
+              <div className="flex flex-row gap-2 items-center">
                 <div className="relative flex shrink-0 overflow-hidden size-12 rounded-full">
                   {userProfile?.profileImage ? (
                     <Image 

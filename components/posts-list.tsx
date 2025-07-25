@@ -103,13 +103,29 @@ function PostRow({ document }: { document: Document }) {
     }).format(new Date(date));
   };
 
-  const handleRowClick = (e: React.MouseEvent) => {
+  const handleRowClick = async (e: React.MouseEvent) => {
     // Don't navigate if clicking on action buttons
     if ((e.target as HTMLElement).closest('[data-action-button]')) {
       return;
     }
     
-    // Generate a new chat ID and navigate to it with the document
+    try {
+      // Try to find the existing chat that created this document
+      const response = await fetch(`/api/posts/${document.id}/chat`);
+      
+      if (response.ok) {
+        const { chatId } = await response.json();
+        if (chatId) {
+          // Navigate to the existing chat with the document
+          window.location.href = `/chat/${chatId}?documentId=${document.id}`;
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error finding chat for document:', error);
+    }
+    
+    // Fallback: generate a new chat ID if we can't find the original
     const chatId = generateUUID();
     window.location.href = `/chat/${chatId}?documentId=${document.id}`;
   };

@@ -26,6 +26,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
+import { exaSearch } from '@/lib/ai/tools/exa-search';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
@@ -225,6 +226,7 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  'exaSearch',
                 ],
           experimental_transform: smoothStream({ chunking: 'word',  }),
           tools: {
@@ -235,6 +237,7 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
               session,
               dataStream,
             }),
+            exaSearch: exaSearch({ session, dataStream }),
           },
           experimental_telemetry: {
             isEnabled: true,

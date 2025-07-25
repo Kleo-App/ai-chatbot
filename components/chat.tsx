@@ -24,9 +24,6 @@ import { ChatSDKError } from '@/lib/errors';
 import type { Attachment, ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
 import { useSidebar } from './ui/sidebar';
-import { Button } from './ui/button';
-import { AlignJustify } from 'lucide-react';
-import Image from 'next/image';
 
 interface Session {
   user: {

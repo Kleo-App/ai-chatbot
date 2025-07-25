@@ -19,20 +19,21 @@
 ## Features
 
 - [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://sdk.vercel.ai/docs)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
+- React Server Components (RSCs), Suspense, and Server Actions
+- [Vercel AI SDK](https://sdk.vercel.ai/docs) for streaming chat UI
+- Support for multiple LLM providers:
+  - [xAI](https://x.ai) (default)
+  - [OpenAI](https://openai.com)
+  - [Anthropic](https://anthropic.com)
+  - [Cohere](https://cohere.com/)
+  - And [many more](https://sdk.vercel.ai/providers/ai-sdk-providers)
+- **Exa Web Search** - Neural search powered by Exa for finding current, accurate information
+- Document creation and editing with AI
+- Weather information tool
+- Suggestion system for content improvement
 - [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+- Data Persistence with [Vercel Postgres](https://vercel.com/storage/postgres)
+- [NextAuth.js](https://github.com/nextauthjs/next-auth) for authentication
 
 ## Model Providers
 
@@ -46,13 +47,59 @@ You can deploy your own version of the Next.js AI Chatbot to Vercel with one cli
 
 ## Running locally
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+You will need to configure the following environment variables to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
+
+### Required Environment Variables
+
+```bash
+# Anthropic API key for Claude models
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+
+# Authentication secret for Clerk
+AUTH_SECRET=your_auth_secret_here
+
+# Clerk authentication configuration
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key_here
+CLERK_SECRET_KEY=your_clerk_secret_key_here
+
+# Database configuration (PostgreSQL)
+DATABASE_URL=your_postgresql_connection_string_here
+
+# Exa API key for web search functionality
+EXA_API_KEY=your_exa_api_key_here
+```
+
+### Optional Environment Variables
+
+```bash
+# Langfuse for AI observability
+LANGFUSE_SECRET_KEY=your_langfuse_secret_key_here
+LANGFUSE_PUBLIC_KEY=your_langfuse_public_key_here
+LANGFUSE_HOST=https://cloud.langfuse.com
+
+# Deepgram for transcription
+DEEPGRAM_API_KEY=your_deepgram_api_key_here
+
+# LinkedIn integration
+LINKEDIN_CLIENT_ID=your_linkedin_client_id_here
+LINKEDIN_CLIENT_SECRET=your_linkedin_client_secret_here
+
+# Loops for email marketing
+LOOPS_API_KEY=your_loops_api_key_here
+```
 
 > Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
 
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
+### Getting API Keys
+
+1. **Exa API Key**: Sign up at [exa.ai](https://exa.ai) to get your API key for web search functionality
+2. **Anthropic API Key**: Get your API key from [console.anthropic.com](https://console.anthropic.com)
+3. **Clerk Keys**: Set up authentication at [clerk.com](https://clerk.com)
+4. **Database**: Set up a PostgreSQL database (recommended: [Vercel Postgres](https://vercel.com/storage/postgres))
+
+5. Install Vercel CLI: `npm i -g vercel`
+6. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
+7. Download your environment variables: `vercel env pull`
 
 ```bash
 pnpm install

@@ -1,9 +1,9 @@
 "use client";
 
-import { createClient, LiveTranscriptionEvents } from "@deepgram/sdk";
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Mic, Square, Loader2 } from "lucide-react";
+import { io, Socket } from "socket.io-client";
 
 interface LiveTranscriptionProps {
   onTranscriptionUpdate?: (text: string) => void;
@@ -13,7 +13,7 @@ interface LiveTranscriptionProps {
 }
 
 interface TranscriptionResources {
-  connection: any; // Using any to avoid TypeScript issues with Deepgram SDK types
+  socket: Socket;
   mediaRecorder: MediaRecorder;
   audioStream: MediaStream;
 }
@@ -45,6 +45,8 @@ export function LiveTranscription({
   const interimResultRef = useRef<string>("");
   // Use a debounce timer to smooth updates
   const updateTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Socket.io instance reference
+  const socketRef = useRef<Socket | null>(null);
   
   const startTranscription = async () => {
     try {
@@ -55,31 +57,55 @@ export function LiveTranscription({
       accumulatedTranscriptRef.current = "";
       interimResultRef.current = "";
       
-      // Get Deepgram API key from environment variable
-      const deepgramApiKey = process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
-      if (!deepgramApiKey) {
-        setError("Deepgram API key is not configured. Please add NEXT_PUBLIC_DEEPGRAM_API_KEY to your .env.local file.");
+      // Get WebSocket server information from our backend
+      const response = await fetch('/api/transcribe/socket');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || `Failed to get WebSocket info: ${response.status}`;
+        console.error('WebSocket info error:', errorMessage);
+        setError(errorMessage);
         setIsProcessing(false);
         return;
       }
-
-      // Create Deepgram client with API key
-      const deepgram = createClient(deepgramApiKey);
-      const connection = deepgram.listen.live({
-        model: "nova-2",
-        language: "en-US",
-        smart_format: true,
-        interim_results: true,
-        utterance_detection: true,
-        endpointing: 1000, // Use milliseconds for endpointing (1 second pause detection)
-        vad_events: true,
-        punctuate: true,
-        numerals: true,
+      
+      // Get socket URL from response
+      const data = await response.json();
+      const socketUrl = data.socketUrl;
+      
+      if (!socketUrl) {
+        const errorMessage = 'No WebSocket URL received from server';
+        console.error(errorMessage);
+        setError(errorMessage);
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Check server status
+      if (data.status === 'initializing') {
+        console.log('WebSocket server is initializing, waiting...');
+        // Wait a bit and try again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        return startTranscription();
+      }
+      
+      // Parse the URL to get the base URL and path
+      const url = new URL(socketUrl);
+      const baseUrl = `${url.protocol}//${url.host}`;
+      
+      // Create Socket.IO connection
+      const socket = io(baseUrl, {
+        path: url.pathname,
+        transports: ['websocket']
       });
-
-      // Set up connection event handlers
-      connection.on(LiveTranscriptionEvents.Open, async () => {
-        console.log("Deepgram connection opened.");
+      socketRef.current = socket;
+      
+      // Set up socket event handlers
+      socket.on('connect', async () => {
+        console.log('Connected to WebSocket server');
+        
+        // Signal server to start Deepgram connection
+        socket.emit('start');
         
         try {
           // Request microphone access
@@ -90,15 +116,18 @@ export function LiveTranscription({
           
           // Store resources for later cleanup
           resourcesRef.current = {
-            connection,
+            socket,
             mediaRecorder,
             audioStream
           };
           
-          // Set up data handler
+          // Set up data handler to send audio to server
           mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0 && connection.getReadyState() === 1) {
-              connection.send(event.data);
+            if (event.data.size > 0 && socket.connected) {
+              // Convert Blob to ArrayBuffer and send to server
+              event.data.arrayBuffer().then(buffer => {
+                socket.emit('audio', buffer);
+              });
             }
           };
           
@@ -111,11 +140,16 @@ export function LiveTranscription({
           console.error("Error accessing microphone:", err);
           setError("Could not access microphone. Please check permissions.");
           setIsProcessing(false);
-          connection.finish();
+          socket.disconnect();
         }
       });
-
-      connection.on(LiveTranscriptionEvents.Transcript, (data) => {
+      
+      // Handle Deepgram events forwarded by the server
+      socket.on('deepgram:open', () => {
+        console.log("Deepgram connection opened.");
+      });
+      
+      socket.on('deepgram:transcript', (data) => {
         const receivedTranscript = data.channel?.alternatives?.[0]?.transcript || "";
         const isFinal = data.is_final || false;
         const isUtteranceEnd = data.speech_final || false;
@@ -148,8 +182,8 @@ export function LiveTranscription({
           }
         }
       });
-
-      connection.on(LiveTranscriptionEvents.Close, () => {
+      
+      socket.on('deepgram:close', () => {
         console.log("Deepgram connection closed.");
         setIsListening(false);
         setIsProcessing(false);
@@ -159,13 +193,32 @@ export function LiveTranscription({
           onTranscriptionComplete(transcript.trim());
         }
       });
-
-      connection.on(LiveTranscriptionEvents.Error, (err) => {
+      
+      socket.on('deepgram:error', (err) => {
         console.error("Deepgram transcription error:", err);
         setError("Transcription error occurred.");
         setIsListening(false);
         setIsProcessing(false);
       });
+      
+      socket.on('error', (err) => {
+        console.error("Socket error:", err);
+        setError("Connection error occurred.");
+        setIsListening(false);
+        setIsProcessing(false);
+      });
+      
+      socket.on('disconnect', () => {
+        console.log("Disconnected from WebSocket server");
+        setIsListening(false);
+        setIsProcessing(false);
+        
+        // Call the complete callback with the final transcript
+        if (transcript && onTranscriptionComplete) {
+          onTranscriptionComplete(transcript.trim());
+        }
+      });
+      
     } catch (err) {
       console.error("Error starting transcription:", err);
       setError("Could not initialize transcription service.");
@@ -176,7 +229,7 @@ export function LiveTranscription({
   const stopTranscription = () => {
     if (!resourcesRef.current) return;
     
-    const { connection, mediaRecorder, audioStream } = resourcesRef.current;
+    const { socket, mediaRecorder, audioStream } = resourcesRef.current;
     
     // Stop recording
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
@@ -186,11 +239,15 @@ export function LiveTranscription({
     // Stop all tracks
     audioStream.getTracks().forEach((track) => track.stop());
     
-    // Close the connection
-    connection.finish();
+    // Tell server to stop transcription
+    socket.emit('stop');
+    
+    // Disconnect from server
+    socket.disconnect();
     
     // Clear resources
     resourcesRef.current = null;
+    socketRef.current = null;
     
     // Clear any pending update timer
     if (updateTimerRef.current) {
@@ -204,6 +261,10 @@ export function LiveTranscription({
     return () => {
       if (resourcesRef.current) {
         stopTranscription();
+      } else if (socketRef.current) {
+        // In case the socket exists but isn't in resourcesRef
+        socketRef.current.disconnect();
+        socketRef.current = null;
       }
       
       // Additional cleanup for any pending timers

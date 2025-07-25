@@ -3,8 +3,8 @@ import { NextRequest, NextResponse } from 'next/server';
 // This endpoint creates a temporary token for client-side real-time transcription
 export async function GET(request: NextRequest) {
   try {
-    // Get the API key from environment variables - same as the one used in the regular transcribe endpoint
-    const apiKey = process.env.DEEPGRAM_API_KEY;
+    // Get the API key from environment variables
+    const apiKey = process.env.DEEPGRAM_API_KEY || process.env.NEXT_PUBLIC_DEEPGRAM_API_KEY;
     
     if (!apiKey) {
       return NextResponse.json(

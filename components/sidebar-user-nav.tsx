@@ -25,6 +25,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { getUserProfile, updateProfileInfo } from '@/app/actions/profile-actions';
 import type { UserProfile } from '@/lib/db/schema-profile';
 import { useArtifact } from '@/hooks/use-artifact';
+import { UserAnalytics } from '@/components/user-analytics';
+
 
 
 export function SidebarUserNav() {
@@ -644,6 +646,11 @@ export function SidebarUserNav() {
                         )}
                       </Button>
                     </div>
+                  </div>
+                  
+                  {/* Analytics Section */}
+                  <div className="border-t pt-6">
+                    <UserAnalytics userId={user?.id} />
                   </div>
                 </div>
               )}

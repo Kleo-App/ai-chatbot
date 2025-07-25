@@ -23,6 +23,10 @@ import { useAutoResume } from '@/hooks/use-auto-resume';
 import { ChatSDKError } from '@/lib/errors';
 import type { Attachment, ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import { useSidebar } from './ui/sidebar';
+import { Button } from './ui/button';
+import { AlignJustify } from 'lucide-react';
+import Image from 'next/image';
 
 interface Session {
   user: {
@@ -65,6 +69,7 @@ export function Chat({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
   const dragCounterRef = useRef(0);
+  const { toggleSidebar } = useSidebar();
 
   const {
     messages,
@@ -411,12 +416,24 @@ export function Chat({
     <>
       <div 
         className="flex flex-col min-w-0 h-dvh bg-white relative @container/nav"
-        style={{ minHeight: '100vh', width: '100vw', position: 'fixed', top: 0, left: 0, zIndex: 0 }}
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
+        {/* Mobile Header with Hamburger Menu */}
+        <div className="md:hidden sticky top-0 z-30 flex items-center h-14 pl-2 pr-4 bg-white/95 backdrop-blur-sm">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={toggleSidebar}
+            aria-label="Toggle Sidebar"
+          >
+            <AlignJustify className="h-7 w-7" />
+          </Button>
+        </div>
+
         {/* File drop overlay */}
         {isDragging && (
           <motion.div 

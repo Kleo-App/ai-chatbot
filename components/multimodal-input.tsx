@@ -87,7 +87,7 @@ function PureMultimodalInput({
   const resetHeight = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = '110px'; // Match min-h-[110px]
+      textareaRef.current.style.height = '80px'; // Match min-h-[80px]
       textareaRef.current.style.overflowY = 'hidden';
     }
   };
@@ -221,7 +221,7 @@ function PureMultimodalInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute left-1/2 bottom-32 -translate-x-1/2 z-50"
+            className="absolute left-1/2 bottom-80 -translate-x-1/2 z-50"
           >
             <Button
               data-testid="scroll-to-bottom-button"
@@ -258,7 +258,7 @@ function PureMultimodalInput({
 
       <div className="relative bg-transparent border border-transparent rounded-2xl transition-all duration-150 ease-in-out">
         {/* Original input design for all contexts */}
-        <div className="relative bg-white border border-blue-100 rounded-2xl shadow-xl focus-within:shadow-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white focus-within:ring-black focus-within:border-transparent transition-all duration-200">
+        <div className="relative bg-white border border-blue-100 rounded-2xl shadow-xl focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-offset-white focus-within:ring-black focus-within:border-transparent transition-all duration-200">
           {/* Image previews at the top of input */}
           {(attachments.length > 0 || uploadQueue.length > 0) && (
             <div className="px-4 pt-4 pb-2">
@@ -295,7 +295,7 @@ function PureMultimodalInput({
             value={input}
             onChange={handleInput}
             className={cx(
-              'rounded-t-2xl min-h-[110px] max-h-[240px] overflow-y-auto resize-none !text-base bg-transparent border-none px-4 pb-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
+              'rounded-t-2xl min-h-[80px] max-h-[240px] overflow-y-auto resize-none !text-base bg-transparent border-none px-4 pb-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
               (attachments.length > 0 || uploadQueue.length > 0) ? 'pt-2' : 'py-4',
               className,
             )}
@@ -320,7 +320,7 @@ function PureMultimodalInput({
           />
 
           {/* Footer area to separate text from buttons */}
-          <div className="relative h-12 bg-transparent border-t border-gray-100 rounded-b-2xl">
+          <div className="relative h-12 bg-transparent rounded-b-2xl">
             {/* Attachment button */}
             <div className="absolute bottom-2 left-2">
               <AttachmentsButton fileInputRef={fileInputRef} status={status} />

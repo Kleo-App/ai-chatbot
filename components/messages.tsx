@@ -55,11 +55,11 @@ function PureMessages({
     <div
       ref={messagesContainerRef}
       className={`flex flex-col min-w-0 gap-6 flex-1 pt-4 relative bg-white ${
-        messages.length === 0 ? 'items-center justify-center -mt-16' : 'overflow-y-scroll pb-4'
+        messages.length === 0 ? 'items-center justify-center -mt-16 md:-mt-16' : 'overflow-y-scroll pb-4 px-4'
       }`}
     >
       {messages.length === 0 && formElement && (
-        <div className="w-full max-w-3xl mx-auto flex flex-col items-center">
+        <div className="w-full max-w-3xl mx-auto px-4 flex flex-col items-center">
           {/* Logo above chat input */}
           <div className="mb-8">
             <Image

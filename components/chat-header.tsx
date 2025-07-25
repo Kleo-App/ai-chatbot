@@ -109,9 +109,24 @@ function PureChatHeader({
     });
   };
 
-  // Don't render the header if there are no messages
+  // If no messages, show minimal header with just hamburger menu on mobile
   if (!hasMessages) {
-    return null;
+    return (
+      <div className="h-12 top-0 sticky z-10 flex flex-row items-start justify-start w-full md:hidden">
+        <div className="w-full flex flex-row items-center px-4 pt-2">
+          {/* Mobile Sidebar Toggle - Only visible on mobile when no messages */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            aria-label="Toggle Sidebar"
+            onClick={toggleSidebar}
+          >
+            <AlignJustify className="h-7 w-7" />
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   return (

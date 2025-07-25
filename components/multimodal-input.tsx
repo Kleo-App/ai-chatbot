@@ -221,7 +221,7 @@ function PureMultimodalInput({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
             transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="absolute left-1/2 bottom-80 -translate-x-1/2 z-50"
+            className="absolute left-1/2 bottom-40 md:bottom-40 -translate-x-1/2 z-50"
           >
             <Button
               data-testid="scroll-to-bottom-button"
@@ -295,7 +295,7 @@ function PureMultimodalInput({
             value={input}
             onChange={handleInput}
             className={cx(
-              'rounded-t-2xl min-h-[80px] max-h-[240px] overflow-y-auto resize-none !text-base bg-transparent border-none px-4 pb-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
+              'rounded-t-2xl min-h-[80px] max-h-[240px] overflow-y-auto resize-none !text-base bg-white border-none px-4 pb-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-transparent focus:shadow-none scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent',
               (attachments.length > 0 || uploadQueue.length > 0) ? 'pt-2' : 'py-4',
               className,
             )}

@@ -421,19 +421,6 @@ export function Chat({
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        {/* Mobile Header with Hamburger Menu */}
-        <div className="md:hidden sticky top-0 z-30 flex items-center h-14 pl-2 pr-4 bg-white/95 backdrop-blur-sm">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10 rounded-full"
-            onClick={toggleSidebar}
-            aria-label="Toggle Sidebar"
-          >
-            <AlignJustify className="h-7 w-7" />
-          </Button>
-        </div>
-
         {/* File drop overlay */}
         {isDragging && (
           <motion.div 

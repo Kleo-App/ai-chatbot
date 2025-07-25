@@ -1,6 +1,6 @@
 export function Background() {
   return (
-    <div className="fixed inset-0 size-full bg-gradient-to-br from-white via-blue-50/60 to-purple-50/40 transition-none -z-10 overflow-hidden">
+    <div className="fixed inset-0 size-full bg-background transition-none -z-10 overflow-hidden">
       {/* Colorful orbs for visual interest */}
       <div className="absolute top-20 left-10 size-64 bg-gradient-to-r from-blue-200/30 to-cyan-200/30 rounded-full blur-3xl animate-pulse" />
       <div className="absolute top-40 right-20 size-48 bg-gradient-to-r from-purple-200/30 to-pink-200/30 rounded-full blur-3xl animate-pulse delay-1000" />

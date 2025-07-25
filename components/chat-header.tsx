@@ -1,7 +1,7 @@
 'use client';
 import { useRouter } from 'next/navigation';
 import { useWindowSize } from 'usehooks-ts';
-import { Pin, MoreHorizontal, SquarePen } from 'lucide-react';
+import { Pin, MoreHorizontal, SquarePen, AlignJustify } from 'lucide-react';
 import Link from 'next/link';
 import { useState, memo } from 'react';
 import { toast } from 'sonner';
@@ -60,7 +60,7 @@ function PureChatHeader({
   onPin?: (pinned: boolean) => void;
 }) {
   const router = useRouter();
-  const { open } = useSidebar();
+  const { open, toggleSidebar } = useSidebar();
   const { width: windowWidth } = useWindowSize();
   
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -116,9 +116,22 @@ function PureChatHeader({
 
   return (
     <>
-      <div className="h-24 top-0 @[80rem]/nav:h-0 @[80rem]/nav:top-8 sticky z-10 flex flex-row items-start justify-center w-full bg-gradient-to-b from-background via-background via-60% to-transparent @[80rem]/nav:from-transparent @[80rem]/nav:via-transparent -mb-10">
+      <div className="h-24 top-0 @[80rem]/nav:h-0 @[80rem]/nav:top-8 sticky z-10 flex flex-row items-start justify-center w-full bg-gradient-to-b from-white via-white via-60% to-transparent @[80rem]/nav:from-transparent @[80rem]/nav:via-transparent -mb-10">
       <div className="w-full flex flex-row items-center justify-between px-4 pt-2">
-        <div className="flex flex-row items-center" />
+        {/* Mobile Sidebar Toggle - Left Side */}
+        <div className="flex flex-row items-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden h-10 w-10 rounded-full"
+            aria-label="Toggle Sidebar"
+            onClick={toggleSidebar}
+          >
+            <AlignJustify className="h-7 w-7" />
+          </Button>
+        </div>
+        
+        {/* Action Buttons - Right Side */}
         <div className="flex flex-row items-center gap-0.5">
           {/* New Chat Button */}
           <TooltipProvider>

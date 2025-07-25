@@ -347,7 +347,7 @@ function PureArtifact({
 
           {!isMobile && (
             <motion.div
-              className="relative w-2/5 bg-muted dark:bg-background h-dvh shrink-0"
+              className="relative w-2/5 bg-white h-dvh shrink-0"
               initial={{ opacity: 0, x: 10, scale: 1 }}
               animate={{
                 opacity: 1,
@@ -382,7 +382,7 @@ function PureArtifact({
                 {viewMode === 'chat' ? (
                   <>
                     {/* Chat Header with Back/Toggle Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 
@@ -435,7 +435,7 @@ function PureArtifact({
                         setAttachments={setAttachments}
                         messages={messages}
                         sendMessage={sendMessage}
-                        className="bg-background dark:bg-muted"
+                        className="bg-white dark:bg-white"
                         setMessages={setMessages}
                         selectedVisibilityType={selectedVisibilityType}
                         isArtifactContext={true}
@@ -446,7 +446,7 @@ function PureArtifact({
                 ) : (
                   <>
                     {/* Editor Header with Back Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6 border-b">
+                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
                       <div className="flex items-center gap-3">
                         {isLinkedInPost && (
                           <Button 
@@ -485,7 +485,7 @@ function PureArtifact({
           )}
 
           <motion.div
-            className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll md:border-l dark:border-zinc-700 border-zinc-200"
+            className="fixed bg-white h-dvh flex flex-col overflow-y-scroll"
             initial={
               isMobile
                 ? {
@@ -592,7 +592,7 @@ function PureArtifact({
               </div>
             )}
 
-            <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">
+            <div className="bg-white h-full overflow-y-scroll !max-w-full items-center">
               <artifactDefinition.content
                 title={artifact.title}
                 content={

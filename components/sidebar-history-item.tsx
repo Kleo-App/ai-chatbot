@@ -120,7 +120,7 @@ const PureChatItem = ({
       <Link 
         href={`/chat/${chat.id}`} 
         onClick={() => setOpenMobile(false)}
-        className="peer/menu-button flex items-center gap-2 overflow-hidden rounded-xl text-left outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-1 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 [&>span:last-child]:truncate [&>svg]:shrink-0 hover:text-primary text-sm h-[36px] border-transparent hover:bg-muted/50 data-[state=open]:hover:bg-muted/50 active:bg-muted data-[active=true]:bg-muted aria-expanded:bg-muted/50 group/conversation-item pl-3 pr-1.5 py-1 text-sm w-full flex flex-row text-muted-foreground"
+        className="peer/menu-button flex items-center gap-2 overflow-hidden rounded-xl text-left outline-none ring-sidebar-ring transition-[width,height,padding] focus-visible:ring-1 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 [&>span:last-child]:truncate [&>svg]:shrink-0 text-sm h-[36px] border-transparent sidebar-menu-hover data-[state=open]:sidebar-menu-hover active:sidebar-menu-active data-[active=true]:sidebar-menu-active aria-expanded:sidebar-menu-active group/conversation-item pl-3 pr-1.5 py-1 text-sm w-full flex flex-row text-muted-foreground"
         data-sidebar="menu-button"
         data-active={isActive}
         tabIndex={-1}
@@ -136,7 +136,7 @@ const PureChatItem = ({
         <DropdownMenu open={open} onOpenChange={setOpen} modal={true}>
           <DropdownMenuTrigger asChild>
             <button
-              className={`items-center justify-center gap-2 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none hover:bg-muted/50 disabled:hover:bg-transparent border border-transparent size-6 rounded-full text-muted-foreground ${buttonVisible ? 'flex' : 'hidden group-hover/conversation-item:flex'}`}
+              className={`items-center justify-center gap-2 whitespace-nowrap text-sm font-medium leading-[normal] cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-60 disabled:cursor-not-allowed transition-colors duration-100 [&_svg]:shrink-0 select-none sidebar-menu-hover disabled:hover:bg-transparent border border-transparent size-6 rounded-full text-muted-foreground ${buttonVisible ? 'flex' : 'hidden group-hover/conversation-item:flex'}`}
               type="button"
               aria-haspopup="menu"
               aria-expanded="false"

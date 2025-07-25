@@ -161,7 +161,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
   const outerClass = isModal 
     ? "relative flex flex-col"
-    : "border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-full";
+    : "border-divider dark:bg-content2 relative flex flex-col rounded-xl border bg-[#f4f2ee] overflow-hidden min-h-0 h-[calc(100%-1rem)] m-2";
   return (
     <div className={outerClass}>
       {showHeader && (
@@ -222,8 +222,8 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
       {/* LinkedIn Post Preview */}
       <div className={isModal ? "" : "flex-1 overflow-y-auto p-6 min-h-0"}>
-        <div className="mx-auto max-w-2xl">
-          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto ${deviceType === 'mobile' ? 'w-[375px]' : 'w-[552px]'}`}>
+        <div className="mx-auto w-full px-4 md:max-w-2xl md:px-0">
+          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto w-full max-w-[375px] md:max-w-[552px]`}>
             {/* Post Header */}
             <div className="flex flex-row justify-between px-4 pt-3 pb-2">
               <div className="flex flex-row gap-2">

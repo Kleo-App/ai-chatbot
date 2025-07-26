@@ -3,6 +3,7 @@ import type { getWeather } from './ai/tools/get-weather';
 import type { createDocument } from './ai/tools/create-document';
 import type { updateDocument } from './ai/tools/update-document';
 import type { requestSuggestions } from './ai/tools/request-suggestions';
+import type { exaSearch } from './ai/tools/exa-search';
 import type { linkedInHookSelector } from './ai/tools/linkedin-hook-selector';
 import type { InferUITool, UIMessage } from 'ai';
 
@@ -25,6 +26,7 @@ type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
 type requestSuggestionsTool = InferUITool<
   ReturnType<typeof requestSuggestions>
 >;
+type exaSearchTool = InferUITool<ReturnType<typeof exaSearch>>;
 type linkedInHookSelectorTool = InferUITool<
   ReturnType<typeof linkedInHookSelector>
 >;
@@ -34,6 +36,7 @@ export type ChatTools = {
   createDocument: createDocumentTool;
   updateDocument: updateDocumentTool;
   requestSuggestions: requestSuggestionsTool;
+  exaSearch: exaSearchTool;
   linkedInHookSelector: linkedInHookSelectorTool;
 };
 

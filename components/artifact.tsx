@@ -50,6 +50,11 @@ export interface UIArtifact {
     width: number;
     height: number;
   };
+  linkedInHooks?: Array<{
+    id: number;
+    source: string;
+    content: string;
+  }>;
 }
 
 function PureArtifact({
@@ -472,6 +477,12 @@ function PureArtifact({
                        </Button>
                     </div>
                     <div className="flex-1 overflow-hidden">
+                      {/* Debug LinkedIn hooks in artifact */}
+                      {(() => {
+                        console.log('[artifact.tsx] LinkedIn hooks before passing to editor:', JSON.stringify(artifact.linkedInHooks));
+                        console.log('[artifact.tsx] LinkedIn hooks length:', artifact.linkedInHooks?.length);
+                        return null;
+                      })()}
                       <LinkedInPostEditor
                         content={isCurrentVersion ? getTextContentFromArtifact(artifact.content) : getTextContentFromArtifact(getDocumentContentById(currentVersionIndex))}
                         onContentChange={handleEditorContentChange}

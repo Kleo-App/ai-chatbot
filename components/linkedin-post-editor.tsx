@@ -3,7 +3,9 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import { default as StarterKit } from '@tiptap/starter-kit';
 import { Button } from './ui/button';
-import { memo, useEffect } from 'react';
+import { memo, useEffect, useState } from 'react';
+import { LinkedInHookSelector } from './linkedin-hook-selector';
+import { useArtifact } from '@/hooks/use-artifact';
 
 interface LinkedInPostEditorProps {
   content: string;
@@ -16,6 +18,10 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   onContentChange,
   onToggleView,
 }: LinkedInPostEditorProps) {
+  const { artifact } = useArtifact();
+  console.log('[linkedin-post-editor.tsx] Current artifact:', JSON.stringify(artifact));
+  console.log('[linkedin-post-editor.tsx] LinkedIn hooks in artifact:', JSON.stringify(artifact.linkedInHooks));
+  const [selectedHook, setSelectedHook] = useState<number | null>(null);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -102,8 +108,49 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
     return null;
   }
 
+  // Handle hook selection
+  const handleHookSelect = (hook: { id: number, source: string, content: string }) => {
+    console.log('[linkedin-post-editor.tsx] LinkedIn hook selected:', JSON.stringify(hook));
+    setSelectedHook(hook.id);
+    
+    // Insert the hook at the beginning of the content
+    if (editor) {
+      // Clear the editor first
+      editor.commands.clearContent();
+      
+      // Insert the hook text
+      editor.commands.setContent(`<p>${hook.content}</p><p></p>`);
+      
+      // Focus at the end
+      editor.commands.focus('end');
+    }
+  };
+
   return (
     <div className="flex flex-col h-full bg-background">
+      {/* LinkedIn Hook Selector */}
+      
+      
+      {/* Log debugging information */}
+      {(() => {
+        console.log('[linkedin-post-editor.tsx] Rendering hook selector section');
+        console.log('[linkedin-post-editor.tsx] artifact.linkedInHooks exists:', !!artifact.linkedInHooks);
+        console.log('[linkedin-post-editor.tsx] artifact.linkedInHooks length:', artifact.linkedInHooks?.length);
+        console.log('[linkedin-post-editor.tsx] selectedHook:', selectedHook);
+        return null;
+      })()}
+      {artifact.linkedInHooks && artifact.linkedInHooks.length > 0 && !selectedHook && (
+        <div className="p-4 border-b">
+          <h3 className="text-lg font-semibold mb-2">Choose a hook for your LinkedIn post</h3>
+          <p className="text-gray-600 text-sm mb-4">The hook is the first thing your audience will see.</p>
+          <LinkedInHookSelector
+            hooks={artifact.linkedInHooks}
+            onHookSelect={handleHookSelect}
+            isReadonly={false}
+          />
+        </div>
+      )}
+      
       {/* Formatting Toolbar */}
       <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
         {/* Clear Content */}

@@ -4,6 +4,7 @@ import type { createDocument } from './ai/tools/create-document';
 import type { updateDocument } from './ai/tools/update-document';
 import type { requestSuggestions } from './ai/tools/request-suggestions';
 import type { exaSearch } from './ai/tools/exa-search';
+import type { linkedInHookSelector } from './ai/tools/linkedin-hook-selector';
 import type { InferUITool, UIMessage } from 'ai';
 
 import type { ArtifactKind } from '@/components/artifact';
@@ -26,6 +27,9 @@ type requestSuggestionsTool = InferUITool<
   ReturnType<typeof requestSuggestions>
 >;
 type exaSearchTool = InferUITool<ReturnType<typeof exaSearch>>;
+type linkedInHookSelectorTool = InferUITool<
+  ReturnType<typeof linkedInHookSelector>
+>;
 
 export type ChatTools = {
   getWeather: weatherTool;
@@ -33,6 +37,7 @@ export type ChatTools = {
   updateDocument: updateDocumentTool;
   requestSuggestions: requestSuggestionsTool;
   exaSearch: exaSearchTool;
+  linkedInHookSelector: linkedInHookSelectorTool;
 };
 
 export type CustomUIDataTypes = {
@@ -45,6 +50,11 @@ export type CustomUIDataTypes = {
   id: string;
   title: string;
   kind: ArtifactKind;
+  'linkedin-hooks': Array<{
+    id: number;
+    source: string;
+    content: string;
+  }>;
   clear: null;
   finish: null;
 };

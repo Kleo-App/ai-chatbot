@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { artifactDefinitions } from './artifact';
 import { initialArtifactData, useArtifact } from '@/hooks/use-artifact';
 import { useDataStream } from './data-stream-provider';
+import { UIArtifact } from './artifact';
 
 export function DataStreamHandler() {
   const { dataStream } = useDataStream();
@@ -69,6 +70,31 @@ export function DataStreamHandler() {
               ...draftArtifact,
               status: 'idle',
             };
+            
+          case 'data-linkedin-hooks':
+            console.log('[DataStreamHandler] Processing LinkedIn hooks:', JSON.stringify(delta.data));
+            console.log('[DataStreamHandler] Hook data type:', typeof delta.data);
+            console.log('[DataStreamHandler] Hook data is array:', Array.isArray(delta.data));
+            
+            if (Array.isArray(delta.data)) {
+              console.log('[DataStreamHandler] Number of hooks:', delta.data.length);
+              delta.data.forEach((hook, index) => {
+                console.log(`[DataStreamHandler] Hook ${index + 1}:`, JSON.stringify(hook));
+                console.log(`[DataStreamHandler] Hook ${index + 1} has id:`, hook.id);
+                console.log(`[DataStreamHandler] Hook ${index + 1} has source:`, hook.source);
+                console.log(`[DataStreamHandler] Hook ${index + 1} has content:`, hook.content);
+              });
+            }
+            
+            // Store the hooks in the artifact data for rendering
+            const updatedArtifact: UIArtifact = {
+              ...draftArtifact,
+              linkedInHooks: delta.data,
+              status: 'streaming' as const,
+            };
+            
+            console.log('[DataStreamHandler] Updated artifact with hooks:', JSON.stringify(updatedArtifact.linkedInHooks));
+            return updatedArtifact;
 
           default:
             return draftArtifact;

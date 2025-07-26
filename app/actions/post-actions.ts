@@ -3,6 +3,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { generatePostIdeas, type PostIdea } from '@/lib/ai/post-generator';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
+import { storePostAnalyticsBackground, analyzePostStructure } from '@/lib/mem0Utils';
 
 /**
  * Get or generate LinkedIn post ideas for the current user
@@ -42,7 +43,7 @@ export async function getOrGeneratePosts(): Promise<{ success: boolean; posts?: 
 /**
  * Save the user's preferred post
  */
-export async function savePreferredPost(postContent: string): Promise<{ success: boolean; error?: string }> {
+export async function savePreferredPost(postContent: string, availablePosts?: PostIdea[], topic?: string): Promise<{ success: boolean; error?: string }> {
   try {
     const { userId } = await auth();
     
@@ -51,6 +52,73 @@ export async function savePreferredPost(postContent: string): Promise<{ success:
     }
     
     await updateUserProfile(userId, { preferredPost: postContent });
+    
+    // Store post analytics in background (non-blocking)
+    if (postContent) {
+      // Analyze post and store analytics in background
+      analyzePostStructure(postContent).then(analysis => {
+        // Extract the hook (first line/sentence)
+        const lines = postContent.split('\n').filter(line => line.trim().length > 0);
+        const selectedHook = lines[0] || postContent.substring(0, 100);
+        
+        storePostAnalyticsBackground(
+          userId,
+          {
+            selectedHook,
+            tone: analysis.tone,
+            structure: analysis.structure,
+            endingSentence: analysis.endingSentence,
+            fullContent: postContent,
+            wordCount: postContent.split(/\s+/).length,
+            publishedToLinkedIn: false,
+            keywordDensity: analysis.keywordDensity,
+            topIndustry: analysis.topIndustry,
+            industryFitScore: analysis.industryFitScore,
+            detectedKeywords: analysis.detectedKeywords,
+            ctaCount: analysis.ctaCount,
+            ctaStrength: analysis.ctaStrength,
+            ctaPlacement: analysis.ctaPlacement,
+            detectedCTAs: analysis.detectedCTAs,
+          },
+          {
+            topic: topic || 'post_selection',
+            generatedOptions: availablePosts?.length || 0,
+            selectionReason: 'user_selected_from_options',
+          }
+        );
+      }).catch(error => {
+        console.error('Failed to analyze post for analytics:', error);
+        // Even if analysis fails, store basic analytics
+        const lines = postContent.split('\n').filter(line => line.trim().length > 0);
+        const selectedHook = lines[0] || postContent.substring(0, 100);
+        
+        storePostAnalyticsBackground(
+          userId,
+          {
+            selectedHook,
+            tone: 'unknown',
+            structure: 'unknown',
+            endingSentence: '',
+            fullContent: postContent,
+            wordCount: postContent.split(/\s+/).length,
+            publishedToLinkedIn: false,
+            keywordDensity: {},
+            topIndustry: 'general',
+            industryFitScore: 0,
+            detectedKeywords: [],
+            ctaCount: 0,
+            ctaStrength: 0,
+            ctaPlacement: 'none',
+            detectedCTAs: [],
+          },
+          {
+            topic: topic || 'post_selection',
+            generatedOptions: availablePosts?.length || 0,
+            selectionReason: 'user_selected_from_options',
+          }
+        );
+      });
+    }
     
     return { success: true };
   } catch (error) {

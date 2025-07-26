@@ -7,6 +7,8 @@ import { LinkedInPostPreview } from './linkedin-post-preview';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useArtifact } from '@/hooks/use-artifact';
+import { useAuth } from '@clerk/nextjs';
+import { storePostAnalyticsBackground, analyzePostStructure } from '@/lib/mem0Utils';
 
 interface LinkedInPublishModalProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export function LinkedInPublishModal({
   uploadedImages = [],
 }: LinkedInPublishModalProps) {
   const { artifact } = useArtifact();
+  const { userId } = useAuth();
   const [isConnected, setIsConnected] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
@@ -82,6 +85,71 @@ export function LinkedInPublishModal({
 
       if (!response.ok) {
         throw new Error('Failed to publish post');
+      }
+
+      // Store post analytics in background (non-blocking)
+      if (userId) {
+        // Analyze post and store analytics in background
+        analyzePostStructure(content).then(analysis => {
+          // Extract the hook (first line/sentence)
+          const lines = content.split('\n').filter(line => line.trim().length > 0);
+          const selectedHook = lines[0] || content.substring(0, 100);
+          
+          storePostAnalyticsBackground(
+            userId,
+            {
+              selectedHook,
+              tone: analysis.tone,
+              structure: analysis.structure,
+              endingSentence: analysis.endingSentence,
+              fullContent: content,
+              wordCount: content.split(/\s+/).length,
+              publishedToLinkedIn: true,
+              keywordDensity: analysis.keywordDensity,
+              topIndustry: analysis.topIndustry,
+              industryFitScore: analysis.industryFitScore,
+              detectedKeywords: analysis.detectedKeywords,
+              ctaCount: analysis.ctaCount,
+              ctaStrength: analysis.ctaStrength,
+              ctaPlacement: analysis.ctaPlacement,
+              detectedCTAs: analysis.detectedCTAs,
+            },
+            {
+              topic: 'linkedin_publish',
+              selectionReason: 'user_published_post',
+            }
+          );
+        }).catch(error => {
+          console.error('Failed to analyze post for analytics:', error);
+          // Even if analysis fails, store basic analytics
+          const lines = content.split('\n').filter(line => line.trim().length > 0);
+          const selectedHook = lines[0] || content.substring(0, 100);
+          
+          storePostAnalyticsBackground(
+            userId,
+            {
+              selectedHook,
+              tone: 'unknown',
+              structure: 'unknown',
+              endingSentence: '',
+              fullContent: content,
+              wordCount: content.split(/\s+/).length,
+              publishedToLinkedIn: true,
+              keywordDensity: {},
+              topIndustry: 'general',
+              industryFitScore: 0,
+              detectedKeywords: [],
+              ctaCount: 0,
+              ctaStrength: 0,
+              ctaPlacement: 'none',
+              detectedCTAs: [],
+            },
+            {
+              topic: 'linkedin_publish',
+              selectionReason: 'user_published_post',
+            }
+          );
+        });
       }
 
       toast.success('Post published to LinkedIn!');

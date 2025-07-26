@@ -152,9 +152,9 @@ export default function KleoHookSelector() {
       
       hookToSave = selectedHookContent
       
-      // Save the preferred hook
+      // Save the preferred hook with available options for memory storage
       console.log('Saving hook:', hookToSave)
-      const saveResult = await savePreferredHook(hookToSave)
+      const saveResult = await savePreferredHook(hookToSave, hookOptions)
       console.log('Save result:', saveResult)
       
       if (!saveResult.success) {

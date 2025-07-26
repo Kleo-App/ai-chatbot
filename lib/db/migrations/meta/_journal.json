@@ -176,6 +176,13 @@
       "when": 1753162532517,
       "tag": "0024_good_miracleman",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1753293775021,
+      "tag": "0025_broad_lethal_legion",
+      "breakpoints": true
     }
   ]
 }

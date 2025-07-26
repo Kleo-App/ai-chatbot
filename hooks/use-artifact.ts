@@ -17,6 +17,7 @@ export const initialArtifactData: UIArtifact = {
     width: 0,
     height: 0,
   },
+  linkedInHooks: [],
 };
 
 type Selector<T> = (state: UIArtifact) => T;

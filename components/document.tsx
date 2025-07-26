@@ -9,6 +9,7 @@ const getActionText = (
   type: 'create' | 'update' | 'request-suggestions',
   tense: 'present' | 'past',
 ) => {
+  console.log(type);
   switch (type) {
     case 'create':
       return tense === 'present' ? 'Creating' : 'Created';

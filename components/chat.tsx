@@ -23,6 +23,7 @@ import { useAutoResume } from '@/hooks/use-auto-resume';
 import { ChatSDKError } from '@/lib/errors';
 import type { Attachment, ChatMessage } from '@/lib/types';
 import { useDataStream } from './data-stream-provider';
+import { useSidebar } from './ui/sidebar';
 
 interface Session {
   user: {
@@ -369,6 +370,7 @@ export function Chat({
     initialMessages,
     resumeStream,
     setMessages,
+    sendMessage,
   });
 
   // Auto-open document artifact if initialDocument is provided

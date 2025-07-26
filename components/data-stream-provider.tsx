@@ -36,5 +36,30 @@ export function useDataStream() {
   if (!context) {
     throw new Error('useDataStream must be used within a DataStreamProvider');
   }
+  
+  // Add event listener for append-message events
+  React.useEffect(() => {
+    const handleAppendMessage = (event: CustomEvent<{ message: string }>) => {
+      console.log('[data-stream-provider] Append message event received:', event.detail.message);
+      context.setDataStream(prev => [
+        ...prev,
+        {
+          type: 'data-appendMessage',
+          data: event.detail.message,
+          transient: true
+        }
+      ]);
+      console.log('[data-stream-provider] Updated data stream with append message');
+    };
+    
+    // Add event listener
+    document.addEventListener('append-message', handleAppendMessage as EventListener);
+    
+    // Clean up
+    return () => {
+      document.removeEventListener('append-message', handleAppendMessage as EventListener);
+    };
+  }, [context]);
+  
   return context;
 }

@@ -244,6 +244,42 @@ const DocumentContent = ({ document }: { document: Document }) => {
     },
   );
 
+  // Helper function to safely extract text content from document
+  const getTextContent = (content: any): string => {
+    // If content is null or undefined, return empty string
+    if (content === null || content === undefined) {
+      return '';
+    }
+    
+    // If content is already a string
+    if (typeof content === 'string') {
+      // Try to parse it if it looks like JSON
+      if (content.trim().startsWith('{') && content.includes('"text":')) {
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed && typeof parsed === 'object' && 'text' in parsed && typeof parsed.text === 'string') {
+            return parsed.text;
+          }
+        } catch (e) {
+          // If parsing fails, use the original string
+          return content;
+        }
+      }
+      return content;
+    }
+    
+    // If content is an object
+    if (typeof content === 'object') {
+      // Check if it has a text property that's a string
+      if ('text' in content && typeof content.text === 'string') {
+        return content.text;
+      }
+    }
+    
+    // Last resort: stringify the object but only if it's not null
+    return content ? JSON.stringify(content) : '';
+  };
+
   // Construct user profile from Clerk user data
   const userProfile = user ? {
     fullName: user.firstName && user.lastName 
@@ -261,7 +297,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
         // Show LinkedIn post preview for text documents
         <div className="h-full">
           <LinkedInPostPreview
-            content={document.content || ''}
+            content={getTextContent(document.content)}
             userProfile={userProfile}
             deviceType="desktop"
             showShareButton={false}
@@ -272,7 +308,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
       ) : document.kind === 'image' ? (
         <ImageEditor
           title={document.title}
-          content={document.content ?? ''}
+          content={getTextContent(document.content)}
           isCurrentVersion={true}
           currentVersionIndex={0}
           status={artifact.status}

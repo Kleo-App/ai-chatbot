@@ -22,7 +22,7 @@ interface LinkedInPostPreviewProps {
     fullName?: string;
     profileImage?: string;
   };
-  onToggleDevice?: () => void;
+  onToggleDevice?: (deviceType: 'mobile' | 'desktop') => void;
   deviceType?: 'mobile' | 'desktop';
   isCollapsed?: boolean;
   onToggleCollapsed?: () => void;
@@ -238,10 +238,12 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
       {/* LinkedIn Post Preview */}
       <div className={isModal ? "" : "flex-1 overflow-y-auto p-6 min-h-0"}>
         <div className="mx-auto w-full px-4 md:max-w-2xl md:px-0">
-          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto w-full max-w-[375px] md:max-w-[552px]`}>
+          <div className={`bg-white rounded-lg border border-foreground/20 shadow-sm mx-auto w-full ${
+            deviceType === 'mobile' ? 'max-w-[375px]' : 'max-w-[552px]'
+          }`}>
             {/* Post Header */}
             <div className="flex flex-row justify-between px-4 pt-3 pb-2">
-              <div className="flex flex-row gap-2">
+              <div className="flex flex-row gap-2 items-center">
                 <div className="relative flex shrink-0 overflow-hidden size-12 rounded-full">
                   {userProfile?.profileImage ? (
                     <Image 
@@ -276,7 +278,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     variant="ghost" 
                     size="sm" 
                     className={`size-6 p-0 ${deviceType === 'mobile' ? 'bg-primary text-primary-foreground' : ''}`}
-                    onClick={() => onToggleDevice?.()}
+                    onClick={() => onToggleDevice?.('mobile')}
                   >
                     <SmartphoneIcon size={12} />
                   </Button>
@@ -284,7 +286,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     variant="ghost" 
                     size="sm" 
                     className={`size-6 p-0 ${deviceType === 'desktop' ? 'bg-primary text-primary-foreground' : ''}`}
-                    onClick={() => onToggleDevice?.()}
+                    onClick={() => onToggleDevice?.('desktop')}
                   >
                     <MonitorIcon size={12} />
                   </Button>

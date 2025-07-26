@@ -66,7 +66,6 @@ export function Chat({
   const [isDragging, setIsDragging] = useState(false);
   const [draggedFiles, setDraggedFiles] = useState<File[]>([]);
   const dragCounterRef = useRef(0);
-  const { toggleSidebar } = useSidebar();
 
   const {
     messages,
@@ -485,7 +484,7 @@ export function Chat({
           onPin={handlePin}
         />
 
-                <Messages
+          <Messages
           chatId={id}
           status={status}
           votes={votes}

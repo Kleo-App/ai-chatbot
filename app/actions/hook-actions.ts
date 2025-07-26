@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getOrCreateUserProfile, updateUserProfile } from '@/lib/db/profile-queries';
 import { generateHookIdeas, type HookIdea } from '@/lib/ai/hook-generator';
 
+
 /**
  * Get or generate hook ideas based on user profile data
  */
@@ -58,7 +59,7 @@ export async function getOrGenerateHooks(forceRegenerate = false): Promise<{ suc
 /**
  * Save the preferred hook selected by the user during onboarding
  */
-export async function savePreferredHook(hookContent: string): Promise<{ success: boolean; error?: string }> {
+export async function savePreferredHook(hookContent: string, availableHooks?: HookIdea[], topic?: string): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('Saving preferred hook:', hookContent);
     

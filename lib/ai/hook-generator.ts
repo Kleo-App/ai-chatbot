@@ -13,8 +13,15 @@ export interface HookIdea {
 
 /**
  * Generate hook ideas based on user profile data and selected style
+ * @param userId - The user ID to fetch profile data
+ * @param overrideBio - Optional bio text to override the user profile bio
+ * @param overrideTopics - Optional topics to override the user profile postDetails
  */
-export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
+export async function generateHookIdeas(
+  userId: string,
+  overrideBio?: string,
+  overrideTopics?: string
+): Promise<HookIdea[]> {
   try {
     // Get user profile data
     const userProfile = await getOrCreateUserProfile(userId);
@@ -32,8 +39,9 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       postDetails
     } = userProfile;
     
-    // Use post details for hook generation
-    const postInformation = postDetails || '';
+    // Use override values if provided, otherwise use profile data
+    const userBio = overrideBio || bio || '';
+    const postInformation = overrideTopics || postDetails || '';
 
     // Get the prompt template from Langfuse
     const promptTemplate = await getPrompt('hook-generator');
@@ -91,8 +99,6 @@ export async function generateHookIdeas(userId: string): Promise<HookIdea[]> {
       console.error('No content returned from Anthropic');
       throw new Error('No content returned from AI model');
     }
-
-    console.log('Raw response from Anthropic:', content);
     
     // Update Langfuse generation with output
     await generation?.update({

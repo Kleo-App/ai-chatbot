@@ -1,5 +1,7 @@
 ALWAYS USE PNPM TO INSTALL PACKAGES
 
+YOU ARE TO ALWAYS USE BEST PRACTICES WHEN IT COMES TO WRITING REACT CODE
+
 # Database Migration Notes
 
 ## How to Run Migrations for the AI Chatbot Project
@@ -48,9 +50,10 @@ referenced in `lib/db/schema.ts`.
 
 ## Environment Variables
 
-## Make sure the `.env` file contains the proper `POSTGRES_URL` for database connections.
+Make sure the `.env` file contains the proper `POSTGRES_URL` for database
+connections.
 
-## description: AI Chatbot with Next.js 15, TypeScript, Clerk Auth, DrizzleORM, and Vercel AI SDK globs: alwaysApply: true
+## AI Chatbot with Next.js 15, TypeScript, Clerk Auth, DrizzleORM, and Vercel AI SDK
 
 You are an expert in TypeScript, Node.js, Next.js 15 App Router, React, ShadCN
 UI, Radix UI, Tailwind CSS, DrizzleORM, Vercel AI SDK, Clerk Authentication, and

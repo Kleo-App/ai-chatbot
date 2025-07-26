@@ -26,6 +26,7 @@ import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
+import { linkedInHookSelector } from '@/lib/ai/tools/linkedin-hook-selector';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
 import { postRequestBodySchema, type PostRequestBody } from './schema';
@@ -225,6 +226,7 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
                   'createDocument',
                   'updateDocument',
                   'requestSuggestions',
+                  'linkedInHookSelector',
                 ],
           experimental_transform: smoothStream({ chunking: 'word',  }),
           tools: {
@@ -232,6 +234,10 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
+              session,
+              dataStream,
+            }),
+            linkedInHookSelector: linkedInHookSelector({
               session,
               dataStream,
             }),

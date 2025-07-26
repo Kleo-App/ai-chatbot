@@ -89,20 +89,35 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
   // Format the content to support LinkedIn-style formatting
   const formatContent = (text: string) => {
+    // Try to parse the content if it's a JSON string
+    let processedText = text;
+    try {
+      // Check if the text looks like a JSON object with a "text" property
+      if (text.trim().startsWith('{"text":')) {
+        const parsedContent = JSON.parse(text);
+        if (parsedContent && typeof parsedContent === 'object' && 'text' in parsedContent) {
+          processedText = parsedContent.text;
+        }
+      }
+    } catch (e) {
+      // If parsing fails, use the original text
+      processedText = text;
+    }
+    
     // Check if content is HTML (contains tags) or plain text
-    const isHTML = /<[^>]*>/.test(text);
+    const isHTML = /<[^>]*>/.test(processedText);
     
     if (isHTML) {
       // For HTML content, render directly with safe HTML and apply LinkedIn styling
       return <div 
         className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]"
-        dangerouslySetInnerHTML={{ __html: text }} 
+        dangerouslySetInnerHTML={{ __html: processedText }} 
       />;
     } else {
       // For plain text, convert newlines to paragraphs with proper styling
       return (
         <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]">
-          {text
+          {processedText
             .split('\n\n') // Split on double newlines for paragraphs
             .map((paragraph, paragraphIndex) => {
               const trimmedParagraph = paragraph.trim();

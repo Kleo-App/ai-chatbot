@@ -224,7 +224,19 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
       icon: <CopyIcon size={18} />,
       description: 'Copy to clipboard',
       onClick: ({ content }) => {
-        navigator.clipboard.writeText(content);
+        // Extract text content from JSON structure
+        let textToCopy = content;
+        try {
+          const parsed = JSON.parse(content);
+          if (parsed && typeof parsed === 'object' && 'text' in parsed && typeof parsed.text === 'string') {
+            textToCopy = parsed.text;
+          }
+        } catch {
+          // Content is not JSON, use as-is
+          textToCopy = content;
+        }
+        
+        navigator.clipboard.writeText(textToCopy);
         toast.success('Copied to clipboard!');
       },
     },

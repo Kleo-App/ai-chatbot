@@ -1301,8 +1301,8 @@ export function runAnalyticsInBackground<T>(
   operation: () => Promise<T>,
   context: string = 'analytics'
 ): void {
-  // Use setImmediate to run after the current event loop
-  setImmediate(async () => {
+  // Use setTimeout to run after the current event loop (Edge Runtime compatible)
+  setTimeout(async () => {
     try {
       await operation();
       console.log(`Background ${context} completed successfully`);
@@ -1310,7 +1310,7 @@ export function runAnalyticsInBackground<T>(
       console.error(`Background ${context} failed:`, error);
       // Silent failure - never throw or affect main application flow
     }
-  });
+  }, 0);
 }
 
 /**

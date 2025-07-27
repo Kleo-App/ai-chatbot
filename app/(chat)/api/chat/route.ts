@@ -228,7 +228,6 @@ When the user asks to make changes, you MUST use the updateDocument tool with th
                   'updateDocument',
                   'requestSuggestions',
                   'exaSearch',
-                  'linkedInHookSelector',
                 ],
           experimental_transform: smoothStream({ chunking: 'word',  }),
           tools: {

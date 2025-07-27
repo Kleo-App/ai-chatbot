@@ -9,8 +9,6 @@ import { useAuth } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateProfileInfo } from "@/app/actions/profile-actions"
 import { Loader2 } from "lucide-react"
-import { VoiceRecorder } from "@/components/voice-recorder"
-import { toast } from "sonner"
 import { StepIndicator } from "@/components/onboarding/step-indicator"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
@@ -111,26 +109,12 @@ export default function ProfileSetup() {
             This will be used as context information when generating content. Don&#39;t worry, you can change it later. You can copy/paste from LinkedIn.
           </p>
 
-          <div className="relative">
-            <Textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
-              placeholder="Tell us about your products or services..."
-            />
-            <div className="absolute top-4 right-4 flex gap-2">
-              <VoiceRecorder 
-                onTranscriptionComplete={(text) => {
-                  setDescription(prev => {
-                    const newContent = prev ? `${prev}\n${text}` : text;
-                    return newContent;
-                  });
-                  toast.success("Voice transcription added!");
-                }} 
-                className="flex items-center"
-              />
-            </div>
-          </div>
+          <Textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            className="min-h-[300px] text-gray-700 border-gray-300 focus:border-blue-500 focus:ring-blue-500 resize-none rounded-xl text-base p-4 w-full"
+            placeholder="Tell us about your products or services..."
+          />
         </div>
 
         {/* Navigation Buttons */}

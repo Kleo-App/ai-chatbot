@@ -7,16 +7,11 @@ import { useAuth, useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { updateProfileInfo, initializeUserProfile } from "@/app/actions/profile-actions"
 import { checkAndCreateUser } from "@/app/actions/user-actions"
-import { VoiceRecorder } from "@/components/voice-recorder"
-import { LiveTranscription } from "@/components/live-transcription"
-import { toast } from "sonner"
 import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 export default function AboutPage() {
   const [combinedProfileText, setCombinedProfileText] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [originalText, setOriginalText] = useState<string>("");
-  const [isTranscribing, setIsTranscribing] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isInitializing, setIsInitializing] = useState(true);
   const { goToStep, userProfile, isLoading: isProfileLoading } = useOnboarding();
@@ -72,8 +67,6 @@ export default function AboutPage() {
     
     setCombinedProfileText(combinedText);
   }, [userProfile]);
-
-
 
   const handleNext = async () => {
     setIsLoading(true);
@@ -146,34 +139,9 @@ export default function AboutPage() {
                 <textarea
                   value={combinedProfileText}
                   onChange={(e) => setCombinedProfileText(e.target.value)}
-                  className="w-full min-h-[160px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 pb-16 placeholder:text-gray-400"
+                  className="w-full min-h-[160px] text-gray-800 bg-transparent border-0 focus:outline-none focus:ring-0 resize-none text-base p-6 placeholder:text-gray-400"
                   placeholder="What you educate on and what you want to be known for."
                 />
-                <div className="absolute bottom-0 left-0 right-0 h-12 bg-white/80 backdrop-blur-sm border-t border-gray-100 rounded-b-2xl flex items-center justify-end px-4 gap-3">
-                  <div className="flex items-center gap-3">
-                    <LiveTranscription
-                      onTranscriptionUpdate={(text) => {
-                        // First time receiving text, store the original content
-                        if (!isTranscribing && text.trim()) {
-                          setOriginalText(combinedProfileText || '');
-                          setIsTranscribing(true);
-                        }
-                        
-                        // Only update with the current transcription, replacing the previous transcription
-                        if (isTranscribing && text.trim()) {
-                          setCombinedProfileText(originalText + (originalText ? ' ' : '') + text);
-                        }
-                      }}
-                      onTranscriptionComplete={(text) => {
-                        // Reset the transcribing state when done
-                        setIsTranscribing(false);
-                        toast.success("Transcription added!");
-                      }}
-                      className="flex items-center"
-                      showText={false}
-                    />
-                  </div>
-                </div>
               </div>
               <div className="mt-3 text-center">
                 <p className="text-xs text-gray-500">

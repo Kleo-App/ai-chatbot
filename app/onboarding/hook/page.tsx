@@ -16,16 +16,7 @@ import { OnboardingLayout } from "@/components/onboarding/onboarding-layout"
 
 // Create a user-friendly prompt that will trigger LinkedIn post creation
 function createUserFriendlyPrompt(userProfile: any, selectedHook: string): string {
-  const topics = userProfile?.selectedTopics ? (() => {
-    try {
-      const parsedTopics = JSON.parse(userProfile.selectedTopics)
-      return Array.isArray(parsedTopics) ? parsedTopics.map((t: any) => t.title).join(" and ") : "business topics"
-    } catch {
-      return "business topics"
-    }
-  })() : "business topics"
-  
-  return `Write a LinkedIn post in the artifact about ${topics} using this hook: "${selectedHook}"`
+  return `Write a LinkedIn post using this exact hook: "${selectedHook}"`
 }
 
  

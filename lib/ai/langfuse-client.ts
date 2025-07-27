@@ -236,6 +236,7 @@ Profile information:
 Name: {{fullName}}
 Job Title: {{jobTitle}}
 Company: {{company}}
+Bio: {{bio}}
 
 Selected topics: {{topics}}
 Writing style: Professional and engaging
@@ -252,7 +253,27 @@ Return the posts as a JSON array with the following structure:
   ...
 ]
 
-Each post should be 150-300 words and maintain the selected style preference throughout.`
+Each post should be 150-300 words and maintain the selected style preference throughout.`,
+
+    'linkedin_post_writer': `You are an AI assistant helping create professional LinkedIn posts.
+
+Profile information:
+{{bio}}
+
+Date: {{date}}
+
+Write a professional LinkedIn post about the given topic. Format it for social media with engaging language, clear structure, and include relevant hashtags. Keep it concise and professional but engaging. Use emojis sparingly. End with a call-to-action or question to encourage engagement.
+
+Personalize the content based on the user's bio to make it more relevant and authentic.`,
+
+    'update_linkedin_post': `You are an AI assistant helping update LinkedIn posts.
+
+Profile information:
+{{bio}}
+
+Current post content: {{current_content}}
+
+Update the following LinkedIn post based on the user's request. Make the requested changes while maintaining the professional tone and social media format. Use the user's bio to ensure the updated content remains authentic and relevant to their expertise.`
   };
   
   return fallbackPrompts[promptName] || `Prompt '${promptName}' not found`;

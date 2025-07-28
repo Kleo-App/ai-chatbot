@@ -6,6 +6,7 @@ import { Button } from './ui/button';
 import { memo, useEffect, useState, useRef } from 'react';
 import { LinkedInHookSelector } from './linkedin-hook-selector';
 import { useArtifact } from '@/hooks/use-artifact';
+import { Eraser, Smile } from 'lucide-react';
 
 
 interface LinkedInPostEditorProps {
@@ -27,7 +28,23 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   const { artifact } = useArtifact();
   const [selectedHook, setSelectedHook] = useState<number | null>(null);
   const [hasValidSelection, setHasValidSelection] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
+  // Common emojis for LinkedIn posts
+  const commonEmojis = [
+    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃',
+    '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
+    '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
+    '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
+    '👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
+    '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋',
+    '🔥', '💯', '✨', '⭐', '🌟', '💫', '⚡', '☀️', '🌈', '🎉',
+    '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '🎖️', '🏅', '⚽',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
+    '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '💌'
+  ];
+  
   // Simple content processing that matches LinkedIn post preview exactly
   const processContentForEditor = (inputContent: string) => {
     if (!inputContent) return '';
@@ -183,6 +200,23 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
     };
   }, []);
 
+  // Handle click outside emoji picker to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showEmojiPicker]);
+
   if (!editor) {
     return null;
   }
@@ -269,11 +303,26 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
       const currentNode = doc.nodeAt(from);
       if (currentNode && currentNode.type.name === 'paragraph') {
         const text = currentNode.textContent;
-        const hasSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
-        if (hasSymbol) {
-          const symbolLength = hasSymbol[0].length;
-          editor.chain().focus().setTextSelection(from).deleteRange({ from, to: from + symbolLength }).run();
+        const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        
+        if (existingSymbol) {
+          // Check if it's the same symbol we're trying to add
+          const currentSymbol = existingSymbol[0];
+          const targetSymbol = isNumbered ? /^\d+\.\s/ : new RegExp(`^\\${symbol.replace(/\s/g, '\\s')}`);
+          const isSameSymbol = isNumbered ? /^\d+\.\s/.test(currentSymbol) : targetSymbol.test(currentSymbol);
+          
+          if (isSameSymbol) {
+            // Same symbol - remove it (toggle off)
+            const symbolLength = existingSymbol[0].length;
+            editor.chain().focus().setTextSelection(from).deleteRange({ from, to: from + symbolLength }).run();
+          } else {
+            // Different symbol - replace it
+            const symbolLength = existingSymbol[0].length;
+            const insertSymbol = isNumbered ? '1. ' : symbol;
+            editor.chain().focus().setTextSelection(from).deleteRange({ from, to: from + symbolLength }).insertContent(insertSymbol).run();
+          }
         } else {
+          // No symbol - add new one
           const insertSymbol = isNumbered ? '1. ' : symbol;
           editor.chain().focus().setTextSelection(from).insertContent(insertSymbol).run();
         }
@@ -282,11 +331,23 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
         editor.chain().focus().insertContent(insertSymbol).run();
       }
     } else {
-      let allHaveSymbols = true;
+      // Check if all paragraphs have the SAME symbol we're trying to add
+      let allHaveSameSymbol = true;
       
       paragraphs.forEach(({ node }) => {
-        if (!node.textContent.match(/^[•\-→]\s|^\d+\.\s/)) {
-          allHaveSymbols = false;
+        const text = node.textContent;
+        const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        
+        if (!existingSymbol) {
+          allHaveSameSymbol = false;
+        } else {
+          const currentSymbol = existingSymbol[0];
+          const targetSymbol = isNumbered ? /^\d+\.\s/ : new RegExp(`^\\${symbol.replace(/\s/g, '\\s')}`);
+          const isSameSymbol = isNumbered ? /^\d+\.\s/.test(currentSymbol) : targetSymbol.test(currentSymbol);
+          
+          if (!isSameSymbol) {
+            allHaveSameSymbol = false;
+          }
         }
       });
       
@@ -295,18 +356,76 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
         const startPos = pos + 1;
         const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
         
-        if (allHaveSymbols && existingSymbol) {
+        if (allHaveSameSymbol && existingSymbol) {
+          // All have the same symbol we're clicking - remove it (toggle off)
           const symbolLength = existingSymbol[0].length;
           editor.chain().focus().setTextSelection(startPos).deleteRange({ from: startPos, to: startPos + symbolLength }).run();
-        } else if (!allHaveSymbols && !existingSymbol) {
+        } else {
+          // Either no symbol or different symbol - replace/add the new one
           let insertSymbol = symbol;
           if (isNumbered) {
             const originalIndex = paragraphs.length - 1 - index;
             insertSymbol = `${originalIndex + 1}. `;
           }
-          editor.chain().focus().setTextSelection(startPos).insertContent(insertSymbol).run();
+          
+          if (existingSymbol) {
+            // Replace existing symbol
+            const symbolLength = existingSymbol[0].length;
+            editor.chain().focus().setTextSelection(startPos).deleteRange({ from: startPos, to: startPos + symbolLength }).insertContent(insertSymbol).run();
+          } else {
+            // Add new symbol
+            editor.chain().focus().setTextSelection(startPos).insertContent(insertSymbol).run();
+          }
         }
       });
+    }
+  };
+
+  // Helper function to clear all formatting from selected paragraphs
+  const clearFormatting = () => {
+    const { from, to } = editor.state.selection;
+    const { state } = editor;
+    const { doc } = state;
+    
+    const paragraphs: { pos: number; node: any }[] = [];
+    doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === 'paragraph') {
+        paragraphs.push({ pos, node });
+      }
+    });
+    
+    if (paragraphs.length === 0) {
+      // Single paragraph at cursor
+      const currentNode = doc.nodeAt(from);
+      if (currentNode && currentNode.type.name === 'paragraph') {
+        const text = currentNode.textContent;
+        const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        
+        if (existingSymbol) {
+          const symbolLength = existingSymbol[0].length;
+          editor.chain().focus().setTextSelection(from).deleteRange({ from, to: from + symbolLength }).run();
+        }
+      }
+    } else {
+      // Multiple paragraphs selected
+      paragraphs.reverse().forEach(({ pos, node }) => {
+        const text = node.textContent;
+        const startPos = pos + 1;
+        const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        
+        if (existingSymbol) {
+          const symbolLength = existingSymbol[0].length;
+          editor.chain().focus().setTextSelection(startPos).deleteRange({ from: startPos, to: startPos + symbolLength }).run();
+        }
+      });
+    }
+  };
+
+  // Helper function to insert emoji at cursor position
+  const insertEmoji = (emoji: string) => {
+    if (editor) {
+      editor.chain().focus().insertContent(emoji).run();
+      setShowEmojiPicker(false);
     }
   };
 
@@ -445,6 +564,17 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
             <path d="M3.6 8L4.8 9.5L3.6 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
+        
+        {/* Clear Formatting Button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={clearFormatting}
+          className="size-8 p-0"
+          title="Clear formatting (remove all list symbols)"
+        >
+          <Eraser className="size-4" />
+        </Button>
 
         <div className="w-px h-6 bg-border mx-1" />
 
@@ -500,6 +630,38 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
             <path d="m3.5498 1.0996v1.8008h15.1v2.1992h-4v4h-4v5.8008h4v4h4v2.1992h-15.1v1.8008h16.9v-5.8008h-4v-4h-4v-2.1992h4v-4h4v-5.8008z" />
           </svg>
         </Button>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Emoji Picker */}
+        <div className="relative" ref={emojiPickerRef}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className="size-8 p-0"
+            title="Add emoji"
+          >
+            <Smile className="size-4" />
+          </Button>
+          
+          {showEmojiPicker && (
+            <div className="absolute top-10 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-80">
+              <div className="grid grid-cols-10 gap-1 max-h-48 overflow-y-auto">
+                {commonEmojis.map((emoji, index) => (
+                  <button
+                    key={index}
+                    onClick={() => insertEmoji(emoji)}
+                    className="w-8 h-8 text-lg hover:bg-gray-100 rounded flex items-center justify-center transition-colors"
+                    title={emoji}
+                  >
+                    {emoji}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Editor Content */}

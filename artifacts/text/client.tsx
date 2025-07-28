@@ -238,7 +238,47 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
           textToCopy = content;
         }
         
-        navigator.clipboard.writeText(textToCopy);
+        // Strip HTML tags and convert to plain text while preserving formatting
+        const stripHtml = (html: string) => {
+          // Handle the specific pattern of content paragraphs and empty paragraphs
+          let processedHtml = html
+            // First, handle empty paragraphs (they represent single line breaks)
+            .replace(/<p[^>]*>\s*<\/p>/gi, '\n')
+            // Handle content paragraphs - extract text and add line break
+            .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1\n')
+            // Convert br tags to line breaks
+            .replace(/<br[^>]*>/gi, '\n')
+            // Convert div tags to line breaks  
+            .replace(/<\/div>\s*<div[^>]*>/gi, '\n')
+            .replace(/<div[^>]*>/gi, '')
+            .replace(/<\/div>/gi, '\n')
+            // Convert list items to lines
+            .replace(/<\/li>\s*<li[^>]*>/gi, '\n')
+            .replace(/<li[^>]*>/gi, '')
+            .replace(/<\/li>/gi, '\n')
+            // Remove list containers
+            .replace(/<\/?[uo]l[^>]*>/gi, '\n')
+            // Convert headings to text with line breaks
+            .replace(/<\/h[1-6]>/gi, '\n\n')
+            .replace(/<h[1-6][^>]*>/gi, '')
+            // Remove any remaining HTML tags
+            .replace(/<[^>]*>/g, '');
+          
+          // Clean up line breaks - preserve single and double breaks appropriately
+          return processedHtml
+            .replace(/\n{3,}/g, '\n\n') // Convert 3+ line breaks to double
+            .replace(/^\s+|\s+$/g, '') // Trim start and end
+            .replace(/[ \t]+/g, ' ') // Normalize horizontal spaces
+            .replace(/\n /g, '\n') // Remove spaces after line breaks
+            .replace(/ \n/g, '\n'); // Remove spaces before line breaks
+        };
+        
+        // Check if content contains HTML tags
+        const hasHtmlTags = /<[^>]*>/.test(textToCopy);
+        
+        const finalText = hasHtmlTags ? stripHtml(textToCopy) : textToCopy;
+        
+        navigator.clipboard.writeText(finalText);
         toast.success('Copied to clipboard!');
       },
     },

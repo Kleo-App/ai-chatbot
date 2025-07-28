@@ -7,6 +7,7 @@ import { memo, useEffect, useState, useRef } from 'react';
 import { LinkedInHookSelector } from './linkedin-hook-selector';
 import { useArtifact } from '@/hooks/use-artifact';
 import { Eraser, Smile } from 'lucide-react';
+import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 
 interface LinkedInPostEditorProps {
@@ -30,21 +31,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   const [hasValidSelection, setHasValidSelection] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
-
-  // Common emojis for LinkedIn posts
-  const commonEmojis = [
-    '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃',
-    '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
-    '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
-    '🤐', '🤨', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '🤥',
-    '👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
-    '👈', '👉', '👆', '🖕', '👇', '☝️', '👋', '🤚', '🖐️', '✋',
-    '🔥', '💯', '✨', '⭐', '🌟', '💫', '⚡', '☀️', '🌈', '🎉',
-    '🎊', '🎈', '🎁', '🏆', '🥇', '🥈', '🥉', '🎖️', '🏅', '⚽',
-    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
-    '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '💌'
-  ];
-  
+   
   // Simple content processing that matches LinkedIn post preview exactly
   const processContentForEditor = (inputContent: string) => {
     if (!inputContent) return '';
@@ -646,19 +633,18 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
           </Button>
           
           {showEmojiPicker && (
-            <div className="absolute top-10 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-80">
-              <div className="grid grid-cols-10 gap-1 max-h-48 overflow-y-auto">
-                {commonEmojis.map((emoji, index) => (
-                  <button
-                    key={index}
-                    onClick={() => insertEmoji(emoji)}
-                    className="w-8 h-8 text-lg hover:bg-gray-100 rounded flex items-center justify-center transition-colors"
-                    title={emoji}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
+            <div className="absolute top-10 right-0 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-80 max-h-96">
+              <EmojiPicker
+                onEmojiClick={({ emoji }) => insertEmoji(emoji)}
+                emojiStyle={EmojiStyle.NATIVE}
+                width={300}
+                height={350}
+                searchPlaceholder="Search emojis..."
+                skinTonesDisabled={true}
+                previewConfig={{
+                  showPreview: false,
+                }}
+              />
             </div>
           )}
         </div>

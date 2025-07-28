@@ -20,6 +20,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   onToggleView,
 }: LinkedInPostEditorProps) {
   const isInternalUpdateRef = useRef(false);
+  const lastContentRef = useRef(content);
   const { artifact } = useArtifact();
   const [selectedHook, setSelectedHook] = useState<number | null>(null);
   const [hasValidSelection, setHasValidSelection] = useState(false);
@@ -40,7 +41,13 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
     onUpdate: ({ editor }) => {
       const newContent = editor.getHTML();
       isInternalUpdateRef.current = true;
+      lastContentRef.current = newContent;
       onContentChange(newContent);
+      
+      // Reset the flag after a short delay to ensure we don't block external updates
+      setTimeout(() => {
+        isInternalUpdateRef.current = false;
+      }, 50);
     },
     onSelectionUpdate: ({ editor }) => {
       const { from, to } = editor.state.selection;
@@ -115,18 +122,32 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   };
 
   useEffect(() => {
-    if (editor && !isInternalUpdateRef.current) {
-      const processedContent = processContentForEditor(content);
+    // Only update if content actually changed from external source (not from user typing)
+    if (editor && content !== lastContentRef.current) {
+      // Check if this is from user typing by comparing with current editor content
+      const currentEditorContent = editor.getHTML();
       
-      if (processedContent !== editor.getHTML()) {
-        editor.commands.setContent(processedContent, {
-          emitUpdate: false,
-        });
+      // If editor is focused (user is actively typing), don't update content
+      if (editor.isFocused) {
+        lastContentRef.current = content;
+        return;
       }
+      
+      // Only process content if it's genuinely different from what we expect
+      if (!isInternalUpdateRef.current) {
+        const processedContent = processContentForEditor(content);
+        
+        if (processedContent !== currentEditorContent) {
+          editor.commands.setContent(processedContent, {
+            emitUpdate: false,
+          });
+        }
+      }
+      
+      // Update our reference and reset the flag
+      lastContentRef.current = content;
+      isInternalUpdateRef.current = false;
     }
-    
-    // Reset the flag after processing
-    isInternalUpdateRef.current = false;
   }, [content, editor]);
 
   if (!editor) {

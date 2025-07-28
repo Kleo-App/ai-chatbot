@@ -2,7 +2,7 @@
 
 import { exampleSetup } from 'prosemirror-example-setup';
 import { inputRules } from 'prosemirror-inputrules';
-import { EditorState } from 'prosemirror-state';
+import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { memo, useEffect, useRef } from 'react';
 
@@ -40,6 +40,9 @@ function PureEditor({
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  const lastContentRef = useRef(content);
+  const isUserTypingRef = useRef(false);
+  const userTypingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (containerRef.current && !editorRef.current) {
@@ -80,6 +83,21 @@ function PureEditor({
     if (editorRef.current) {
       editorRef.current.setProps({
         dispatchTransaction: (transaction) => {
+          // Mark user typing when transaction comes from user input
+          if (transaction.docChanged && !transaction.getMeta('no-save') && !transaction.getMeta('external-update')) {
+            isUserTypingRef.current = true;
+            
+            // Clear existing timeout
+            if (userTypingTimeoutRef.current) {
+              clearTimeout(userTypingTimeoutRef.current);
+            }
+            
+            // Set timeout to reset typing flag
+            userTypingTimeoutRef.current = setTimeout(() => {
+              isUserTypingRef.current = false;
+            }, 150);
+          }
+          
           handleTransaction({
             transaction,
             editorRef,
@@ -91,10 +109,14 @@ function PureEditor({
   }, [onSaveContent]);
 
   useEffect(() => {
-    if (editorRef.current && content) {
+    if (editorRef.current && content && content !== lastContentRef.current) {
       const currentContent = buildContentFromDocument(
         editorRef.current.state.doc,
       );
+
+      // Store current cursor position
+      const currentSelection = editorRef.current.state.selection;
+      const cursorPos = currentSelection.from;
 
       if (status === 'streaming') {
         const newDocument = buildDocumentFromContent(content);
@@ -106,7 +128,9 @@ function PureEditor({
         );
 
         transaction.setMeta('no-save', true);
+        transaction.setMeta('external-update', true);
         editorRef.current.dispatch(transaction);
+        lastContentRef.current = content;
         return;
       }
 
@@ -120,8 +144,28 @@ function PureEditor({
         );
 
         transaction.setMeta('no-save', true);
+        transaction.setMeta('external-update', true);
+        
+        // Only preserve cursor position if user was typing recently and content is similar
+        const contentSimilar = Math.abs(content.length - currentContent.length) < 100;
+        
+        if (isUserTypingRef.current && contentSimilar) {
+          // Try to preserve cursor position for minor updates
+          try {
+            const newDocSize = newDocument.content.size;
+            const preservedPos = Math.min(cursorPos, newDocSize);
+            // Use TextSelection.near instead of constructor.near
+            const newSelection = TextSelection.near(transaction.doc.resolve(preservedPos));
+            transaction.setSelection(newSelection);
+          } catch {
+            // Fallback if position restoration fails - don't set selection
+          }
+        }
+        
         editorRef.current.dispatch(transaction);
       }
+      
+      lastContentRef.current = content;
     }
   }, [content, status]);
 
@@ -141,9 +185,19 @@ function PureEditor({
 
       const transaction = editorRef.current.state.tr;
       transaction.setMeta(suggestionsPluginKey, { decorations });
+      transaction.setMeta('external-update', true);
       editorRef.current.dispatch(transaction);
     }
   }, [suggestions, content]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (userTypingTimeoutRef.current) {
+        clearTimeout(userTypingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <div className="relative prose dark:prose-invert" ref={containerRef} />

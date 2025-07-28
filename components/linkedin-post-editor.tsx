@@ -20,54 +20,13 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   onToggleView,
 }: LinkedInPostEditorProps) {
   const isInternalUpdateRef = useRef(false);
-  const lastContentRef = useRef(content);
+  const lastExternalContentRef = useRef(content);
+  const lastCursorPositionRef = useRef<number | null>(null);
+  const isTypingRef = useRef(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { artifact } = useArtifact();
   const [selectedHook, setSelectedHook] = useState<number | null>(null);
   const [hasValidSelection, setHasValidSelection] = useState(false);
-  
-  const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        paragraph: {
-          HTMLAttributes: {
-            class: '',
-          },
-        },
-        hardBreak: false,
-      }),
-    ],
-    content: '',
-    immediatelyRender: false,
-    onUpdate: ({ editor }) => {
-      const newContent = editor.getHTML();
-      isInternalUpdateRef.current = true;
-      lastContentRef.current = newContent;
-      onContentChange(newContent);
-      
-      // Reset the flag after a short delay to ensure we don't block external updates
-      setTimeout(() => {
-        isInternalUpdateRef.current = false;
-      }, 50);
-    },
-    onSelectionUpdate: ({ editor }) => {
-      const { from, to } = editor.state.selection;
-      const { doc } = editor.state;
-      
-      const paragraphs: any[] = [];
-      doc.nodesBetween(from, to, (node) => {
-        if (node.type.name === 'paragraph') {
-          paragraphs.push(node);
-        }
-      });
-      
-      setHasValidSelection(paragraphs.length >= 2);
-    },
-    editorProps: {
-      attributes: {
-        class: 'focus:outline-none min-h-[400px] text-sm text-black bg-white [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
-      },
-    },
-  });
 
   // Simple content processing that matches LinkedIn post preview exactly
   const processContentForEditor = (inputContent: string) => {
@@ -120,35 +79,109 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
       return paragraphs;
     }
   };
+  
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure({
+        paragraph: {
+          HTMLAttributes: {
+            class: '',
+          },
+        },
+        hardBreak: false,
+      }),
+    ],
+    content: processContentForEditor(content),
+    immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      const newContent = editor.getHTML();
+      
+      // Mark that this update is from user typing
+      isInternalUpdateRef.current = true;
+      isTypingRef.current = true;
+      
+      // Clear any existing timeout to extend typing detection
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      
+      // Set a timeout to detect when user stops typing
+      typingTimeoutRef.current = setTimeout(() => {
+        isTypingRef.current = false;
+        isInternalUpdateRef.current = false; // Reset both flags together
+      }, 500); // Longer timeout to ensure we catch the feedback loop
+      
+      // Store cursor position for potential restoration
+      const { from } = editor.state.selection;
+      lastCursorPositionRef.current = from;
+      
+      // Store the content we're about to send to prevent feedback loops
+      lastExternalContentRef.current = newContent;
+      
+      onContentChange(newContent);
+    },
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      const { doc } = editor.state;
+      
+      const paragraphs: any[] = [];
+      doc.nodesBetween(from, to, (node) => {
+        if (node.type.name === 'paragraph') {
+          paragraphs.push(node);
+        }
+      });
+      
+      setHasValidSelection(paragraphs.length >= 2);
+    },
+    editorProps: {
+      attributes: {
+        class: 'focus:outline-none min-h-[400px] text-sm text-black bg-white [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
+      },
+    },
+  });
 
   useEffect(() => {
-    // Only update if content actually changed from external source (not from user typing)
-    if (editor && content !== lastContentRef.current) {
-      // Check if this is from user typing by comparing with current editor content
-      const currentEditorContent = editor.getHTML();
+    // Skip ALL updates if user is currently typing - this prevents feedback loops
+    if (isTypingRef.current || isInternalUpdateRef.current) {
+      return;
+    }
+    
+    // Only update if content has actually changed from external source
+    if (editor && content !== lastExternalContentRef.current) {
+      const currentText = editor.getText();
+      const processedContent = processContentForEditor(content);
       
-      // If editor is focused (user is actively typing), don't update content
-      if (editor.isFocused) {
-        lastContentRef.current = content;
-        return;
-      }
+      // Get the text from processed content for comparison
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = processedContent;
+      const newContentText = tempDiv.textContent || tempDiv.innerText || '';
       
-      // Only process content if it's genuinely different from what we expect
-      if (!isInternalUpdateRef.current) {
-        const processedContent = processContentForEditor(content);
+      // Only update if the actual text content is significantly different
+      const textIsDifferent = currentText.trim() !== newContentText.trim();
+      
+      if (textIsDifferent || currentText.length === 0) {
+        // This is a real external update (like AI generation)
+        editor.commands.setContent(processedContent, {
+          emitUpdate: false,
+        });
         
-        if (processedContent !== currentEditorContent) {
-          editor.commands.setContent(processedContent, {
-            emitUpdate: false,
-          });
-        }
+        // Move cursor to end for external updates
+        editor.commands.focus('end');
+        
+        // Update our reference to the new external content
+        lastExternalContentRef.current = content;
       }
-      
-      // Update our reference and reset the flag
-      lastContentRef.current = content;
-      isInternalUpdateRef.current = false;
     }
   }, [content, editor]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!editor) {
     return null;
@@ -350,8 +383,15 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
           className="size-8 p-0"
           title="Bullet list"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" className="size-4">
-            <path d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18" className="size-4">
+            <g fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" stroke="black">
+              <path d="M3.75 10.5C4.57843 10.5 5.25 9.82843 5.25 9C5.25 8.17157 4.57843 7.5 3.75 7.5C2.92157 7.5 2.25 8.17157 2.25 9C2.25 9.82843 2.92157 10.5 3.75 10.5Z" fill="black" stroke="none" />
+              <path d="M3.75 5.25C4.57843 5.25 5.25 4.57843 5.25 3.75C5.25 2.92157 4.57843 2.25 3.75 2.25C2.92157 2.25 2.25 2.92157 2.25 3.75C2.25 4.57843 2.92157 5.25 3.75 5.25Z" fill="black" stroke="none" />
+              <path d="M3.75 15.75C4.57843 15.75 5.25 15.0784 5.25 14.25C5.25 13.4216 4.57843 12.75 3.75 12.75C2.92157 12.75 2.25 13.4216 2.25 14.25C2.25 15.0784 2.92157 15.75 3.75 15.75Z" fill="black" stroke="none" />
+              <path d="M8.25 9H15.75" stroke="black" />
+              <path d="M8.25 3.75H15.75" stroke="black" />
+              <path d="M8.25 14.25H15.75" stroke="black" />
+            </g>
           </svg>
         </Button>
         

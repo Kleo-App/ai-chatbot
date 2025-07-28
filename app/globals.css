@@ -169,15 +169,16 @@
 
 /* Override any default TipTap paragraph margins to match our custom styling */
 .ProseMirror p {
-  margin-bottom: 0.5rem !important;
+  margin-bottom: 0px !important;
   margin-top: 0 !important;
 }
 
 /* Ensure consistent line spacing */
 .ProseMirror {
-  line-height: 1.625 !important;
+  line-height: 1.25rem !important;
   font-size: 0.875rem !important;
-  color: rgba(0, 0, 0, 0.9) !important;
+  color: black !important;
+  background-color: white !important;
 }
 
 /* Ensure list styling matches */

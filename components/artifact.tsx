@@ -17,8 +17,9 @@ import { VersionFooter } from './version-footer';
 import { ArtifactActions } from './artifact-actions';
 import { ArtifactCloseButton } from './artifact-close-button';
 import { ArtifactMessages } from './artifact-messages';
-import { ArrowLeftIcon, MessageIcon } from './icons';
+import { ArrowLeftIcon, HomeIcon, MessageIcon, PenIcon } from './icons';
 import { useSidebar } from './ui/sidebar';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 import { useArtifact, initialArtifactData } from '@/hooks/use-artifact';
 import { imageArtifact } from '@/artifacts/image/client';
 import { textArtifact } from '@/artifacts/text/client';
@@ -383,100 +384,80 @@ function PureArtifact({
                 )}
               </AnimatePresence>
 
-              <div className="flex flex-col h-full justify-between items-center">
-                {viewMode === 'chat' ? (
-                  <>
-                    {/* Chat Header with Back/Toggle Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
-                      <div className="flex items-center gap-3">
-                        {isLinkedInPost && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleBackButton}
-                            className="h-fit p-2"
-                            title="Back"
-                          >
-                            <ArrowLeftIcon size={16} />
-                          </Button>
-                        )}
-                        <h3 className="text-sm font-medium">Chat</h3>
-                      </div>
-                      {isLinkedInPost && (
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          onClick={toggleViewMode}
-                          className="gap-2"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" className="size-4">
-                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                            <path fillRule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/>
-                          </svg>
-                          Edit
-                        </Button>
-                      )}
-                    </div>
+              <div className="flex flex-col h-full">
+                {/* Header with Back Button and Tabs */}
+                <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
+                  <div className="flex items-center gap-3">
+                    {isLinkedInPost && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleBackButton}
+                        className="h-fit p-2"
+                        title="Home"
+                      >
+                        <HomeIcon size={16} />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  {/* Tabs Component */}
+                  <Tabs 
+                    value={viewMode} 
+                    onValueChange={(value) => setViewMode(value as 'chat' | 'editor')}
+                    className="w-fit"
+                  >
+                    <TabsList className="grid w-full grid-cols-2">
+                      <TabsTrigger value="chat" className="flex items-center gap-2">
+                        <MessageIcon size={16} />
+                        <span className="text-sm font-medium">Chat</span>
+                      </TabsTrigger>
+                      <TabsTrigger value="editor" className="flex items-center gap-2">
+                        <PenIcon size={16} />
+                        <span className="text-sm font-medium">Edit</span>
+                      </TabsTrigger>
+                    </TabsList>
+                  </Tabs>
+                  
+                  <div></div> {/* Empty div for spacing */}
+                </div>
 
-                    <ArtifactMessages
-                      chatId={chatId}
-                      status={status}
-                      votes={votes}
-                      messages={messages}
-                      setMessages={setMessages}
-                      regenerate={regenerate}
-                      isReadonly={isReadonly}
-                      artifactStatus={artifact.status}
-                    />
-
-                    <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
-                      <MultimodalInput
+                {/* Content Area */}
+                <div className="flex-1 overflow-hidden">
+                  {viewMode === 'chat' ? (
+                    <div className="flex flex-col h-full justify-between">
+                      <ArtifactMessages
                         chatId={chatId}
-                        input={input}
-                        setInput={setInput}
                         status={status}
-                        stop={stop}
-                        attachments={attachments}
-                        setAttachments={setAttachments}
+                        votes={votes}
                         messages={messages}
-                        sendMessage={sendMessage}
-                        className="bg-white dark:bg-white"
                         setMessages={setMessages}
-                        selectedVisibilityType={selectedVisibilityType}
-                        isArtifactContext={true}
-                        artifactKind={artifact.kind}
+                        regenerate={regenerate}
+                        isReadonly={isReadonly}
+                        artifactStatus={artifact.status}
                       />
-                    </form>
-                  </>
-                ) : (
-                  <>
-                    {/* Editor Header with Back Button */}
-                    <div className="flex h-[70px] items-center justify-between w-full px-2 sm:px-4 md:px-6">
-                      <div className="flex items-center gap-3">
-                        {isLinkedInPost && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={handleBackButton}
-                            className="h-fit p-2"
-                            title="Back"
-                          >
-                            <ArrowLeftIcon size={16} />
-                          </Button>
-                        )}
-                        <h3 className="text-sm font-medium">Edit Post</h3>
-                      </div>
-                                             <Button 
-                         variant="ghost" 
-                         size="sm" 
-                         onClick={toggleViewMode}
-                         className="gap-2"
-                       >
-                         <MessageIcon size={16} />
-                         Chat
-                       </Button>
+
+                      <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
+                        <MultimodalInput
+                          chatId={chatId}
+                          input={input}
+                          setInput={setInput}
+                          status={status}
+                          stop={stop}
+                          attachments={attachments}
+                          setAttachments={setAttachments}
+                          messages={messages}
+                          sendMessage={sendMessage}
+                          className="bg-white dark:bg-white"
+                          setMessages={setMessages}
+                          selectedVisibilityType={selectedVisibilityType}
+                          isArtifactContext={true}
+                          artifactKind={artifact.kind}
+                        />
+                      </form>
                     </div>
-                    <div className="flex-1 overflow-hidden">
+                  ) : (
+                    <div className="h-full overflow-hidden">
                       {/* Debug LinkedIn hooks in artifact */}
                       {(() => {
                         console.log('[artifact.tsx] LinkedIn hooks before passing to editor:', JSON.stringify(artifact.linkedInHooks));
@@ -489,8 +470,8 @@ function PureArtifact({
                         onToggleView={toggleViewMode}
                       />
                     </div>
-                  </>
-                )}
+                  )}
+                </div>
               </div>
             </motion.div>
           )}

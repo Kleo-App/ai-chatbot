@@ -7,6 +7,7 @@ import { memo, useEffect, useState, useRef } from 'react';
 import { LinkedInHookSelector } from './linkedin-hook-selector';
 import { useArtifact } from '@/hooks/use-artifact';
 
+
 interface LinkedInPostEditorProps {
   content: string;
   onContentChange: (content: string) => void;
@@ -19,155 +20,256 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
   onToggleView,
 }: LinkedInPostEditorProps) {
   const isInternalUpdateRef = useRef(false);
-  const contentRef = useRef(content);
   const { artifact } = useArtifact();
-  console.log('[linkedin-post-editor.tsx] Current artifact:', JSON.stringify(artifact));
-  console.log('[linkedin-post-editor.tsx] LinkedIn hooks in artifact:', JSON.stringify(artifact.linkedInHooks));
   const [selectedHook, setSelectedHook] = useState<number | null>(null);
+  const [hasValidSelection, setHasValidSelection] = useState(false);
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        // Configure paragraph to remove default margins that might conflict
         paragraph: {
           HTMLAttributes: {
-            class: 'mb-2',
+            class: '',
           },
         },
+        hardBreak: false,
       }),
     ],
-    content: content,
+    content: '',
     immediatelyRender: false,
     onUpdate: ({ editor }) => {
       const newContent = editor.getHTML();
-      
-      // Mark this as an internal update to prevent circular updates
       isInternalUpdateRef.current = true;
-      contentRef.current = newContent;
-      
       onContentChange(newContent);
-
+    },
+    onSelectionUpdate: ({ editor }) => {
+      const { from, to } = editor.state.selection;
+      const { doc } = editor.state;
+      
+      const paragraphs: any[] = [];
+      doc.nodesBetween(from, to, (node) => {
+        if (node.type.name === 'paragraph') {
+          paragraphs.push(node);
+        }
+      });
+      
+      setHasValidSelection(paragraphs.length >= 2);
     },
     editorProps: {
       attributes: {
-        class: 'focus:outline-none min-h-[400px] text-sm leading-relaxed text-[#000000E9] [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
+        class: 'focus:outline-none min-h-[400px] text-sm text-black bg-white [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_h1]:text-xl [&_h1]:font-bold [&_h1]:mb-3 [&_h2]:text-lg [&_h2]:font-bold [&_h2]:mb-2 [&_h3]:text-base [&_h3]:font-bold [&_h3]:mb-2',
       },
-    },
-    // Add these options to ensure consistent styling
-    parseOptions: {
-      preserveWhitespace: 'full',
     },
   });
 
-  useEffect(() => {
-    // Only update if:
-    // 1. Editor exists
-    // 2. Content is different from what's currently in the editor
-    // 3. This is not an internal update (from user typing)
-    // 4. Content is different from our last known content
-    if (
-      editor && 
-      content !== editor.getHTML() && 
-      !isInternalUpdateRef.current &&
-      content !== contentRef.current
-    ) {
-      // Update our content reference
-      contentRef.current = content;
-      
-      // Convert content to proper HTML structure for TipTap
-      const convertToEditorFormat = (inputContent: string) => {
-        console.log('External content update:', inputContent);
-        
-        // Handle HTML content with spans/br structure (from preview)
-        if (inputContent.includes('<span>') && inputContent.includes('<br>')) {
-          return inputContent
-            .replace(/<span>(.*?)<br><\/span>/g, '$1\n')
-            .replace(/<span><br><\/span>/g, '\n')
-            .replace(/<span>(.*?)<\/span>/g, '$1\n')
-            .split(/\n\s*\n/)
-            .map(paragraph => {
-              const trimmed = paragraph.trim();
-              if (!trimmed) return '';
-              const withFormatting = trimmed
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>');
-              return `<p>${withFormatting}</p>`;
-            })
-            .filter(p => p !== '')
-            .join('');
+  // Simple content processing that matches LinkedIn post preview exactly
+  const processContentForEditor = (inputContent: string) => {
+    if (!inputContent) return '';
+    
+    // Try to parse JSON content first (like LinkedIn preview does)
+    let processedText = inputContent;
+    try {
+      if (inputContent.trim().startsWith('{"text":')) {
+        const parsedContent = JSON.parse(inputContent);
+        if (parsedContent && typeof parsedContent === 'object' && 'text' in parsedContent) {
+          processedText = parsedContent.text;
         }
-        
-        // Handle plain text content (from AI generation)
-        if (!inputContent.includes('<') || !inputContent.includes('>')) {
-          // Plain text - convert to proper paragraph structure
-          return inputContent
-            .split(/\n\s*\n/) // Split on double line breaks for paragraphs
-            .map(paragraph => {
-              const trimmed = paragraph.trim();
-              if (!trimmed) return '';
-              // Convert markdown formatting and preserve single line breaks
-              const withFormatting = trimmed
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                .replace(/\n/g, '<br>'); // Convert single line breaks to <br>
-              return `<p>${withFormatting}</p>`;
-            })
-            .filter(p => p !== '')
-            .join('');
-        }
-        
-        // Already formatted HTML
-        return inputContent;
-      };
-      
-      const formattedContent = convertToEditorFormat(content);
-      console.log('Setting content from external source:', formattedContent);
-      
-      // Use emitUpdate: false to prevent triggering onUpdate during external content set
-      editor.commands.setContent(formattedContent, {
-        emitUpdate: false,
-        parseOptions: {
-          preserveWhitespace: 'full',
-        },
-      });
+      }
+    } catch (e) {
+      // If parsing fails, use the original content
+      processedText = inputContent;
     }
+    
+    // Check if content is HTML or plain text
+    const isHTML = /<[^>]*>/.test(processedText);
+    
+    if (isHTML) {
+      // For HTML content, clean up any existing mb-2 classes before returning
+      const cleanedHTML = processedText
+        .replace(/class="mb-2"/g, '')
+        .replace(/class="[^"]*mb-2[^"]*"/g, (match) => {
+          // Remove mb-2 from class lists like "class="some-class mb-2 other-class""
+          return match.replace(/\s*mb-2\s*/g, ' ').replace(/class="\s*"/g, '').replace(/class="\s+/g, 'class="').replace(/\s+"/g, '"');
+        });
+      return cleanedHTML;
+    } else {
+      // For plain text, convert each line to a separate paragraph (like LinkedIn preview)
+      const paragraphs = processedText
+        .split(/\n/) // Split on single line breaks to preserve empty lines
+        .map(line => {
+          const trimmed = line.trim();
+          if (trimmed.length === 0) {
+            // Preserve empty lines as empty p tags
+            return '<p></p>';
+          }
+          // Convert markdown formatting
+          const formatted = trimmed
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>');
+          return `<p>${formatted}</p>`;
+        })
+        .join('');
+      
+      return paragraphs;
+    }
+  };
+
+  useEffect(() => {
+    if (editor && !isInternalUpdateRef.current) {
+      const processedContent = processContentForEditor(content);
+      
+      if (processedContent !== editor.getHTML()) {
+        editor.commands.setContent(processedContent, {
+          emitUpdate: false,
+        });
+      }
+    }
+    
+    // Reset the flag after processing
+    isInternalUpdateRef.current = false;
   }, [content, editor]);
 
   if (!editor) {
     return null;
   }
 
+  // Helper function to reorder paragraphs by length
+  const reorderParagraphsByLength = (pattern: 'short-to-long' | 'long-to-short' | 'short-long-short' | 'long-short-long') => {
+    const { from, to } = editor.state.selection;
+    const { state } = editor;
+    const { doc } = state;
+    
+    const paragraphs: { pos: number; node: any; content: string }[] = [];
+    doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === 'paragraph') {
+        paragraphs.push({ pos, node, content: node.textContent });
+      }
+    });
+    
+    if (paragraphs.length < 2) return;
+    
+    const sortedByLength = [...paragraphs].sort((a, b) => a.content.length - b.content.length);
+    
+    let reorderedContent: string[];
+    
+    switch (pattern) {
+      case 'short-to-long':
+        reorderedContent = sortedByLength.map(p => p.content);
+        break;
+      case 'long-to-short':
+        reorderedContent = sortedByLength.reverse().map(p => p.content);
+        break;
+      case 'short-long-short':
+        const shorts = sortedByLength.slice(0, Math.ceil(sortedByLength.length / 2));
+        const longs = sortedByLength.slice(Math.ceil(sortedByLength.length / 2));
+        reorderedContent = [
+          ...shorts.slice(0, Math.ceil(shorts.length / 2)),
+          ...longs,
+          ...shorts.slice(Math.ceil(shorts.length / 2))
+        ].map(p => p.content);
+        break;
+      case 'long-short-long':
+        const shortParagraphs = sortedByLength.slice(0, Math.floor(sortedByLength.length / 2));
+        const longParagraphs = sortedByLength.slice(Math.floor(sortedByLength.length / 2));
+        reorderedContent = [
+          ...longParagraphs.slice(0, Math.ceil(longParagraphs.length / 2)),
+          ...shortParagraphs,
+          ...longParagraphs.slice(Math.ceil(longParagraphs.length / 2))
+        ].map(p => p.content);
+        break;
+    }
+    
+    let currentOffset = 0;
+    paragraphs.forEach((paragraph, index) => {
+      const startPos = paragraph.pos + 1;
+      const endPos = startPos + paragraph.content.length;
+      const adjustedStartPos = startPos + currentOffset;
+      const adjustedEndPos = endPos + currentOffset;
+      
+      const newContent = reorderedContent[index];
+      const lengthDiff = newContent.length - paragraph.content.length;
+      
+      editor.chain().focus()
+        .setTextSelection({ from: adjustedStartPos, to: adjustedEndPos })
+        .insertContent(newContent)
+        .run();
+      
+      currentOffset += lengthDiff;
+    });
+  };
+
+  // Helper function to add list symbols to paragraphs
+  const addListSymbolToParagraphs = (symbol: string, isNumbered = false) => {
+    const { from, to } = editor.state.selection;
+    const { state } = editor;
+    const { doc } = state;
+    
+    const paragraphs: { pos: number; node: any }[] = [];
+    doc.nodesBetween(from, to, (node, pos) => {
+      if (node.type.name === 'paragraph') {
+        paragraphs.push({ pos, node });
+      }
+    });
+    
+    if (paragraphs.length === 0) {
+      const currentNode = doc.nodeAt(from);
+      if (currentNode && currentNode.type.name === 'paragraph') {
+        const text = currentNode.textContent;
+        const hasSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        if (hasSymbol) {
+          const symbolLength = hasSymbol[0].length;
+          editor.chain().focus().setTextSelection(from).deleteRange({ from, to: from + symbolLength }).run();
+        } else {
+          const insertSymbol = isNumbered ? '1. ' : symbol;
+          editor.chain().focus().setTextSelection(from).insertContent(insertSymbol).run();
+        }
+      } else {
+        const insertSymbol = isNumbered ? '1. ' : symbol;
+        editor.chain().focus().insertContent(insertSymbol).run();
+      }
+    } else {
+      let allHaveSymbols = true;
+      
+      paragraphs.forEach(({ node }) => {
+        if (!node.textContent.match(/^[•\-→]\s|^\d+\.\s/)) {
+          allHaveSymbols = false;
+        }
+      });
+      
+      paragraphs.reverse().forEach(({ pos, node }, index) => {
+        const text = node.textContent;
+        const startPos = pos + 1;
+        const existingSymbol = text.match(/^[•\-→]\s|^\d+\.\s/);
+        
+        if (allHaveSymbols && existingSymbol) {
+          const symbolLength = existingSymbol[0].length;
+          editor.chain().focus().setTextSelection(startPos).deleteRange({ from: startPos, to: startPos + symbolLength }).run();
+        } else if (!allHaveSymbols && !existingSymbol) {
+          let insertSymbol = symbol;
+          if (isNumbered) {
+            const originalIndex = paragraphs.length - 1 - index;
+            insertSymbol = `${originalIndex + 1}. `;
+          }
+          editor.chain().focus().setTextSelection(startPos).insertContent(insertSymbol).run();
+        }
+      });
+    }
+  };
+
   // Handle hook selection
   const handleHookSelect = (hook: { id: number, source: string, content: string }) => {
-    console.log('[linkedin-post-editor.tsx] LinkedIn hook selected:', JSON.stringify(hook));
     setSelectedHook(hook.id);
     
-    // Insert the hook at the beginning of the content
     if (editor) {
-      // Clear the editor first
       editor.commands.clearContent();
-      
-      // Insert the hook text
       editor.commands.setContent(`<p>${hook.content}</p><p></p>`);
-      
-      // Focus at the end
       editor.commands.focus('end');
     }
   };
 
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background ml-2">
       {/* LinkedIn Hook Selector */}
-      
-      
-      {/* Log debugging information */}
-      {(() => {
-        console.log('[linkedin-post-editor.tsx] Rendering hook selector section');
-        console.log('[linkedin-post-editor.tsx] artifact.linkedInHooks exists:', !!artifact.linkedInHooks);
-        console.log('[linkedin-post-editor.tsx] artifact.linkedInHooks length:', artifact.linkedInHooks?.length);
-        console.log('[linkedin-post-editor.tsx] selectedHook:', selectedHook);
-        return null;
-      })()}
       {artifact.linkedInHooks && artifact.linkedInHooks.length > 0 && !selectedHook && (
         <div className="p-4 border-b">
           <h3 className="text-lg font-semibold mb-2">Choose a hook for your LinkedIn post</h3>
@@ -181,22 +283,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
       )}
       
       {/* Formatting Toolbar */}
-      <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
-        {/* Clear Content */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().clearContent().run()}
-          className="size-8 p-0"
-          title="Clear all content"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
-            <path d="M8.586 8.858l-4.95 4.95 5.194 5.194H10V19h1.172l3.778-3.778-6.364-6.364zM10 7.444l6.364 6.364 2.828-2.829-6.364-6.364L10 7.444zM14 19h7v2h-9l-3.998.002-6.487-6.487a1 1 0 0 1 0-1.414L12.12 2.494a1 1 0 0 1 1.415 0l7.778 7.778a1 1 0 0 1 0 1.414L14 19z" />
-          </svg>
-        </Button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
+      <div className="flex flex-wrap items-center gap-1 px-6 py-2 border-b bg-muted/30">
         {/* Text Formatting */}
         <Button
           variant="ghost"
@@ -231,70 +318,135 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
             <path d="M17.1538 14C17.3846 14.5161 17.5 15.0893 17.5 15.7196C17.5 17.0625 16.9762 18.1116 15.9286 18.867C14.8809 19.6223 13.4335 20 11.5862 20C9.94674 20 8.32335 19.6185 6.71592 18.8555V16.6009C8.23538 17.4783 9.7908 17.917 11.3822 17.917C13.9333 17.917 15.2128 17.1846 15.2208 15.7196C15.2208 15.0939 15.0049 14.5598 14.5731 14.1173C14.5339 14.0772 14.4939 14.0381 14.4531 14H3V12H21V14H17.1538ZM13.076 11H7.62908C7.4566 10.8433 7.29616 10.6692 7.14776 10.4778C6.71592 9.92084 6.5 9.24559 6.5 8.45207C6.5 7.21602 6.96583 6.165 7.89749 5.299C8.82916 4.43299 10.2706 4 12.2219 4C13.6934 4 15.1009 4.32808 16.4444 4.98426V7.13591C15.2448 6.44921 13.9293 6.10587 12.4978 6.10587C10.0187 6.10587 8.77917 6.88793 8.77917 8.45207C8.77917 8.87172 8.99709 9.23796 9.43293 9.55079C9.86878 9.86362 10.4066 10.1135 11.0463 10.3004C11.6665 10.4816 12.3431 10.7148 13.076 11H13.076Z" />
           </svg>
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => editor.chain().focus().toggleCode().run()}
-          className={`size-8 p-0 ${editor.isActive('code') ? 'bg-accent' : ''}`}
-          title="Code"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
-            <path d="M23 12l-7.071 7.071-1.414-1.414L20.172 12l-5.657-5.657 1.414-1.414L23 12zM3.828 12l5.657 5.657-1.414 1.414L1 12l7.071-7.071 1.414 1.414L3.828 12z" />
-          </svg>
-        </Button>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Lists */}
+        {/* List Formatting Buttons */}
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`size-8 p-0 ${editor.isActive('bulletList') ? 'bg-accent' : ''}`}
+          onClick={() => addListSymbolToParagraphs('• ')}
+          className="size-8 p-0"
           title="Bullet list"
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" className="size-4">
             <path d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm-3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2zm0 4a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/>
           </svg>
         </Button>
+        
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`size-8 p-0 ${editor.isActive('orderedList') ? 'bg-accent' : ''}`}
+          onClick={() => addListSymbolToParagraphs('- ')}
+          className="size-8 p-0"
+          title="Dashed list"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="size-4">
+            <path d="M5.5 7.5H14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M5.5 11.5H14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1.5 11.5H3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1.5 7.5H3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1.5 3.5H3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M5.5 3.5H14.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => addListSymbolToParagraphs('', true)}
+          className="size-8 p-0"
           title="Numbered list"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" className="size-4">
-            <path d="M5 11.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zm0-4a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 0 1h-9a.5.5 0 0 1-.5-.5zM2.5 4.5A.5.5 0 0 1 3 4h.5v1.5H3a.5.5 0 0 1 0-1zM3 8a.5.5 0 0 1-.5-.5V7h.5a.5.5 0 0 1 0 1zM2.5 11.5A.5.5 0 0 1 3 11h.5v1.5H3a.5.5 0 0 1-.5-.5z"/>
-            <path d="M2 1a1 1 0 0 1 1-1h.5a.5.5 0 0 1 0 1H3v1.5a.5.5 0 0 1-1 0V1zm0 3a1 1 0 0 1 1-1h.5a.5.5 0 0 1 0 1H3v1.5a.5.5 0 0 1-1 0V4zm0 3a1 1 0 0 1 1-1h.5a.5.5 0 0 1 0 1H3v1.5a.5.5 0 0 1-1 0V7z"/>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="size-4">
+            <path d="M6.5 7H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 3H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 11H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M2 9.5C2.2 8.8 2.9 8.4 3.6 8.4C4.3 8.4 5 8.7 5 9.5C5 10.3 4.3 10.8 3.5 11.1C2.7 11.4 2.1 11.7 2 12.5H5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3.5 6V2C3.5 2 3 2.8 2 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => addListSymbolToParagraphs('→ ')}
+          className="size-8 p-0"
+          title="Arrow list"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="size-4">
+            <path d="M6.5 7H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 3H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M6.5 11H13.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M4.8 5.5H1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3.6 4L4.8 5.5L3.6 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M4.8 9.5H1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M3.6 8L4.8 9.5L3.6 11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Button>
 
         <div className="w-px h-6 bg-border mx-1" />
 
-        {/* Emoji Placeholder */}
+        {/* Staircase Formatting Buttons */}
         <Button
           variant="ghost"
           size="sm"
+          onClick={() => reorderParagraphsByLength('short-to-long')}
           className="size-8 p-0"
-          title="Insert emoji"
-          onClick={() => {
-            // Placeholder for emoji functionality
-            editor.chain().focus().insertContent('😊').run();
-          }}
+          title={hasValidSelection ? "Reorder paragraphs: Shortest to Longest" : "Select multiple paragraphs to reorder"}
+          disabled={!hasValidSelection}
         >
           <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
-            <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm0-2a8 8 0 1 0 0-16 8 8 0 0 0 0 16zm-5-7h2a3 3 0 0 0 6 0h2a5 5 0 0 1-10 0zm1-2a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm8 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z" />
+            <path d="m1.5508 1.0996v1.8008h3.0996v4h4v4h4v4h4v4h4v2.1992h-19.1v1.8008h20.898v-5.8008h-4v-4h-4v-4h-4v-4h-4v-4z" />
+          </svg>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => reorderParagraphsByLength('long-to-short')}
+          className="size-8 p-0"
+          title={hasValidSelection ? "Reorder paragraphs: Longest to Shortest" : "Select multiple paragraphs to reorder"}
+          disabled={!hasValidSelection}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
+            <path d="m1.5508 22.9v-1.8008h3.0996v-4h4v-4h4v-4h4v-4h4v-2.1992h-19.1v-1.8008h20.898v5.8008h-4v4h-4v4h-4v4h-4v4z" />
+          </svg>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => reorderParagraphsByLength('short-long-short')}
+          className="size-8 p-0"
+          title={hasValidSelection ? "Reorder paragraphs: Short-Long-Short pattern" : "Select multiple paragraphs to reorder"}
+          disabled={!hasValidSelection}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
+            <path d="m3.5508 1.0996v1.8008h7.0996v4h4v4h4v2.1992h-4v4h-4v4h-7.0996v1.8008h8.8984v-4h4v-4h4v-5.8008h-4v-4h-4v-4z" />
+          </svg>
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => reorderParagraphsByLength('long-short-long')}
+          className="size-8 p-0"
+          title={hasValidSelection ? "Reorder paragraphs: Long-Short-Long pattern" : "Select multiple paragraphs to reorder"}
+          disabled={!hasValidSelection}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" className="size-4">
+            <path d="m3.5498 1.0996v1.8008h15.1v2.1992h-4v4h-4v5.8008h4v4h4v2.1992h-15.1v1.8008h16.9v-5.8008h-4v-4h-4v-2.1992h4v-4h4v-5.8008z" />
           </svg>
         </Button>
       </div>
 
       {/* Editor Content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="relative px-4 pb-4">
+      <div className="flex-1 overflow-y-auto bg-white">
+        <div className="relative px-6 pt-4 pb-4 bg-white">
           <EditorContent 
             editor={editor} 
-            className="h-full"
+            className="h-full bg-white"
           />
         </div>
       </div>

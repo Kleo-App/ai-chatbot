@@ -191,6 +191,8 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
         };
       });
     }
+
+
   },
   content: (props) => <TextArtifactContent {...props} />,
   actions: [

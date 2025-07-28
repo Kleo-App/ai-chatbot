@@ -19,7 +19,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import {
-  MoreHorizontalIcon,
+  MoreIcon,
 } from './icons';
 
 const PureChatItem = ({
@@ -142,7 +142,7 @@ const PureChatItem = ({
               aria-expanded="false"
               data-state="closed"
             >
-              <MoreHorizontalIcon size={14} />
+              <MoreIcon size={14} />
             </button>
           </DropdownMenuTrigger>
 

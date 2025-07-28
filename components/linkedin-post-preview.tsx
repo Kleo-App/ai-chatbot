@@ -108,35 +108,37 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     const isHTML = /<[^>]*>/.test(processedText);
     
     if (isHTML) {
-      // For HTML content, render directly with safe HTML and apply LinkedIn styling
+      // For HTML content, clean up any existing mb-2 classes and render with LinkedIn styling
+      const cleanedHTML = processedText
+        .replace(/class="mb-2"/g, '')
+        .replace(/class="[^"]*mb-2[^"]*"/g, (match) => {
+          // Remove mb-2 from class lists
+          return match.replace(/\s*mb-2\s*/g, ' ').replace(/class="\s*"/g, '').replace(/class="\s+/g, 'class="').replace(/\s+"/g, '"');
+        });
+      
       return <div 
-        className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]"
-        dangerouslySetInnerHTML={{ __html: processedText }} 
+        className="[&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]"
+        dangerouslySetInnerHTML={{ __html: cleanedHTML }} 
       />;
     } else {
-      // For plain text, convert newlines to paragraphs with proper styling
+      // For plain text, convert each line to a separate paragraph
       return (
-        <div className="[&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]">
+        <div className="[&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1 [&_p:empty]:min-h-[1.5em]">
           {processedText
-            .split('\n\n') // Split on double newlines for paragraphs
-            .map((paragraph, paragraphIndex) => {
-              const trimmedParagraph = paragraph.trim();
-              if (!trimmedParagraph) return null;
+            .split(/\n/) // Split on single line breaks to preserve empty lines
+            .map((line, lineIndex) => {
+              const trimmedLine = line.trim();
+              if (trimmedLine.length === 0) {
+                // Preserve empty lines as empty p tags
+                return <p key={lineIndex}></p>;
+              }
               
               return (
-                <p key={paragraphIndex} className="mb-2">
-                  {trimmedParagraph
-                    .split('\n') // Split remaining single newlines within paragraph
-                    .map((line, lineIndex) => (
-                      <span key={lineIndex}>
-                        {line}
-                        {lineIndex < trimmedParagraph.split('\n').length - 1 && <br />}
-                      </span>
-                    ))}
+                <p key={lineIndex}>
+                  {trimmedLine}
                 </p>
               );
-            })
-            .filter(Boolean)}
+            })}
         </div>
       );
     }
@@ -149,12 +151,12 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
     return (
       <div className="relative">
         <div 
-          className={`overflow-hidden ${deviceType === 'mobile' ? 'pr-10' : 'pr-12'} [&_p]:mb-2 [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1`}
+          className={`overflow-hidden ${deviceType === 'mobile' ? 'pr-10' : 'pr-12'} [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1`}
           style={{
             display: '-webkit-box',
             WebkitLineClamp: 3,
             WebkitBoxOrient: 'vertical',
-            lineHeight: '1.5',
+            lineHeight: '1.25rem',
           }}
         >
           {formatContent(text)}
@@ -306,7 +308,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
 
             {/* Post Content */}
             <div className="relative px-4 pb-4">
-              <div className="text-sm leading-relaxed text-left text-[#000000E9] [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1">
+              <div className="text-sm text-left text-[#000000E9] [&_strong]:font-bold [&_em]:italic [&_ul]:list-disc [&_ul]:ml-4 [&_ol]:list-decimal [&_ol]:ml-4 [&_li]:mb-1" style={{ lineHeight: '1.25rem' }}>
                 {isCollapsed ? formatCollapsedContent(content) : formatContent(content)}
               </div>
             </div>

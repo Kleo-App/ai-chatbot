@@ -83,17 +83,19 @@ const TimeSlot = ({
   hour, 
   posts, 
   date, 
-  onTimeSlotClick 
+  onTimeSlotClick,
+  isLast = false
 }: { 
   hour: number; 
   posts: ScheduledPost[]; 
   date: Date; 
   onTimeSlotClick: (date: Date, hour: number) => void; 
+  isLast?: boolean;
 }) => {
   const isEmpty = posts.length === 0;
   
   return (
-    <div className="group border-divider/50 ease relative border-b-[0.5px] transition-all duration-300" style={{ height: '50px' }}>
+    <div className={`group border-divider/50 ease relative transition-all duration-300 ${isLast ? '' : 'border-b-[0.5px]'}`} style={{ height: '50px' }}>
       <div 
         className={`subpixel-antialiased relative h-full w-full p-1 transition-all duration-200 ${
           isEmpty 
@@ -173,7 +175,7 @@ const DayColumn = ({
           </>
         )}
         
-        <div className="relative flex-1" style={{ minHeight: '1200px' }}>
+        <div className="relative" style={{ height: '1200px' }}>
           {hours.map(hour => {
             const hourPosts = posts.filter(post => {
               if (!post.scheduledAt) return false;
@@ -187,6 +189,7 @@ const DayColumn = ({
                 posts={hourPosts} 
                 date={date} 
                 onTimeSlotClick={onTimeSlotClick}
+                isLast={hour === 23}
               />
             );
           })}
@@ -228,10 +231,14 @@ const TimeLegend = () => {
       
       <div className="relative">
         {hours.map(hour => {
-          // Show the END time of each hour block
+          // Show the END time of each hour block, except for the last block (hour 23)
           // Hour 0 (12-1am) should show "1:00 AM"
           // Hour 1 (1-2am) should show "2:00 AM", etc.
-          // Hour 23 (11pm-12am) should show "12:00 AM"
+          // Hour 23 (11pm-12am) should show nothing (end of day)
+          if (hour === 23) {
+            return null; // Hide the empty div for the last hour
+          }
+          
           const endHour = (hour + 1) % 24;
           const isAM = endHour < 12 || endHour === 0;
           const displayHour = endHour === 0 ? 12 : (endHour > 12 ? endHour - 12 : endHour);
@@ -469,7 +476,7 @@ export function ScheduleCalendar() {
             <div className="flex flex-row">
               <TimeLegend />
               
-              <div className="relative flex flex-1 flex-row overflow-x-auto" style={{ minHeight: '1200px' }}>
+              <div className="relative flex flex-1 flex-row overflow-x-auto" style={{ height: '1200px' }}>
                 <div className="bg-white flex flex-1 flex-row">
                   {days.map((day, index) => (
                     <DayColumn 

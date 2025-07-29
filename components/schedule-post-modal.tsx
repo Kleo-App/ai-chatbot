@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,11 +38,34 @@ export function SchedulePostModal({
     return tomorrow;
   });
   const [isScheduling, setIsScheduling] = useState(false);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
+  const [isLinkedInConnected, setIsLinkedInConnected] = useState(false);
+  const [isCheckingLinkedIn, setIsCheckingLinkedIn] = useState(true);
 
   const handleDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDateTime = new Date(e.target.value);
     setSelectedDate(newDateTime);
+  };
+
+  // Check LinkedIn connection status when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      checkLinkedInStatus();
+    }
+  }, [isOpen]);
+
+  const checkLinkedInStatus = async () => {
+    setIsCheckingLinkedIn(true);
+    try {
+      const response = await fetch('/api/linkedin/status');
+      if (response.ok) {
+        const data = await response.json();
+        setIsLinkedInConnected(data.isConnected);
+      }
+    } catch (error) {
+      console.error('Failed to check LinkedIn status:', error);
+    } finally {
+      setIsCheckingLinkedIn(false);
+    }
   };
 
   const updateDocumentStatus = async (status: 'scheduled' | 'draft', scheduledAt?: Date) => {
@@ -91,21 +114,29 @@ export function SchedulePostModal({
     }
   };
 
-  const handleSaveAsDraft = async () => {
-    setIsSavingDraft(true);
+  const handleConnectLinkedInAndSchedule = async () => {
+    setIsScheduling(true);
     try {
-      const success = await updateDocumentStatus('draft');
+      // First save the post as scheduled
+      const success = await updateDocumentStatus('scheduled', selectedDate);
       if (success) {
-        toast.success('Post saved as draft');
-        onClose();
+        // Save current URL to return after OAuth
+        const currentUrl = window.location.href;
+        
+        // Show a toast that we're connecting
+        toast.success(`Post scheduled! Redirecting to LinkedIn to connect...`);
+        
+        // Redirect to LinkedIn auth
+        window.location.href = `/api/linkedin/auth?returnUrl=${encodeURIComponent(currentUrl)}`;
       }
     } catch (error) {
-      console.error('Error saving draft:', error);
-      toast.error('Failed to save as draft');
-    } finally {
-      setIsSavingDraft(false);
+      console.error('Error scheduling post and connecting LinkedIn:', error);
+      toast.error('Failed to schedule post and connect LinkedIn');
+      setIsScheduling(false);
     }
   };
+
+
 
   const formatDateTime = (date: Date) => {
     return format(date, "yyyy-MM-dd'T'HH:mm");
@@ -154,11 +185,6 @@ export function SchedulePostModal({
                   </div>
                 </div>
               </div>
-              <div className="flex w-full justify-start mt-2">
-                <span className="text-muted-foreground text-xs">
-                  We've selected your next available slot from your content strategy.
-                </span>
-              </div>
             </div>
 
             {/* Action Buttons */}
@@ -166,37 +192,34 @@ export function SchedulePostModal({
               <div className="flex flex-col items-center w-full">
                 <div className="relative flex items-center w-full">
                   <Button 
-                    onClick={handleSchedulePost}
-                    disabled={isScheduling || isSavingDraft}
+                    onClick={isLinkedInConnected ? handleSchedulePost : handleConnectLinkedInAndSchedule}
+                    disabled={isScheduling || isCheckingLinkedIn}
                     className="w-full h-12 bg-primary text-primary-foreground hover:opacity-hover gap-2"
                   >
                     {isScheduling ? (
                       <>
                         <Clock className="w-5 h-5 animate-spin" />
-                        Scheduling post...
+                        {isLinkedInConnected ? 'Scheduling post...' : 'Scheduling & connecting...'}
+                      </>
+                    ) : isCheckingLinkedIn ? (
+                      <>
+                        <Clock className="w-5 h-5 animate-spin" />
+                        Checking connection...
+                      </>
+                    ) : isLinkedInConnected ? (
+                      <>
+                        Schedule post for {format(selectedDate, 'MMM d')} at {format(selectedDate, 'h:mm a')}
+                        <Clock className="w-5 h-5" />
                       </>
                     ) : (
                       <>
-                        Schedule post for {format(selectedDate, 'MMM d')} at {format(selectedDate, 'h:mm a')}
+                        Connect to LinkedIn and schedule post
                         <Clock className="w-5 h-5" />
                       </>
                     )}
                   </Button>
                   <Info className="text-foreground absolute -right-8 w-4 h-4" />
                 </div>
-                
-                <span className="text-muted-foreground mt-2 h-4 text-sm leading-4">
-                  or
-                </span>
-                
-                <Button 
-                  variant="ghost"
-                  onClick={handleSaveAsDraft}
-                  disabled={isScheduling || isSavingDraft}
-                  className="bg-transparent hover:bg-default/40 text-muted-foreground underline"
-                >
-                  {isSavingDraft ? 'Saving as draft...' : 'Save as draft in the calendar'}
-                </Button>
               </div>
             </div>
           </div>

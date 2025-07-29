@@ -4,7 +4,6 @@ import { memo, useState } from 'react';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { 
-  ShareIcon, 
   ImageIcon,
   MonitorIcon,
   SmartphoneIcon,
@@ -12,10 +11,13 @@ import {
   ChevronUpIcon,
   CalendarIcon
 } from './icons';
+import { SendHorizontal } from 'lucide-react';
 import { ArtifactActions } from './artifact-actions';
 import { MediaUploadModal } from './media-upload-modal';
 import { formatDistance } from 'date-fns';
 import type { UIArtifact } from './artifact';
+import type { Document } from '@/lib/db/schema';
+import { PostStatusBadge } from './post-status-badge';
 
 interface LinkedInPostPreviewProps {
   content: string;
@@ -29,9 +31,7 @@ interface LinkedInPostPreviewProps {
   onToggleCollapsed?: () => void;
   // Artifact header props
   artifact?: UIArtifact;
-  document?: {
-    createdAt: Date;
-  } | null;
+  document?: Document | null;
   isContentDirty?: boolean;
   currentVersionIndex?: number;
   handleVersionChange?: (type: 'next' | 'prev' | 'toggle' | 'latest') => void;
@@ -195,10 +195,19 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             {/* Left side: title */}
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-left">
-                <div className="font-medium text-sm text-left" title={artifact?.title}>
-                  {artifact?.title && artifact.title.length > 40 
-                    ? `${artifact.title.substring(0, 40)}...` 
-                    : artifact?.title}
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-sm text-left" title={artifact?.title}>
+                    {artifact?.title && artifact.title.length > 40 
+                      ? `${artifact.title.substring(0, 40)}...` 
+                      : artifact?.title}
+                  </div>
+                  {document && (
+                    <PostStatusBadge 
+                      status={document.status || 'draft'} 
+                      scheduledAt={document.scheduledAt ? new Date(document.scheduledAt) : null}
+                      className="text-[10px] h-5"
+                    />
+                  )}
                 </div>
                 {isContentDirty ? (
                   <div className="text-xs text-muted-foreground text-left">Saving changes...</div>
@@ -248,7 +257,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                   style={{ backgroundColor: '#157dff' }}
                 >
                   Publish
-                  <ShareIcon size={14} />
+                  <SendHorizontal size={14} />
                 </Button>
               )}
             </div>

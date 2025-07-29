@@ -9,8 +9,8 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ChevronLeft, ChevronRight, Settings, Plus, Calendar, CalendarDays, MapPin } from 'lucide-react';
-import { format, addWeeks, subWeeks, startOfWeek, addDays, isSameDay } from 'date-fns';
+import { ChevronLeft, ChevronRight, Settings, Plus, Calendar, CalendarDays, MapPin, Clock } from 'lucide-react';
+import { format, addWeeks, subWeeks, startOfWeek, addDays, isSameDay, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getWeeksInMonth } from 'date-fns';
 import { PostStatusBadge } from './post-status-badge';
 import { SelectDraftPostModal } from './select-draft-post-modal';
 import { PostPreviewPopover } from './post-preview-popover';
@@ -182,11 +182,7 @@ const StatusIcon = ({ status }: { status: ScheduledPost['status'] }) => {
   }
   
   return (
-    <svg viewBox="0 0 12 12" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-foreground">
-      <g>
-        <circle cx="6" cy="6" fill="none" r="5.25" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1"></circle>
-      </g>
-    </svg>
+    <Clock className="w-4 h-4 text-foreground" />
   );
 };
 
@@ -194,15 +190,40 @@ const StatusIcon = ({ status }: { status: ScheduledPost['status'] }) => {
 const getPostContent = (post: ScheduledPost) => {
   if (!post.content) return post.title;
   
+  let textContent = post.content;
+  
   try {
     const parsed = JSON.parse(post.content);
     if (parsed && typeof parsed === 'object' && parsed.text) {
-      return parsed.text;
+      textContent = parsed.text;
     }
-    return post.content;
   } catch (e) {
-    return post.content;
+    textContent = post.content;
   }
+  
+  // Strip HTML tags to show only plain text
+  const stripHtml = (html: string) => {
+    return html
+      // Handle empty paragraphs (they represent single line breaks)
+      .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+      // Handle content paragraphs - extract text and add space
+      .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+      // Convert br tags to spaces
+      .replace(/<br[^>]*>/gi, ' ')
+      // Convert div tags to spaces
+      .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+      .replace(/<div[^>]*>/gi, '')
+      .replace(/<\/div>/gi, ' ')
+      // Remove any remaining HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Clean up multiple spaces and trim
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+  
+  // Check if content contains HTML tags
+  const hasHtmlTags = /<[^>]*>/.test(textContent);
+  return hasHtmlTags ? stripHtml(textContent) : textContent;
 };
 
 const PostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpdated?: () => void }) => {
@@ -522,6 +543,263 @@ const TimeLegend = ({ timezone }: { timezone: string }) => {
   );
 };
 
+const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpdated?: () => void }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'POST',
+    item: { id: post.id, post, isScheduled: true },
+    canDrag: post.status !== 'published', // Only allow dragging if not published
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const content = getPostContent(post);
+  
+  return (
+    <div
+      ref={drag as any}
+      className={`transition-all duration-200 ${
+        isDragging ? 'opacity-50 rotate-1 scale-105 cursor-grabbing' : post.status !== 'published' ? 'cursor-grab' : 'cursor-default'
+      }`}
+    >
+      {isDragging ? (
+        <div className="bg-content3 border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border shadow-xs transition-all duration-200 hover:border-foreground/30 hover:bg-content4">
+          <div className="pt-2 flex w-full flex-col items-start justify-between gap-2.5 px-2 pb-2">
+            <div className="flex w-full flex-col gap-1.5">
+              <div className="flex w-full flex-row items-start justify-between gap-2">
+                <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+                  <StatusIcon status={post.status} />
+                </div>
+                <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-1">
+                  {content}
+                </p>
+              </div>
+              {post.scheduledAt && (
+                <div className="flex flex-row items-center gap-2">
+                  <div className="border-divider flex w-fit items-center gap-1.5 overflow-hidden rounded-md border-[0.5px] px-1.5 py-0.5 text-ellipsis whitespace-nowrap">
+                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
+                    <p className="text-muted-foreground whitespace overflow-hidden text-[11px] font-medium text-ellipsis">
+                      {format(post.scheduledAt, 'h:mm a')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
+        <PostPreviewPopover post={post} onPostUpdated={onPostUpdated}>
+          <div className="bg-content3 border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border shadow-xs transition-all duration-200 hover:border-foreground/30 hover:bg-content4 cursor-pointer">
+            <div className="pt-2 flex w-full flex-col items-start justify-between gap-2.5 px-2 pb-2">
+              <div className="flex w-full flex-col gap-1.5">
+                <div className="flex w-full flex-row items-start justify-between gap-2">
+                  <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+                    <StatusIcon status={post.status} />
+                  </div>
+                  <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-1">
+                    {content}
+                  </p>
+                </div>
+                {post.scheduledAt && (
+                  <div className="flex flex-row items-center gap-2">
+                    <div className="border-divider flex w-fit items-center gap-1.5 overflow-hidden rounded-md border-[0.5px] px-1.5 py-0.5 text-ellipsis whitespace-nowrap">
+                      <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
+                      <p className="text-muted-foreground whitespace overflow-hidden text-[11px] font-medium text-ellipsis">
+                        {format(post.scheduledAt, 'h:mm a')}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </PostPreviewPopover>
+      )}
+    </div>
+  );
+};
+
+const MonthDay = ({ 
+  date, 
+  posts, 
+  onDayClick,
+  onPostDropped,
+  onPostUpdated,
+  timezone,
+  isCurrentMonth = true,
+  isToday = false
+}: {
+  date: Date;
+  posts: ScheduledPost[];
+  onDayClick: (date: Date) => void;
+  onPostDropped: (postId: string, date: Date, originalPost: any) => void;
+  onPostUpdated?: () => void;
+  timezone: string;
+  isCurrentMonth?: boolean;
+  isToday?: boolean;
+}) => {
+  const [{ isOver, canDrop }, drop] = useDrop({
+    accept: 'POST',
+    drop: (item: { id: string; post: any; isScheduled?: boolean }) => {
+      // Pass the original post data to let parent handle hour calculation
+      onPostDropped(item.id, date, item.post);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+      canDrop: monitor.canDrop(),
+    }),
+  });
+
+  const dayPosts = posts
+    .filter(post => {
+      if (!post.scheduledAt) return false;
+      return isSameDay(post.scheduledAt, date);
+    })
+    .sort((a, b) => {
+      // Sort by scheduled time (earliest to latest)
+      if (!a.scheduledAt || !b.scheduledAt) return 0;
+      
+      // Convert to viewing timezone for proper sorting
+      const timeA = convertPostTimeToViewingTimezone(a, timezone);
+      const timeB = convertPostTimeToViewingTimezone(b, timezone);
+      
+      if (!timeA || !timeB) return 0;
+      
+      return timeA.getTime() - timeB.getTime();
+    });
+
+  return (
+    <div
+      ref={drop as any}
+      className={`group relative border-r border-b border-divider h-32 transition-all duration-200 ${
+        canDrop && isOver ? 'bg-primary/10 border-primary/50' : ''
+      } ${!isCurrentMonth ? 'opacity-50' : ''}`}
+    >
+      <div
+        className={`h-full w-full p-2 transition-all duration-200 ${
+          isToday ? 'bg-primary/5' : 'hover:bg-gray-50'
+        }`}
+      >
+        <div className="flex items-center justify-between mb-1">
+          <div className={`text-sm font-medium ${
+            isToday 
+              ? 'text-primary font-semibold' 
+              : isCurrentMonth 
+                ? 'text-foreground' 
+                : 'text-muted-foreground'
+          }`}>
+            {format(date, 'd')}
+          </div>
+          
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onDayClick(date)}
+            className="invisible group-hover:visible opacity-70 hover:opacity-100 rounded-full min-w-8 w-8 h-8 p-0 bg-transparent hover:bg-default/40 transition-all duration-200"
+            aria-label="Add to day"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </Button>
+        </div>
+        
+        <div className="scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-100 flex flex-1 flex-col gap-0.5 overflow-y-auto max-h-20">
+          {dayPosts.slice(0, 6).map(post => (
+            <MonthPostCard key={post.id} post={post} onPostUpdated={onPostUpdated} />
+          ))}
+          {dayPosts.length > 6 && (
+            <div className="text-xs text-muted-foreground pl-2">
+              +{dayPosts.length - 6} more
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MonthCalendarHeader = ({ 
+  currentMonth, 
+  timezone, 
+  weekStartsOn 
+}: {
+  currentMonth: Date;
+  timezone: string;
+  weekStartsOn: 'monday' | 'sunday';
+}) => {
+  const weekStartOption = weekStartsOn === 'sunday' ? 0 : 1;
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const orderedDays = weekStartOption === 1 ? [...days.slice(1), days[0]] : days;
+  
+  return (
+    <div className="border-divider bg-gray-50 flex border-b select-none">
+      {orderedDays.map((day, index) => (
+        <div 
+          key={index}
+          className="text-muted-foreground flex-1 flex items-center justify-center p-3 text-sm font-medium border-r border-divider last:border-r-0"
+        >
+          {day}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const MonthGrid = ({ 
+  currentMonth, 
+  posts, 
+  onDayClick,
+  onPostDropped,
+  onPostUpdated,
+  timezone,
+  weekStartsOn
+}: {
+  currentMonth: Date;
+  posts: ScheduledPost[];
+  onDayClick: (date: Date) => void;
+  onPostDropped: (postId: string, date: Date, originalPost: any) => void;
+  onPostUpdated?: () => void;
+  timezone: string;
+  weekStartsOn: 'monday' | 'sunday';
+}) => {
+  const weekStartOption = weekStartsOn === 'sunday' ? 0 : 1;
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: weekStartOption });
+  const calendarEnd = addDays(calendarStart, 41); // 6 weeks * 7 days
+  
+  const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
+  
+  const todayInTimezone = (() => {
+    try {
+      const now = new Date();
+      return new Date(now.toLocaleDateString("en-US", { timeZone: timezone }));
+    } catch (error) {
+      return new Date();
+    }
+  })();
+
+  return (
+    <div className="bg-white">
+      <div className="grid grid-cols-7">
+        {days.map((day, index) => (
+          <MonthDay
+            key={index}
+            date={day}
+            posts={posts}
+            onDayClick={onDayClick}
+            onPostDropped={(postId, date) => onPostDropped(postId, date, 9)}
+            onPostUpdated={onPostUpdated}
+            isCurrentMonth={day >= monthStart && day <= monthEnd}
+            isToday={isSameDay(day, todayInTimezone)}
+            timezone={timezone}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const CalendarHeader = ({ currentWeek, onPreviousWeek, onNextWeek, onToday, timezone, weekStartsOn }: {
   currentWeek: Date;
   onPreviousWeek: () => void;
@@ -576,6 +854,8 @@ const CalendarHeader = ({ currentWeek, onPreviousWeek, onNextWeek, onToday, time
 
 function ScheduleCalendarContent() {
   const [currentWeek, setCurrentWeek] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [viewType, setViewType] = useState<'week' | 'month'>('week');
   const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
   const [selectedDateTime, setSelectedDateTime] = useState<Date>(new Date());
   const [scheduledPosts, setScheduledPosts] = useState<ScheduledPost[]>([]);
@@ -684,21 +964,40 @@ function ScheduleCalendarContent() {
   }, []);
   
   const handlePreviousWeek = () => {
-    setCurrentWeek(prev => subWeeks(prev, 1));
+    setCurrentWeek(subWeeks(currentWeek, 1));
   };
-  
+
   const handleNextWeek = () => {
-    setCurrentWeek(prev => addWeeks(prev, 1));
+    setCurrentWeek(addWeeks(currentWeek, 1));
   };
-  
+
   const handleToday = () => {
-    try {
-      const now = new Date();
-      const todayInTimezone = new Date(now.toLocaleDateString("en-US", { timeZone: selectedTimezone }));
-      setCurrentWeek(todayInTimezone);
-    } catch (error) {
-      // Fallback to local date if timezone is invalid
-      setCurrentWeek(new Date());
+    const today = new Date();
+    setCurrentWeek(today);
+    setCurrentMonth(today);
+  };
+
+  const handlePreviousMonth = () => {
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  const handlePrevious = () => {
+    if (viewType === 'week') {
+      handlePreviousWeek();
+    } else {
+      handlePreviousMonth();
+    }
+  };
+
+  const handleNext = () => {
+    if (viewType === 'week') {
+      handleNextWeek();
+    } else {
+      handleNextMonth();
     }
   };
 
@@ -707,6 +1006,54 @@ function ScheduleCalendarContent() {
     dateTime.setHours(hour, 0, 0, 0);
     setSelectedDateTime(dateTime);
     setIsDraftModalOpen(true);
+  };
+
+  const findBestAvailableHour = (date: Date, preferredHour?: number): number => {
+    // Get posts for the selected day
+    const dayPosts = scheduledPosts.filter(post => {
+      if (!post.scheduledAt) return false;
+      // Convert post time to the current viewing timezone
+      const convertedTime = convertPostTimeToViewingTimezone(post, selectedTimezone);
+      if (!convertedTime) return false;
+      return isSameDay(convertedTime, date);
+    });
+
+    // Get hours that are already taken
+    const takenHours = new Set(dayPosts.map(post => {
+      const convertedTime = convertPostTimeToViewingTimezone(post, selectedTimezone);
+      return convertedTime ? convertedTime.getHours() : null;
+    }).filter(hour => hour !== null));
+
+    // If a preferred hour is provided and it's available, use it
+    if (preferredHour !== undefined && !takenHours.has(preferredHour)) {
+      return preferredHour;
+    }
+
+    // Find the next available hour starting from 9 AM
+    for (let hour = 9; hour < 24; hour++) {
+      if (!takenHours.has(hour)) {
+        return hour;
+      }
+    }
+
+    // If all hours from 9 AM to 11 PM are taken, start from earlier hours
+    for (let hour = 6; hour < 9; hour++) {
+      if (!takenHours.has(hour)) {
+        return hour;
+      }
+    }
+
+    // If somehow all hours are taken, default to 9 AM (shouldn't happen in practice)
+    return 9;
+  };
+
+  const findNextAvailableHour = (date: Date): number => {
+    return findBestAvailableHour(date);
+  };
+
+  const handleDayClick = (date: Date) => {
+    const nextAvailableHour = findNextAvailableHour(date);
+    handleTimeSlotClick(date, nextAvailableHour);
   };
 
   const handlePostDropped = async (postId: string, date: Date, hour: number) => {
@@ -728,26 +1075,43 @@ function ScheduleCalendarContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: JSON.stringify({ 
           status: 'scheduled',
           scheduledAt: dateTime.toISOString(),
-          scheduledTimezone: selectedTimezone,
+          scheduledTimezone: selectedTimezone
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to schedule post');
+        throw new Error('Failed to update post schedule');
       }
 
       const action = existingPost?.scheduledAt ? 'rescheduled' : 'scheduled';
       toast.success(`Post ${action} for ${format(dateTime, 'PPP p')}`);
       
-      // Refresh both calendar data and sidebar
+      // Refresh calendar data
       await fetchScheduledPosts();
     } catch (error) {
-      console.error('Error scheduling post:', error);
-      toast.error('Failed to schedule post');
+      console.error('Error updating post schedule:', error);
+      toast.error('Failed to reschedule post');
     }
+  };
+
+  const handleMonthPostDropped = async (postId: string, date: Date, originalPost: any) => {
+    // Try to preserve the original hour when dragging to a new day
+    let originalHour = 9; // default fallback
+    if (originalPost && originalPost.scheduledAt) {
+      const originalTime = convertPostTimeToViewingTimezone(originalPost, selectedTimezone);
+      if (originalTime) {
+        originalHour = originalTime.getHours();
+      }
+    }
+    
+    // Find the best available hour (preferring the original hour)
+    const bestHour = findBestAvailableHour(date, originalHour);
+    
+    // Call the existing handlePostDropped with the calculated hour
+    return handlePostDropped(postId, date, bestHour);
   };
 
   const handlePostSelected = async (post: Document) => {
@@ -801,8 +1165,8 @@ function ScheduleCalendarContent() {
           <div className="grid w-full grid-cols-2 items-center gap-2 sm:flex sm:gap-4">
             <div className="order-3 col-span-2 flex w-full flex-row items-center justify-between gap-2 sm:order-2 sm:justify-start sm:gap-4">
               <p className="text-foreground col-span-2 flex w-fit flex-row items-center justify-start text-lg font-normal tracking-tight whitespace-pre">
-                <span className="font-semibold">{format(currentWeek, 'MMMM ')} </span>
-                <span className="text-foreground">{format(currentWeek, 'yyyy')}</span>
+                <span className="font-semibold">{format(viewType === 'week' ? currentWeek : currentMonth, 'MMMM ')} </span>
+                <span className="text-foreground">{format(viewType === 'week' ? currentWeek : currentMonth, 'yyyy')}</span>
               </p>
               
               <Button 
@@ -818,7 +1182,7 @@ function ScheduleCalendarContent() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={handlePreviousWeek}
+                  onClick={handlePrevious}
                   className="rounded-r-none bg-transparent text-default-foreground hover:bg-default/40"
                 >
                   <ChevronLeft className="w-5 h-5" />
@@ -826,7 +1190,7 @@ function ScheduleCalendarContent() {
                 <Button 
                   variant="ghost" 
                   size="sm"
-                  onClick={handleNextWeek}
+                  onClick={handleNext}
                   className="rounded-l-none bg-transparent text-default-foreground hover:bg-default/40"
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -836,6 +1200,15 @@ function ScheduleCalendarContent() {
           </div>
           
           <div className="flex flex-row items-center gap-2">
+            <Select value={viewType} onValueChange={(value: 'week' | 'month') => setViewType(value)}>
+              <SelectTrigger className="w-24 bg-default/40 text-default-700 border-divider">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="week">Week</SelectItem>
+                <SelectItem value="month">Month</SelectItem>
+              </SelectContent>
+            </Select>
             <Button 
               variant="outline" 
               size="sm"
@@ -864,40 +1237,68 @@ function ScheduleCalendarContent() {
         {/* Calendar container */}
         <div className="border-divider bg-white flex flex-1 h-full min-h-0 flex-col items-center justify-between gap-3 overflow-hidden border-[0.5px]">
           <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
-            {/* Sticky CalendarHeader */}
-            <div className="sticky top-0 z-40">
-              <CalendarHeader 
-                currentWeek={currentWeek}
-                onPreviousWeek={handlePreviousWeek}
-                onNextWeek={handleNextWeek}
-                onToday={handleToday}
-                timezone={selectedTimezone}
-                weekStartsOn={weekStartsOn}
-              />
-            </div>
-            
-            {/* Calendar content */}
-            <div className="flex flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
-              <div className="flex flex-row">
-                <TimeLegend timezone={selectedTimezone} />
+            {viewType === 'week' ? (
+              <>
+                {/* Sticky CalendarHeader */}
+                <div className="sticky top-0 z-40">
+                  <CalendarHeader 
+                    currentWeek={currentWeek}
+                    onPreviousWeek={handlePreviousWeek}
+                    onNextWeek={handleNextWeek}
+                    onToday={handleToday}
+                    timezone={selectedTimezone}
+                    weekStartsOn={weekStartsOn}
+                  />
+                </div>
                 
-                <div className="relative flex flex-1 flex-row overflow-x-auto" style={{ height: '1200px' }}>
-                  <div className="bg-white flex flex-1 flex-row">
-                    {days.map((day, index) => (
-                      <DayColumn 
-                        key={index} 
-                        date={day} 
-                        posts={scheduledPosts}
-                        onTimeSlotClick={handleTimeSlotClick}
-                        onPostDropped={handlePostDropped}
-                        onPostUpdated={fetchScheduledPosts}
-                        timezone={selectedTimezone}
-                      />
-                    ))}
+                {/* Calendar content */}
+                <div className="flex flex-1 flex-col overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                  <div className="flex flex-row">
+                    <TimeLegend timezone={selectedTimezone} />
+                    
+                    <div className="relative flex flex-1 flex-row overflow-x-auto" style={{ height: '1200px' }}>
+                      <div className="bg-white flex flex-1 flex-row">
+                        {days.map((day, index) => (
+                          <DayColumn 
+                            key={index} 
+                            date={day} 
+                            posts={scheduledPosts}
+                            onTimeSlotClick={handleTimeSlotClick}
+                            onPostDropped={handlePostDropped}
+                            onPostUpdated={fetchScheduledPosts}
+                            timezone={selectedTimezone}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              </>
+            ) : (
+              <>
+                {/* Sticky MonthCalendarHeader */}
+                <div className="sticky top-0 z-40">
+                  <MonthCalendarHeader 
+                    currentMonth={currentMonth}
+                    timezone={selectedTimezone}
+                    weekStartsOn={weekStartsOn}
+                  />
+                </div>
+                
+                {/* Month calendar content */}
+                <div className="flex flex-1 flex-col overflow-y-auto">
+                  <MonthGrid
+                    currentMonth={currentMonth}
+                    posts={scheduledPosts}
+                    onDayClick={handleDayClick}
+                    onPostDropped={handleMonthPostDropped}
+                    onPostUpdated={fetchScheduledPosts}
+                    timezone={selectedTimezone}
+                    weekStartsOn={weekStartsOn}
+                  />
+                </div>
+              </>
+            )}
           </div>
         </div>
 

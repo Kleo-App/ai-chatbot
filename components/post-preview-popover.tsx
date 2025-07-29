@@ -36,15 +36,40 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
   const getPostContent = () => {
     if (!post.content) return post.title;
     
+    let textContent = post.content;
+    
     try {
       const parsed = JSON.parse(post.content);
       if (parsed && typeof parsed === 'object' && parsed.text) {
-        return parsed.text;
+        textContent = parsed.text;
       }
-      return post.content;
     } catch (e) {
-      return post.content;
+      textContent = post.content;
     }
+
+    // Strip HTML tags to show only plain text
+    const stripHtml = (html: string) => {
+      return html
+        // Handle empty paragraphs (they represent single line breaks)
+        .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+        // Handle content paragraphs - extract text and add space
+        .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+        // Convert br tags to spaces
+        .replace(/<br[^>]*>/gi, ' ')
+        // Convert div tags to spaces
+        .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, ' ')
+        // Remove any remaining HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up multiple spaces and trim
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    // Check if content contains HTML tags
+    const hasHtmlTags = /<[^>]*>/.test(textContent);
+    return hasHtmlTags ? stripHtml(textContent) : textContent;
   };
 
   // Handle removing post from calendar
@@ -84,6 +109,36 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
     }
   };
 
+  const handleEditPost = async () => {
+    try {
+      // Try to find the existing chat that created this document
+      const response = await fetch(`/api/posts/${post.id}/chat`);
+      
+      if (response.ok) {
+        const { chatId } = await response.json();
+        if (chatId) {
+          // Navigate to the existing chat with the document
+          window.location.href = `/chat/${chatId}?documentId=${post.id}`;
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error finding chat for document:', error);
+    }
+    
+    // Fallback: generate a new chat ID if we can't find the original
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    };
+    
+    const chatId = generateUUID();
+    window.location.href = `/chat/${chatId}?documentId=${post.id}`;
+  };
+
   // Map user data
   const userProfile = user ? {
     fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
@@ -113,7 +168,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
           {/* Header with time and category */}
           <div className="flex flex-row justify-between border-b border-divider px-3 pt-2 pb-2">
             <time className="text-muted-foreground text-sm">
-              {format(displayTime, 'MMM d, HH:mm (O)')}
+              {format(displayTime, 'MMM d, h:mm a (O)')}
             </time>
             <div className="flex w-fit items-center gap-1.5 rounded-md border border-divider border-[0.5px] px-1.5 py-0.5">
               <div className="h-2 w-2 rounded-full bg-purple-500"></div>
@@ -176,10 +231,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
               variant="outline" 
               size="sm"
               className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
-              onClick={() => {
-                // Navigate to edit - you can implement this
-                window.open(`/chat?documentId=${post.id}`, '_blank');
-              }}
+              onClick={handleEditPost}
             >
               <Edit className="h-4 w-4" />
               <span className="hidden sm:block">Edit Post</span>

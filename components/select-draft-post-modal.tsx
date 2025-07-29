@@ -52,15 +52,40 @@ export function SelectDraftPostModal({
   const getPreviewContent = (content: string | null) => {
     if (!content) return 'No content';
     
+    let textContent = content;
+    
     try {
       const parsedContent = JSON.parse(content);
       if (parsedContent && typeof parsedContent === 'object' && parsedContent.text) {
-        return parsedContent.text;
+        textContent = parsedContent.text;
       }
-      return content;
     } catch (e) {
-      return content;
+      textContent = content;
     }
+
+    // Strip HTML tags to show only plain text
+    const stripHtml = (html: string) => {
+      return html
+        // Handle empty paragraphs (they represent single line breaks)
+        .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+        // Handle content paragraphs - extract text and add space
+        .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+        // Convert br tags to spaces
+        .replace(/<br[^>]*>/gi, ' ')
+        // Convert div tags to spaces
+        .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, ' ')
+        // Remove any remaining HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up multiple spaces and trim
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    // Check if content contains HTML tags
+    const hasHtmlTags = /<[^>]*>/.test(textContent);
+    return hasHtmlTags ? stripHtml(textContent) : textContent;
   };
 
   const handlePostSelect = (post: Document) => {

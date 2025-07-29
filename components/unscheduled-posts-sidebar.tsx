@@ -24,15 +24,40 @@ interface UnscheduledPost {
 const getPostContent = (post: UnscheduledPost) => {
   if (!post.content) return post.title;
   
+  let textContent = post.content;
+  
   try {
     const parsed = JSON.parse(post.content);
     if (parsed && typeof parsed === 'object' && parsed.text) {
-      return parsed.text;
+      textContent = parsed.text;
     }
-    return post.content;
   } catch (e) {
-    return post.content;
+    textContent = post.content;
   }
+  
+  // Strip HTML tags to show only plain text
+  const stripHtml = (html: string) => {
+    return html
+      // Handle empty paragraphs (they represent single line breaks)
+      .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+      // Handle content paragraphs - extract text and add space
+      .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+      // Convert br tags to spaces
+      .replace(/<br[^>]*>/gi, ' ')
+      // Convert div tags to spaces
+      .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+      .replace(/<div[^>]*>/gi, '')
+      .replace(/<\/div>/gi, ' ')
+      // Remove any remaining HTML tags
+      .replace(/<[^>]*>/g, '')
+      // Clean up multiple spaces and trim
+      .replace(/\s+/g, ' ')
+      .trim();
+  };
+  
+  // Check if content contains HTML tags
+  const hasHtmlTags = /<[^>]*>/.test(textContent);
+  return hasHtmlTags ? stripHtml(textContent) : textContent;
 };
 
 const DraggablePost = ({ post, onPostUpdated }: { post: UnscheduledPost; onPostUpdated?: () => void }) => {
@@ -95,7 +120,6 @@ export function UnscheduledPostsSidebar({ onPostsChange }: UnscheduledPostsSideb
       }
       const data: Document[] = await response.json();
       const mappedPosts = data
-        .filter(doc => !doc.scheduledAt) // Only include posts without scheduled times
         .map(doc => ({
           id: doc.id,
           title: doc.title,
@@ -106,7 +130,8 @@ export function UnscheduledPostsSidebar({ onPostsChange }: UnscheduledPostsSideb
           kind: doc.kind as UnscheduledPost['kind'],
           userId: doc.userId,
           createdAt: new Date(doc.createdAt),
-        }));
+        }))
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()); // Sort newest to oldest
       setUnscheduledPosts(mappedPosts);
     } catch (error) {
       console.error('Error fetching unscheduled posts:', error);

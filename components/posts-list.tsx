@@ -77,21 +77,46 @@ function PostRow({ document }: { document: Document }) {
   const getPreviewContent = (content: string | null) => {
     if (!content) return 'No content';
     
+    let textContent = content;
+    
     try {
       // Parse the content as JSON
       const parsedContent = JSON.parse(content);
       
       // Extract the text field from the JSON object
       if (parsedContent && typeof parsedContent === 'object' && parsedContent.text) {
-        return truncateContent(parsedContent.text);
+        textContent = parsedContent.text;
       }
-      
-      // Fallback to original content if text field is not found
-      return truncateContent(content);
     } catch (e) {
-      // If parsing fails, return the original content
-      return truncateContent(content);
+      // If parsing fails, use the original content
+      textContent = content;
     }
+    
+    // Strip HTML tags to show only plain text
+    const stripHtml = (html: string) => {
+      return html
+        // Handle empty paragraphs (they represent single line breaks)
+        .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+        // Handle content paragraphs - extract text and add space
+        .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+        // Convert br tags to spaces
+        .replace(/<br[^>]*>/gi, ' ')
+        // Convert div tags to spaces
+        .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, ' ')
+        // Remove any remaining HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up multiple spaces and trim
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    // Check if content contains HTML tags
+    const hasHtmlTags = /<[^>]*>/.test(textContent);
+    const finalText = hasHtmlTags ? stripHtml(textContent) : textContent;
+    
+    return truncateContent(finalText);
   };
 
   const formatDate = (date: Date) => {
@@ -166,7 +191,10 @@ function PostRow({ document }: { document: Document }) {
           <h3 className="font-medium text-sm line-clamp-1">
             {document.title}
           </h3>
-          <PostStatusBadge status={document.status || 'draft'} />
+          <PostStatusBadge 
+            status={document.status || 'draft'} 
+            scheduledAt={document.scheduledAt ? new Date(document.scheduledAt) : null}
+          />
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2">
           {getPreviewContent(document.content)}

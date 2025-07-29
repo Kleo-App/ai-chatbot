@@ -125,7 +125,7 @@ const DayColumn = ({
   posts: ScheduledPost[]; 
   onTimeSlotClick: (date: Date, hour: number) => void; 
 }) => {
-  const hours = Array.from({ length: 24 }, (_, i) => i); // Full 24 hours (0-23)
+  const hours = Array.from({ length: 24 }, (_, i) => i); // Revert to 24 hours (0-23)
   const isToday = isSameDay(date, new Date());
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   
@@ -197,7 +197,7 @@ const DayColumn = ({
 };
 
 const TimeLegend = () => {
-  const hours = Array.from({ length: 24 }, (_, i) => i); // Full 24 hours (0-23)
+  const hours = Array.from({ length: 24 }, (_, i) => i); // Revert to  24 hours (0-23)
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
   
   useEffect(() => {
@@ -228,27 +228,14 @@ const TimeLegend = () => {
       
       <div className="relative">
         {hours.map(hour => {
-          // Show the END time of each hour block, except for the last block
+          // Show the END time of each hour block
           // Hour 0 (12-1am) should show "1:00 AM"
           // Hour 1 (1-2am) should show "2:00 AM", etc.
-          // Hour 23 (11pm-12am) should show nothing (end of day)
-          if (hour === 23) {
-            return (
-              <div 
-                key={hour}
-                className="text-muted-foreground mr-2 flex items-start justify-end text-[10px] pt-[10px]" 
-                style={{ height: '50px' }}
-              >
-                {/* No label for end of day */}
-              </div>
-            );
-          }
-          
-          const endHour = hour + 1;
-          const timeString = endHour === 1 ? '1:00 AM' :
-                           endHour === 12 ? '12:00 PM' :
-                           endHour < 12 ? `${endHour}:00 AM` :
-                           `${endHour - 12}:00 PM`;
+          // Hour 23 (11pm-12am) should show "12:00 AM"
+          const endHour = (hour + 1) % 24;
+          const isAM = endHour < 12 || endHour === 0;
+          const displayHour = endHour === 0 ? 12 : (endHour > 12 ? endHour - 12 : endHour);
+          const timeString = `${displayHour}:00 ${isAM ? 'AM' : 'PM'}`;
           
           return (
             <div 

@@ -6,6 +6,7 @@ import { formatDistance } from 'date-fns';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { FileIcon, PlusIcon, LoaderIcon, TrashIcon } from './icons';
+import { PostStatusBadge } from './post-status-badge';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { deletePost } from '@/app/actions/post-actions';
 import type { Document } from '@/lib/db/schema';
@@ -161,9 +162,12 @@ function PostRow({ document }: { document: Document }) {
       </div>
       
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-sm line-clamp-1 mb-1">
-          {document.title}
-        </h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-medium text-sm line-clamp-1">
+            {document.title}
+          </h3>
+          <PostStatusBadge status={document.status || 'draft'} />
+        </div>
         <p className="text-xs text-muted-foreground line-clamp-2">
           {getPreviewContent(document.content)}
         </p>

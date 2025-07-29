@@ -115,6 +115,11 @@ export const document = pgTable(
     kind: varchar('text', { enum: ['text', 'image'] })
       .notNull()
       .default('text'),
+    status: varchar('status', { enum: ['draft', 'scheduled', 'published'] })
+      .notNull()
+      .default('draft'),
+    scheduledAt: timestamp('scheduledAt'),
+    publishedAt: timestamp('publishedAt'),
     userId: text('userId')
       .notNull()
       .references(() => user.id),

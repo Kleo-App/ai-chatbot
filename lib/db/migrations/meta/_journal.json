@@ -183,6 +183,13 @@
       "when": 1753293775021,
       "tag": "0025_broad_lethal_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1753737978571,
+      "tag": "0026_thin_shockwave",
+      "breakpoints": true
     }
   ]
 }

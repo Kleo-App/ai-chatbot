@@ -1,0 +1,159 @@
+'use client';
+
+import { useState } from 'react';
+import { format } from 'date-fns';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar, Edit, MoreHorizontal } from 'lucide-react';
+import { useUser } from '@clerk/nextjs';
+import type { Document } from '@/lib/db/schema';
+
+interface PostPreviewPopoverProps {
+  post: {
+    id: string;
+    title: string;
+    content: string | null;
+    scheduledAt: Date | null;
+    publishedAt: Date | null;
+    status: 'scheduled' | 'published' | 'draft';
+    kind: 'text' | 'image';
+    userId: string;
+    createdAt: Date;
+  };
+  children: React.ReactNode;
+}
+
+export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const { user } = useUser();
+
+  // Extract content text
+  const getPostContent = () => {
+    if (!post.content) return post.title;
+    
+    try {
+      const parsed = JSON.parse(post.content);
+      if (parsed && typeof parsed === 'object' && parsed.text) {
+        return parsed.text;
+      }
+      return post.content;
+    } catch (e) {
+      return post.content;
+    }
+  };
+
+  // Map user data
+  const userProfile = user ? {
+    fullName: user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+    profileImage: user.imageUrl,
+    bio: 'Content Creator' // You can expand this with actual user bio data
+  } : {
+    fullName: 'User',
+    profileImage: undefined,
+    bio: 'Content Creator'
+  };
+
+  const displayTime = post.scheduledAt || post.createdAt;
+  const content = getPostContent();
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        {children}
+      </PopoverTrigger>
+      <PopoverContent 
+        side="right" 
+        align="start"
+        className="w-[400px] max-h-[700px] overflow-y-auto p-0 bg-gradient-to-b from-content3 to-content2 border-divider"
+        sideOffset={8}
+      >
+        <div className="flex flex-col">
+          {/* Header with time and category */}
+          <div className="flex flex-row justify-between border-b border-divider px-3 pt-2 pb-2">
+            <time className="text-muted-foreground text-sm">
+              {format(displayTime, 'MMM d, HH:mm (O)')}
+            </time>
+            <div className="flex w-fit items-center gap-1.5 rounded-md border border-divider border-[0.5px] px-1.5 py-0.5">
+              <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+              <p className="text-muted-foreground text-[11px] font-medium">
+                {post.status === 'published' ? 'Published' : 'Scheduled'}
+              </p>
+            </div>
+          </div>
+
+          {/* User profile section */}
+          <div className="flex flex-row gap-2 px-3 pt-3">
+            <div className="relative flex shrink-0 overflow-hidden rounded-full h-[32px] w-[32px]">
+              {userProfile.profileImage ? (
+                <Image 
+                  className="aspect-square h-full w-full" 
+                  src={userProfile.profileImage}
+                  alt={userProfile.fullName}
+                  width={32}
+                  height={32}
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                  {userProfile.fullName[0]}
+                </div>
+              )}
+            </div>
+            <div className="flex w-full flex-col gap-0 leading-snug">
+              <span className="text-foreground text-sm leading-snug font-medium">
+                {userProfile.fullName}
+              </span>
+              <span className="text-muted-foreground line-clamp-1 text-xs leading-snug">
+                {userProfile.bio}
+              </span>
+            </div>
+          </div>
+
+          {/* Post content */}
+          <div className="flex w-full flex-col gap-3 px-3 pt-2 pb-3">
+            <div className="text-foreground line-clamp-5 text-sm whitespace-pre-wrap [&_p:empty]:min-h-4">
+              {content.split('\n').map((line: string, index: number) => (
+                <p key={index}>{line}</p>
+              ))}
+            </div>
+            {/* Media placeholder - can be expanded for images */}
+            <div className="flex max-h-[400px] w-full items-center justify-center overflow-hidden rounded-md"></div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="relative flex w-full flex-row items-center justify-end gap-2 border-t border-divider px-2 py-1">
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
+            >
+              <Calendar className="h-4 w-4" />
+              <span className="hidden sm:block">Schedule</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
+              onClick={() => {
+                // Navigate to edit - you can implement this
+                window.open(`/chat?documentId=${post.id}`, '_blank');
+              }}
+            >
+              <Edit className="h-4 w-4" />
+              <span className="hidden sm:block">Edit Post</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="bg-default/40 text-default-700 border-divider h-8 w-8 p-0"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+} 

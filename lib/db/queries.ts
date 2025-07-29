@@ -308,12 +308,18 @@ export async function saveDocument({
   kind,
   content,
   userId,
+  status = 'draft',
+  scheduledAt,
+  publishedAt,
 }: {
   id: string;
   title: string;
   kind: ArtifactKind;
   content: string;
   userId: string;
+  status?: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: Date;
+  publishedAt?: Date;
 }) {
   try {
     return await db
@@ -324,11 +330,40 @@ export async function saveDocument({
         kind,
         content,
         userId,
+        status,
+        scheduledAt,
+        publishedAt,
         createdAt: new Date(),
       })
       .returning();
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to save document');
+  }
+}
+
+export async function updateDocumentStatus({
+  id,
+  status,
+  scheduledAt,
+  publishedAt,
+}: {
+  id: string;
+  status: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: Date;
+  publishedAt?: Date;
+}) {
+  try {
+    return await db
+      .update(document)
+      .set({
+        status,
+        scheduledAt,
+        publishedAt,
+      })
+      .where(eq(document.id, id))
+      .returning();
+  } catch (error) {
+    throw new ChatSDKError('bad_request:database', 'Failed to update document status');
   }
 }
 
@@ -393,11 +428,19 @@ export async function getDocumentsByUserId({
 export async function getLatestDocumentsByUserId({ 
   userId,
   limit = 50,
+  status,
 }: { 
   userId: string;
   limit?: number;
+  status?: 'draft' | 'scheduled' | 'published';
 }) {
   try {
+    // Build the where condition
+    let whereCondition = eq(document.userId, userId);
+    if (status) {
+      whereCondition = and(whereCondition, eq(document.status, status))!;
+    }
+
     // Get the latest version of each document by grouping by id and taking the max createdAt
     const documents = await db
       .select({
@@ -406,10 +449,13 @@ export async function getLatestDocumentsByUserId({
         title: document.title,
         content: document.content,
         kind: document.kind,
+        status: document.status,
+        scheduledAt: document.scheduledAt,
+        publishedAt: document.publishedAt,
         userId: document.userId,
       })
       .from(document)
-      .where(eq(document.userId, userId))
+      .where(whereCondition)
       .orderBy(desc(document.createdAt));
 
     // Group by document id and keep only the latest version of each

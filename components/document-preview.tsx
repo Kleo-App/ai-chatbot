@@ -93,6 +93,9 @@ export function DocumentPreview({
           id: artifact.documentId,
           createdAt: new Date(),
           userId: 'noop',
+          status: 'draft' as const,
+          scheduledAt: null,
+          publishedAt: null,
         }
       : null;
 

@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { getLatestDocumentsByUserId, deleteDocumentById } from '@/lib/db/queries';
 import { ChatSDKError } from '@/lib/errors';
 
-export async function GET() {
+export async function GET(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
@@ -10,7 +10,13 @@ export async function GET() {
   }
 
   try {
-    const documents = await getLatestDocumentsByUserId({ userId });
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status') as 'draft' | 'scheduled' | 'published' | null;
+
+    const documents = await getLatestDocumentsByUserId({ 
+      userId,
+      status: status || undefined 
+    });
     return Response.json(documents, { status: 200 });
   } catch (error) {
     return new ChatSDKError(

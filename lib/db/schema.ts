@@ -119,6 +119,7 @@ export const document = pgTable(
       .notNull()
       .default('draft'),
     scheduledAt: timestamp('scheduledAt'),
+    scheduledTimezone: text('scheduledTimezone'),
     publishedAt: timestamp('publishedAt'),
     userId: text('userId')
       .notNull()

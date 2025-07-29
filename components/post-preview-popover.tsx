@@ -5,8 +5,10 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar, Edit, MoreHorizontal } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Calendar, Edit, MoreHorizontal, CalendarX } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
+import { toast } from 'sonner';
 import type { Document } from '@/lib/db/schema';
 
 interface PostPreviewPopoverProps {
@@ -22,10 +24,12 @@ interface PostPreviewPopoverProps {
     createdAt: Date;
   };
   children: React.ReactNode;
+  onPostUpdated?: () => void; // Callback to refresh the calendar
 }
 
-export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) {
+export function PostPreviewPopover({ post, children, onPostUpdated }: PostPreviewPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
   const { user } = useUser();
 
   // Extract content text
@@ -40,6 +44,43 @@ export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) 
       return post.content;
     } catch (e) {
       return post.content;
+    }
+  };
+
+  // Handle removing post from calendar
+  const handleRemoveFromCalendar = async () => {
+    if (post.status !== 'scheduled') {
+      toast.error('Only scheduled posts can be removed from calendar');
+      return;
+    }
+
+    setIsRemoving(true);
+    
+    try {
+      const response = await fetch(`/api/posts/${post.id}/status`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'draft',
+          scheduledAt: null,
+          scheduledTimezone: null,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to remove post from calendar');
+      }
+
+      toast.success('Post removed from calendar and moved to drafts');
+      setIsOpen(false); // Close the popover
+      onPostUpdated?.(); // Refresh the calendar view
+    } catch (error) {
+      console.error('Error removing post from calendar:', error);
+      toast.error('Failed to remove post from calendar');
+    } finally {
+      setIsRemoving(false);
     }
   };
 
@@ -144,13 +185,30 @@ export function PostPreviewPopover({ post, children }: PostPreviewPopoverProps) 
               <span className="hidden sm:block">Edit Post</span>
             </Button>
             
-            <Button 
-              variant="outline" 
-              size="sm"
-              className="bg-default/40 text-default-700 border-divider h-8 w-8 p-0"
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="bg-default/40 text-default-700 border-divider h-8 w-8 p-0"
+                  disabled={isRemoving}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {post.status === 'scheduled' && (
+                  <DropdownMenuItem 
+                    onClick={handleRemoveFromCalendar}
+                    disabled={isRemoving}
+                    className="text-sm cursor-pointer focus:bg-accent focus:text-accent-foreground"
+                  >
+                    <CalendarX className="mr-2 h-4 w-4" />
+                    {isRemoving ? 'Removing...' : 'Remove from calendar'}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </PopoverContent>

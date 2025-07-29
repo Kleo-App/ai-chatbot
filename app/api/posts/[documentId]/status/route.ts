@@ -14,7 +14,7 @@ export async function PATCH(
 
   try {
     const { documentId } = await params;
-    const { status, scheduledAt, publishedAt } = await request.json();
+    const { status, scheduledAt, scheduledTimezone, publishedAt } = await request.json();
 
     if (!status || !['draft', 'scheduled', 'published'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
@@ -24,6 +24,7 @@ export async function PATCH(
       id: documentId,
       status,
       scheduledAt: scheduledAt ? new Date(scheduledAt) : undefined,
+      scheduledTimezone: scheduledTimezone || undefined,
       publishedAt: publishedAt ? new Date(publishedAt) : undefined,
     });
 

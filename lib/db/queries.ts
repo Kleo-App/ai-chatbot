@@ -310,6 +310,7 @@ export async function saveDocument({
   userId,
   status = 'draft',
   scheduledAt,
+  scheduledTimezone,
   publishedAt,
 }: {
   id: string;
@@ -319,6 +320,7 @@ export async function saveDocument({
   userId: string;
   status?: 'draft' | 'scheduled' | 'published';
   scheduledAt?: Date;
+  scheduledTimezone?: string;
   publishedAt?: Date;
 }) {
   try {
@@ -332,6 +334,7 @@ export async function saveDocument({
         userId,
         status,
         scheduledAt,
+        scheduledTimezone,
         publishedAt,
         createdAt: new Date(),
       })
@@ -345,11 +348,13 @@ export async function updateDocumentStatus({
   id,
   status,
   scheduledAt,
+  scheduledTimezone,
   publishedAt,
 }: {
   id: string;
   status: 'draft' | 'scheduled' | 'published';
   scheduledAt?: Date;
+  scheduledTimezone?: string;
   publishedAt?: Date;
 }) {
   try {
@@ -358,11 +363,13 @@ export async function updateDocumentStatus({
       .set({
         status,
         scheduledAt,
+        scheduledTimezone,
         publishedAt,
       })
       .where(eq(document.id, id))
       .returning();
   } catch (error) {
+    console.error('Database error in updateDocumentStatus:', error);
     throw new ChatSDKError('bad_request:database', 'Failed to update document status');
   }
 }
@@ -451,6 +458,7 @@ export async function getLatestDocumentsByUserId({
         kind: document.kind,
         status: document.status,
         scheduledAt: document.scheduledAt,
+        scheduledTimezone: document.scheduledTimezone,
         publishedAt: document.publishedAt,
         userId: document.userId,
       })

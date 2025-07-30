@@ -494,16 +494,16 @@ function InlineImagePreview({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+      <div className="size-12 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
         {!isUploading && url ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={url}
             alt="Attachment preview"
-            className="w-full h-full object-cover"
+            className="size-full object-cover"
           />
         ) : (
-          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+          <div className="size-full bg-gray-100 flex items-center justify-center">
             {isUploading && (
               <div className="animate-spin">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -523,7 +523,7 @@ function InlineImagePreview({
             e.stopPropagation();
             onRemove();
           }}
-          className="absolute -top-1 -right-1 w-4 h-4 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors z-50"
+          className="absolute -top-1 -right-1 size-4 bg-gray-800 text-white rounded-full flex items-center justify-center hover:bg-gray-900 transition-colors z-50"
           style={{ zIndex: 50 }}
         >
           <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

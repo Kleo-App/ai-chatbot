@@ -462,9 +462,9 @@ export function SidebarUserNav() {
                     className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200 disabled:opacity-100"
                   >
                     {isUploadingImage ? (
-                      <div className="animate-spin rounded-full h-6 w-6 border-2 border-white border-t-transparent" />
+                      <div className="animate-spin rounded-full size-6 border-2 border-white border-t-transparent" />
                     ) : (
-                      <Camera className="h-6 w-6 text-white" />
+                      <Camera className="size-6 text-white" />
                     )}
                   </button>
                   

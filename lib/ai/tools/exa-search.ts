@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { tool, type UIMessageStreamWriter } from 'ai';
-import Exa from 'exa-js';
+import { Exa } from 'exa-js';
 import type { ChatMessage, UserType } from '@/lib/types';
 
 interface ExaSearchProps {

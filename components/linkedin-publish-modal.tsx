@@ -14,6 +14,7 @@ interface LinkedInPublishModalProps {
   isOpen: boolean;
   onClose: () => void;
   content: string;
+  documentId?: string;
   userProfile?: {
     fullName?: string;
     profileImage?: string;
@@ -25,6 +26,7 @@ export function LinkedInPublishModal({
   isOpen,
   onClose,
   content,
+  documentId,
   userProfile,
   uploadedImages = [],
 }: LinkedInPublishModalProps) {
@@ -85,6 +87,23 @@ export function LinkedInPublishModal({
 
       if (!response.ok) {
         throw new Error('Failed to publish post');
+      }
+
+      // Update document status to published
+      if (documentId) {
+        try {
+          await fetch(`/api/posts/${documentId}/status`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              status: 'published',
+              publishedAt: new Date().toISOString(),
+            }),
+          });
+        } catch (statusError) {
+          console.error('Failed to update document status:', statusError);
+          // Don't block the publish flow if status update fails
+        }
       }
 
       // Store post analytics in background (non-blocking)

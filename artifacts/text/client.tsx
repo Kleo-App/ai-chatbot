@@ -3,6 +3,7 @@ import { DiffView } from '@/components/diffview';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { LinkedInPostPreview } from '@/components/linkedin-post-preview';
 import { LinkedInPublishModal } from '@/components/linkedin-publish-modal';
+import { SchedulePostModal } from '@/components/schedule-post-modal';
 
 import {
   CopyIcon,
@@ -42,6 +43,7 @@ function TextArtifactContent({
   const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('desktop');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [parsedTextContent, setParsedTextContent] = useState<string>(content);
 
@@ -74,6 +76,10 @@ function TextArtifactContent({
 
   const handleClosePublishModal = () => {
     setIsPublishModalOpen(false);
+  };
+
+  const handleCloseScheduleModal = () => {
+    setIsScheduleModalOpen(false);
   };
 
   // Helper to save content with images
@@ -143,6 +149,8 @@ function TextArtifactContent({
         uploadedImages={uploadedImages}
         onImagesChange={handleImagesChange}
         onTextChange={handleTextContentChange}
+        showScheduleButton={true}
+        onScheduleClick={() => setIsScheduleModalOpen(true)}
         onShareClick={() => setIsPublishModalOpen(true)}
       />
       
@@ -150,11 +158,23 @@ function TextArtifactContent({
         isOpen={isPublishModalOpen}
         onClose={handleClosePublishModal}
         content={parsedTextContent}
+        documentId={document?.id}
         userProfile={userProfile}
         uploadedImages={uploadedImages}
       />
+      
+      <SchedulePostModal
+        isOpen={isScheduleModalOpen}
+        onClose={handleCloseScheduleModal}
+        content={parsedTextContent}
+        documentId={document?.id}
+        userProfile={userProfile}
+        uploadedImages={uploadedImages}
+        scheduledAt={document?.scheduledAt}
+        status={document?.status}
+      />
       </>
-    );
+  );
 }
 
 export const textArtifact = new Artifact<'text', TextArtifactMetadata>({

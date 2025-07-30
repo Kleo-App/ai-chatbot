@@ -435,7 +435,7 @@ export function Chat({
               className="bg-white p-6 rounded-xl shadow-lg flex flex-col items-center gap-4 max-w-md"
             >
               <div className="bg-blue-50 p-4 rounded-full">
-                <FileIcon className="h-8 w-8 text-blue-500" />
+                <FileIcon className="size-8 text-blue-500" />
               </div>
               <div className="text-center">
                 <h3 className="text-lg font-semibold mb-1">Drop files here</h3>
@@ -460,7 +460,7 @@ export function Chat({
                       transition={{ delay: index * 0.05 }}
                       className="flex items-center gap-2 py-1"
                     >
-                      <FileIcon className="h-4 w-4 text-gray-400" />
+                      <FileIcon className="size-4 text-gray-400" />
                       <span className="truncate">{file.name}</span>
                       <span className="text-xs text-gray-400 ml-auto">{(file.size / 1024).toFixed(1)} KB</span>
                     </motion.div>

@@ -33,7 +33,13 @@ export function SidebarToggle({
           <span className="sr-only">Toggle Sidebar</span>
         </Button>
       </TooltipTrigger>
-      <TooltipContent align="start">Toggle Sidebar</TooltipContent>
+      <TooltipContent 
+        align="start" 
+        className="z-[9999]" 
+        style={{ zIndex: 9999, position: 'fixed' }}
+      >
+        Toggle Sidebar
+      </TooltipContent>
     </Tooltip>
   );
 }

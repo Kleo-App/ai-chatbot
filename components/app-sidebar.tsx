@@ -2,7 +2,7 @@
 
 import { useUser } from '@clerk/nextjs';
 import { useRouter, usePathname } from 'next/navigation';
-import { Search, MessageSquare, History, ChevronRight, FileText } from 'lucide-react';
+import { Search, SquarePen, History, ChevronRight, FileText, Calendar, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { SidebarHistory } from '@/components/sidebar-history';
 import { SidebarToggle } from '@/components/sidebar-toggle';
@@ -97,7 +97,7 @@ export function AppSidebar() {
                 <Link href="/" onClick={() => setOpenMobile(false)} className="flex items-center justify-between w-full group/chat-link">
                   <div className="flex items-center gap-2">
                     <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
-                      <MessageSquare className="size-4" />
+                      <SquarePen className="size-4" />
                     </div>
                     <span className="group-data-[collapsible=icon]:hidden">Chat</span>
                   </div>
@@ -120,6 +120,42 @@ export function AppSidebar() {
                     <FileText className="size-4" />
                   </div>
                   <span className="group-data-[collapsible=icon]:hidden">Posts</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
+              <SidebarMenuButton
+                asChild
+                className={`w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                  pathname.startsWith('/schedule')
+                    ? 'sidebar-menu-active'
+                    : 'text-muted-foreground sidebar-menu-hover hover:text-foreground'
+                }`}
+              >
+                <Link href="/schedule" onClick={() => setOpenMobile(false)}>
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
+                    <Calendar className="size-4" />
+                  </div>
+                  <span className="group-data-[collapsible=icon]:hidden">Schedule</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+
+            <SidebarMenuItem className="mx-1 whitespace-nowrap font-semibold">
+              <SidebarMenuButton
+                asChild
+                className={`w-full flex flex-row gap-2 p-1.5 text-sm transition-colors rounded-xl h-[36px] border-transparent ${
+                  pathname.startsWith('/library')
+                    ? 'sidebar-menu-active'
+                    : 'text-muted-foreground sidebar-menu-hover hover:text-foreground'
+                }`}
+              >
+                <Link href="/library" onClick={() => setOpenMobile(false)}>
+                  <div className="size-6 group-data-[collapsible=icon]:size-4 flex items-center justify-center shrink-0">
+                    <BookOpen className="size-4" />
+                  </div>
+                  <span className="group-data-[collapsible=icon]:hidden">Library</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>

@@ -30,13 +30,13 @@ export function OnboardingLayout({ children, currentStep }: OnboardingLayoutProp
   return (
     <>
       <Background />
-      <div className="relative flex h-full min-h-screen w-full items-center justify-center overflow-hidden">
-        <div className="relative z-10 mx-auto flex min-h-screen w-full flex-col items-center justify-center">
-          <div className="flex h-full w-full max-w-6xl flex-1 items-center justify-center">
+      <div className="relative flex size-full min-h-screen items-center justify-center overflow-hidden">
+        <div className="relative z-10 mx-auto flex min-h-screen size-full flex-col items-center justify-center">
+          <div className="flex size-full max-w-6xl flex-1 items-center justify-center">
             <div className="relative flex w-full flex-1 items-center justify-center px-4 py-12 sm:px-6">
-              <div className="flex h-full w-full flex-col items-center justify-center">
+              <div className="flex size-full flex-col items-center justify-center">
                 <div 
-                  className={`relative flex h-full w-full max-w-5xl flex-col items-center justify-center px-4 transition-all duration-700 ease-out ${
+                  className={`relative flex size-full max-w-5xl flex-col items-center justify-center px-4 transition-all duration-700 ease-out ${
                     isVisible 
                       ? 'opacity-100 translate-y-0' 
                       : 'opacity-0 translate-y-8'
@@ -50,7 +50,7 @@ export function OnboardingLayout({ children, currentStep }: OnboardingLayoutProp
           
           {/* Fixed footer with step indicator - also animated */}
           <div 
-            className={`fixed bottom-8 left-0 right-0 z-20 transition-all duration-700 ease-out delay-300 ${
+            className={`fixed bottom-8 inset-x-0 z-20 transition-all duration-700 ease-out delay-300 ${
               isVisible 
                 ? 'opacity-100 translate-y-0' 
                 : 'opacity-0 translate-y-4'

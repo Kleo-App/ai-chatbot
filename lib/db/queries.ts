@@ -10,6 +10,7 @@ import {
   gte,
   inArray,
   lt,
+  lte,
   type SQL,
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -117,13 +118,14 @@ export async function saveChat({
   visibility: VisibilityType;
 }) {
   try {
-    return await db.insert(chat).values({
+    const [newChat] = await db.insert(chat).values({
       id,
       createdAt: new Date(),
       userId,
       title,
       visibility,
-    });
+    }).returning();
+    return newChat;
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to save chat');
   }
@@ -308,12 +310,20 @@ export async function saveDocument({
   kind,
   content,
   userId,
+  status = 'draft',
+  scheduledAt,
+  scheduledTimezone,
+  publishedAt,
 }: {
   id: string;
   title: string;
   kind: ArtifactKind;
   content: string;
   userId: string;
+  status?: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: Date;
+  scheduledTimezone?: string;
+  publishedAt?: Date;
 }) {
   try {
     return await db
@@ -324,11 +334,45 @@ export async function saveDocument({
         kind,
         content,
         userId,
+        status,
+        scheduledAt,
+        scheduledTimezone,
+        publishedAt,
         createdAt: new Date(),
       })
       .returning();
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to save document');
+  }
+}
+
+export async function updateDocumentStatus({
+  id,
+  status,
+  scheduledAt,
+  scheduledTimezone,
+  publishedAt,
+}: {
+  id: string;
+  status: 'draft' | 'scheduled' | 'published';
+  scheduledAt?: Date;
+  scheduledTimezone?: string;
+  publishedAt?: Date;
+}) {
+  try {
+    return await db
+      .update(document)
+      .set({
+        status,
+        scheduledAt,
+        scheduledTimezone,
+        publishedAt,
+      })
+      .where(eq(document.id, id))
+      .returning();
+  } catch (error) {
+    console.error('Database error in updateDocumentStatus:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to update document status');
   }
 }
 
@@ -393,11 +437,19 @@ export async function getDocumentsByUserId({
 export async function getLatestDocumentsByUserId({ 
   userId,
   limit = 50,
+  status,
 }: { 
   userId: string;
   limit?: number;
+  status?: 'draft' | 'scheduled' | 'published';
 }) {
   try {
+    // Build the where condition
+    let whereCondition = eq(document.userId, userId);
+    if (status) {
+      whereCondition = and(whereCondition, eq(document.status, status))!;
+    }
+
     // Get the latest version of each document by grouping by id and taking the max createdAt
     const documents = await db
       .select({
@@ -406,10 +458,14 @@ export async function getLatestDocumentsByUserId({
         title: document.title,
         content: document.content,
         kind: document.kind,
+        status: document.status,
+        scheduledAt: document.scheduledAt,
+        scheduledTimezone: document.scheduledTimezone,
+        publishedAt: document.publishedAt,
         userId: document.userId,
       })
       .from(document)
-      .where(eq(document.userId, userId))
+      .where(whereCondition)
       .orderBy(desc(document.createdAt));
 
     // Group by document id and keep only the latest version of each
@@ -717,5 +773,71 @@ export async function deleteMessageById({ messageId }: { messageId: string }) {
       'bad_request:database',
       'Failed to delete message by id',
     );
+  }
+}
+
+export async function getScheduledPosts({
+  userId,
+  limit = 50,
+}: {
+  userId: string;
+  limit?: number;
+}) {
+  try {
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.userId, userId),
+        eq(document.status, 'scheduled')
+      ))
+      .orderBy(document.scheduledAt)
+      .limit(limit);
+  } catch (error) {
+    console.error('Database error in getScheduledPosts:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch scheduled posts');
+  }
+}
+
+export async function getPostsScheduledBetween({
+  userId,
+  startDate,
+  endDate,
+}: {
+  userId: string;
+  startDate: Date;
+  endDate: Date;
+}) {
+  try {
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.userId, userId),
+        eq(document.status, 'scheduled'),
+        gte(document.scheduledAt, startDate),
+        lte(document.scheduledAt, endDate)
+      ))
+      .orderBy(document.scheduledAt);
+  } catch (error) {
+    console.error('Database error in getPostsScheduledBetween:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch scheduled posts in date range');
+  }
+}
+
+export async function getOverdueScheduledPosts() {
+  try {
+    const now = new Date();
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.status, 'scheduled'),
+        lt(document.scheduledAt, now)
+      ))
+      .orderBy(document.scheduledAt);
+  } catch (error) {
+    console.error('Database error in getOverdueScheduledPosts:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch overdue scheduled posts');
   }
 }

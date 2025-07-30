@@ -90,7 +90,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
     if (userId) {
       fetchMemories();
     }
-  }, [userId]);
+  }, [userId, fetchMemories]);
 
   const filteredMemories = memories.filter((item: MemoryData) => {
     if (activeFilter === 'posts') {
@@ -130,7 +130,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
             <LoaderIcon size={16} />
           ) : (
             <>
-              <RefreshCw className="w-4 h-4 mr-2" />
+              <RefreshCw className="size-4 mr-2" />
               Refresh
             </>
           )}
@@ -141,7 +141,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
       <div className="grid grid-cols-2 gap-4">
         <div className="p-4 border rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <BarChart3 className="w-5 h-5 text-blue-600" />
+            <BarChart3 className="size-5 text-blue-600" />
             <span className="font-medium">Posts</span>
           </div>
           <div className="text-2xl font-bold">{totalPosts}</div>
@@ -152,7 +152,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
         
         <div className="p-4 border rounded-lg">
           <div className="flex items-center gap-2 mb-2">
-            <MessageSquare className="w-5 h-5 text-green-600" />
+            <MessageSquare className="size-5 text-green-600" />
             <span className="font-medium">Memories</span>
           </div>
           <div className="text-2xl font-bold">{memories.length}</div>
@@ -166,7 +166,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
       {totalPosts > 0 && (
         <div className="p-4 border rounded-lg bg-blue-50">
           <div className="flex items-center gap-2 mb-2">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <TrendingUp className="size-5 text-blue-600" />
             <span className="font-medium">Your Style Insights</span>
           </div>
           <div className="text-sm">
@@ -238,7 +238,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
                       )}
                       {item.metadata.timestamp && (
                         <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-gray-50 text-gray-600 rounded-full">
-                          <Calendar className="w-3 h-3 mr-1" />
+                          <Calendar className="size-3 mr-1" />
                           {new Date(item.metadata.timestamp).toLocaleDateString()}
                         </span>
                       )}
@@ -255,7 +255,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
                   {deletingIds.has(item.id) ? (
                     <LoaderIcon size={16} />
                   ) : (
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="size-4" />
                   )}
                 </Button>
               </div>
@@ -264,7 +264,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
         </div>
       ) : (
         <div className="text-center py-8 text-muted-foreground">
-          <BarChart3 className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <BarChart3 className="size-12 mx-auto mb-4 opacity-50" />
           <p className="font-medium">No memories yet</p>
           <p className="text-sm">Your content selections will appear here</p>
         </div>

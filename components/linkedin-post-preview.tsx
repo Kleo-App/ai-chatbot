@@ -4,17 +4,20 @@ import { memo, useState } from 'react';
 import Image from 'next/image';
 import { Button } from './ui/button';
 import { 
-  ShareIcon, 
   ImageIcon,
   MonitorIcon,
   SmartphoneIcon,
   ChevronDownIcon,
-  ChevronUpIcon
+  ChevronUpIcon,
+  CalendarIcon
 } from './icons';
+import { SendHorizontal } from 'lucide-react';
 import { ArtifactActions } from './artifact-actions';
 import { MediaUploadModal } from './media-upload-modal';
 import { formatDistance } from 'date-fns';
 import type { UIArtifact } from './artifact';
+import type { Document } from '@/lib/db/schema';
+import { PostStatusBadge } from './post-status-badge';
 
 interface LinkedInPostPreviewProps {
   content: string;
@@ -28,9 +31,7 @@ interface LinkedInPostPreviewProps {
   onToggleCollapsed?: () => void;
   // Artifact header props
   artifact?: UIArtifact;
-  document?: {
-    createdAt: Date;
-  } | null;
+  document?: Document | null;
   isContentDirty?: boolean;
   currentVersionIndex?: number;
   handleVersionChange?: (type: 'next' | 'prev' | 'toggle' | 'latest') => void;
@@ -44,10 +45,13 @@ interface LinkedInPostPreviewProps {
   onTextChange?: (text: string) => void;
   // UI control props
   showShareButton?: boolean;
+  showScheduleButton?: boolean;
   showHeader?: boolean;
   showDeviceToggle?: boolean;
   // Share modal props
   onShareClick?: () => void;
+  // Schedule modal props
+  onScheduleClick?: () => void;
   isModal?: boolean;
 }
 
@@ -74,10 +78,13 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   onTextChange,
   // UI control props
   showShareButton = true,
+  showScheduleButton = false,
   showHeader = true,
   showDeviceToggle = true,
   // Share modal props
   onShareClick,
+  // Schedule modal props
+  onScheduleClick,
   isModal = false,
 }: LinkedInPostPreviewProps) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
@@ -188,10 +195,19 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             {/* Left side: title */}
             <div className="flex items-center gap-3">
               <div className="flex flex-col text-left">
-                <div className="font-medium text-sm text-left" title={artifact?.title}>
-                  {artifact?.title && artifact.title.length > 40 
-                    ? `${artifact.title.substring(0, 40)}...` 
-                    : artifact?.title}
+                <div className="flex items-center gap-2">
+                  <div className="font-medium text-sm text-left" title={artifact?.title}>
+                    {artifact?.title && artifact.title.length > 40 
+                      ? `${artifact.title.substring(0, 40)}...` 
+                      : artifact?.title}
+                  </div>
+                  {document && (
+                    <PostStatusBadge 
+                      status={document.status || 'draft'} 
+                      scheduledAt={document.scheduledAt ? new Date(document.scheduledAt) : null}
+                      className="text-[10px] h-5"
+                    />
+                  )}
                 </div>
                 {isContentDirty ? (
                   <div className="text-xs text-muted-foreground text-left">Saving changes...</div>
@@ -222,14 +238,26 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                 </div>
               )}
               
-              {/* Share button */}
+              {/* Schedule button */}
+              {showScheduleButton && (
+                <Button 
+                  onClick={onScheduleClick}
+                  className="gap-1 bg-black text-white hover:bg-gray-800 h-8 text-xs"
+                >
+                  {document?.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
+                  <CalendarIcon size={14} />
+                </Button>
+              )}
+              
+              {/* Publish button */}
               {showShareButton && (
                 <Button 
                   onClick={onShareClick}
-                  className="gap-1 bg-primary text-primary-foreground h-8 text-xs"
+                  className="gap-1 h-8 text-xs text-white hover:opacity-90"
+                  style={{ backgroundColor: '#157dff' }}
                 >
-                  Share
-                  <ShareIcon size={14} />
+                  Publish
+                  <SendHorizontal size={14} />
                 </Button>
               )}
             </div>
@@ -256,13 +284,9 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                       height={48}
                     />
                   ) : (
-                    <Image 
-                      className="size-full aspect-square" 
-                      alt={userProfile?.fullName || 'John Doe'} 
-                      src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop&crop=face"
-                      width={48}
-                      height={48}
-                    />
+                    <div className="size-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-lg">
+                      {userProfile?.fullName?.[0] || 'U'}
+                    </div>
                   )}
                 </div>
                 <div className="flex flex-col gap-0">

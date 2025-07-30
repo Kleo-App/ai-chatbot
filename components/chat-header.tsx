@@ -118,11 +118,11 @@ function PureChatHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full"
+            className="size-10 rounded-full"
             aria-label="Toggle Sidebar"
             onClick={toggleSidebar}
           >
-            <AlignJustify className="h-7 w-7" />
+            <AlignJustify className="size-7" />
           </Button>
         </div>
       </div>
@@ -138,11 +138,11 @@ function PureChatHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden h-10 w-10 rounded-full"
+            className="md:hidden size-10 rounded-full"
             aria-label="Toggle Sidebar"
             onClick={toggleSidebar}
           >
-            <AlignJustify className="h-7 w-7" />
+            <AlignJustify className="size-7" />
           </Button>
         </div>
         
@@ -156,10 +156,10 @@ function PureChatHeader({
                   asChild
                   variant="ghost"
                   size="icon"
-                  className="h-10 w-10 rounded-full text-foreground hover:bg-muted border border-transparent"
+                  className="size-10 rounded-full text-foreground hover:bg-muted border border-transparent"
                 >
                   <Link href="/">
-                    <SquarePen className="h-5 w-5 stroke-[2]" />
+                    <SquarePen className="size-5 stroke-[2]" />
                   </Link>
                 </Button>
               </TooltipTrigger>
@@ -173,7 +173,7 @@ function PureChatHeader({
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 rounded-full text-foreground hover:bg-muted border border-transparent"
+            className="size-10 rounded-full text-foreground hover:bg-muted border border-transparent"
             aria-label={isPinned ? 'Unpin' : 'Pin'}
             onClick={handlePin}
           >
@@ -182,7 +182,7 @@ function PureChatHeader({
                 <path d="M7.23047 1.26183C7.86569 0.082389 9.45799 -0.151271 10.4053 0.796012L13.2041 3.59484C14.1514 4.54211 13.9177 6.1344 12.7383 6.76964L11.1338 7.6339C10.5893 7.9271 10.2112 8.45562 10.1094 9.06554L9.62207 11.9874L8.33301 13.2765L5 9.9425L2.1377 12.8019L1 13.0001L1.19824 11.8614L4.05664 9.00011L0.723633 5.66711L2.0127 4.37804L4.93359 3.89074C5.54368 3.78906 6.07294 3.41087 6.36621 2.86632L7.23047 1.26183Z" fill="currentColor" />
               </svg>
             ) : (
-              <Pin className="h-[18px] w-[18px]" />
+              <Pin className="size-[18px]" />
             )}
           </Button>
 
@@ -192,10 +192,10 @@ function PureChatHeader({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-10 w-10 rounded-full text-foreground hover:bg-muted border border-transparent"
+                className="size-10 rounded-full text-foreground hover:bg-muted border border-transparent"
                 aria-label="More"
               >
-                <MoreHorizontal className="h-5 w-5" />
+                <MoreHorizontal className="size-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 

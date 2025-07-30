@@ -1,16 +1,25 @@
 'use client';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import Link from 'next/link';
 import { formatDistance } from 'date-fns';
 import { Button } from './ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { FileIcon, PlusIcon, LoaderIcon, TrashIcon } from './icons';
+import { PostStatusBadge } from './post-status-badge';
 import { fetcher, generateUUID } from '@/lib/utils';
 import { deletePost } from '@/app/actions/post-actions';
 import type { Document } from '@/lib/db/schema';
 
+type PostStatus = 'all' | 'draft' | 'scheduled' | 'published';
+
 export function PostsList() {
+  const [activeFilter, setActiveFilter] = useQueryState(
+    'filter',
+    parseAsStringLiteral(['all', 'draft', 'scheduled', 'published']).withDefault('all')
+  );
   const { data: documents, isLoading, error } = useSWR<Document[]>(
     '/api/posts',
     fetcher
@@ -56,11 +65,85 @@ export function PostsList() {
     );
   }
 
+  // Filter documents based on active filter
+  const filteredDocuments = documents.filter(doc => {
+    if (activeFilter === 'all') return true;
+    return doc.status === activeFilter;
+  });
+
+  // Count posts by status
+  const counts = {
+    all: documents.length,
+    draft: documents.filter(doc => doc.status === 'draft').length,
+    scheduled: documents.filter(doc => doc.status === 'scheduled').length,
+    published: documents.filter(doc => doc.status === 'published').length,
+  };
+
   return (
-    <div className="space-y-2">
-      {documents.map((document) => (
-        <PostRow key={`${document.id}-${document.createdAt}`} document={document} />
-      ))}
+    <div className="space-y-6">
+      <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as PostStatus)}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            All
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.all}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="draft" className="flex items-center gap-2">
+            Drafts
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.draft}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="scheduled" className="flex items-center gap-2">
+            Scheduled
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.scheduled}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="published" className="flex items-center gap-2">
+            Published
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.published}
+            </span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeFilter} className="mt-6">
+          {filteredDocuments.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto size-12 text-muted-foreground/50 mb-4">
+                <FileIcon size={48} />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                No {activeFilter === 'all' ? '' : activeFilter} posts found
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {activeFilter === 'draft' && 'All your draft posts will appear here'}
+                {activeFilter === 'scheduled' && 'Posts scheduled for future publishing will appear here'}
+                {activeFilter === 'published' && 'Your published posts will appear here'}
+                {activeFilter === 'all' && 'Create your first post to get started'}
+              </p>
+              {activeFilter === 'all' && (
+                <Link href="/">
+                  <Button>
+                    <span className="mr-2">
+                      <PlusIcon size={16} />
+                    </span>
+                    Create New Post
+                  </Button>
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredDocuments.map((document) => (
+                <PostRow key={`${document.id}-${document.createdAt}`} document={document} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
@@ -76,21 +159,46 @@ function PostRow({ document }: { document: Document }) {
   const getPreviewContent = (content: string | null) => {
     if (!content) return 'No content';
     
+    let textContent = content;
+    
     try {
       // Parse the content as JSON
       const parsedContent = JSON.parse(content);
       
       // Extract the text field from the JSON object
       if (parsedContent && typeof parsedContent === 'object' && parsedContent.text) {
-        return truncateContent(parsedContent.text);
+        textContent = parsedContent.text;
       }
-      
-      // Fallback to original content if text field is not found
-      return truncateContent(content);
     } catch (e) {
-      // If parsing fails, return the original content
-      return truncateContent(content);
+      // If parsing fails, use the original content
+      textContent = content;
     }
+    
+    // Strip HTML tags to show only plain text
+    const stripHtml = (html: string) => {
+      return html
+        // Handle empty paragraphs (they represent single line breaks)
+        .replace(/<p[^>]*>\s*<\/p>/gi, ' ')
+        // Handle content paragraphs - extract text and add space
+        .replace(/<p[^>]*>([^<]+)<\/p>/gi, '$1 ')
+        // Convert br tags to spaces
+        .replace(/<br[^>]*>/gi, ' ')
+        // Convert div tags to spaces
+        .replace(/<\/div>\s*<div[^>]*>/gi, ' ')
+        .replace(/<div[^>]*>/gi, '')
+        .replace(/<\/div>/gi, ' ')
+        // Remove any remaining HTML tags
+        .replace(/<[^>]*>/g, '')
+        // Clean up multiple spaces and trim
+        .replace(/\s+/g, ' ')
+        .trim();
+    };
+    
+    // Check if content contains HTML tags
+    const hasHtmlTags = /<[^>]*>/.test(textContent);
+    const finalText = hasHtmlTags ? stripHtml(textContent) : textContent;
+    
+    return truncateContent(finalText);
   };
 
   const formatDate = (date: Date) => {
@@ -161,9 +269,15 @@ function PostRow({ document }: { document: Document }) {
       </div>
       
       <div className="flex-1 min-w-0">
-        <h3 className="font-medium text-sm line-clamp-1 mb-1">
-          {document.title}
-        </h3>
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-medium text-sm line-clamp-1">
+            {document.title}
+          </h3>
+          <PostStatusBadge 
+            status={document.status || 'draft'} 
+            scheduledAt={document.scheduledAt ? new Date(document.scheduledAt) : null}
+          />
+        </div>
         <p className="text-xs text-muted-foreground line-clamp-2">
           {getPreviewContent(document.content)}
         </p>

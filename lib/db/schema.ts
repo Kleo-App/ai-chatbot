@@ -115,6 +115,12 @@ export const document = pgTable(
     kind: varchar('text', { enum: ['text', 'image'] })
       .notNull()
       .default('text'),
+    status: varchar('status', { enum: ['draft', 'scheduled', 'published'] })
+      .notNull()
+      .default('draft'),
+    scheduledAt: timestamp('scheduledAt'),
+    scheduledTimezone: text('scheduledTimezone'),
+    publishedAt: timestamp('publishedAt'),
     userId: text('userId')
       .notNull()
       .references(() => user.id),
@@ -183,3 +189,11 @@ export type { UserProfile } from './schema-profile';
 // Re-export LinkedIn connection schema
 export { linkedinConnection } from './schema-linkedin';
 export type { LinkedInConnection } from './schema-linkedin';
+
+// Re-export hooks schema
+export { hook } from './schema-hooks';
+export type { Hook } from './schema-hooks';
+
+// Re-export posts schema
+export { post } from './schema-posts';
+export type { Post } from './schema-posts';

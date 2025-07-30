@@ -652,7 +652,7 @@ export const LinkedInPostEditor = memo(function LinkedInPostEditor({
 
       {/* Editor Content */}
       <div className="flex-1 overflow-y-auto bg-white">
-        <div className="relative px-6 pt-4 pb-4 bg-white">
+        <div className="relative px-6 py-4 bg-white">
           <EditorContent 
             editor={editor} 
             className="h-full bg-white"

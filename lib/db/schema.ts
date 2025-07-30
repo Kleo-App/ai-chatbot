@@ -189,3 +189,11 @@ export type { UserProfile } from './schema-profile';
 // Re-export LinkedIn connection schema
 export { linkedinConnection } from './schema-linkedin';
 export type { LinkedInConnection } from './schema-linkedin';
+
+// Re-export hooks schema
+export { hook } from './schema-hooks';
+export type { Hook } from './schema-hooks';
+
+// Re-export posts schema
+export { post } from './schema-posts';
+export type { Post } from './schema-posts';

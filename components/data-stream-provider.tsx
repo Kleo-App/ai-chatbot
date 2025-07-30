@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useMemo, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { DataUIPart } from 'ai';
 import type { CustomUIDataTypes } from '@/lib/types';
 
@@ -38,7 +38,7 @@ export function useDataStream() {
   }
   
   // Add event listener for append-message events
-  React.useEffect(() => {
+  useEffect(() => {
     const handleAppendMessage = (event: CustomEvent<{ message: string }>) => {
       console.log('[data-stream-provider] Append message event received:', event.detail.message);
       context.setDataStream(prev => [

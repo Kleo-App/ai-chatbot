@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDrag } from 'react-dnd';
 import { Calendar, GripVertical } from 'lucide-react';
 import { PostStatusBadge } from './post-status-badge';
@@ -61,6 +61,7 @@ const getPostContent = (post: UnscheduledPost) => {
 };
 
 const DraggablePost = ({ post, onPostUpdated }: { post: UnscheduledPost; onPostUpdated?: () => void }) => {
+  const ref = useRef<HTMLDivElement>(null);
   const [{ isDragging }, drag] = useDrag({
     type: 'POST',
     item: { id: post.id, post },
@@ -69,11 +70,14 @@ const DraggablePost = ({ post, onPostUpdated }: { post: UnscheduledPost; onPostU
     }),
   });
 
+  // Connect the drag functionality
+  drag(ref);
+
   const content = getPostContent(post);
   
   return (
     <div
-      ref={drag}
+      ref={ref}
       className={`group cursor-move transition-all duration-200 ${
         isDragging ? 'opacity-50 rotate-3 scale-105' : 'opacity-100'
       }`}
@@ -83,14 +87,14 @@ const DraggablePost = ({ post, onPostUpdated }: { post: UnscheduledPost; onPostU
         <div className="bg-white border-divider ease flex flex-col gap-2 rounded-lg border transition-all duration-200 hover:border-foreground/30 hover:shadow-sm p-3 relative">
           <div className="flex items-start gap-2">
             <div className="text-muted-foreground mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-              <GripVertical className="w-4 h-4" />
+              <GripVertical className="size-4" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <h3 className="font-medium text-sm line-clamp-1 text-foreground">
                   {post.title}
                 </h3>
-                <PostStatusBadge status="draft" className="text-[10px] h-5 flex-shrink-0" />
+                <PostStatusBadge status="draft" className="text-[10px] h-5 shrink-0" />
               </div>
               <p className="text-foreground text-[13px] leading-snug font-medium tracking-tight line-clamp-3">
                 {content}
@@ -160,8 +164,8 @@ export function UnscheduledPostsSidebar({ onPostsChange }: UnscheduledPostsSideb
 
   return (
     <div className="bg-background border-divider flex w-80 flex-col border-r transition-all duration-300 ease-in-out h-full">
-      <div className="border-divider flex items-center gap-2 border-b px-4 py-3 flex-shrink-0">
-        <Calendar className="w-4 h-4 text-muted-foreground" />
+      <div className="border-divider flex items-center gap-2 border-b px-4 py-3 shrink-0">
+        <Calendar className="size-4 text-muted-foreground" />
         <h2 className="text-sm font-medium">Unscheduled Posts</h2>
         <div className="ml-auto">
           <span className="bg-muted text-muted-foreground rounded-full px-2 py-1 text-xs">
@@ -179,11 +183,11 @@ export function UnscheduledPostsSidebar({ onPostsChange }: UnscheduledPostsSideb
       >
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin w-5 h-5 border-2 border-primary border-t-transparent rounded-full" />
+            <div className="animate-spin size-5 border-2 border-primary border-t-transparent rounded-full" />
           </div>
         ) : unscheduledPosts.length === 0 ? (
           <div className="text-center py-8">
-            <Calendar className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+            <Calendar className="size-8 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground mb-1">No unscheduled posts</p>
             <p className="text-xs text-muted-foreground">
               Create draft posts to schedule them

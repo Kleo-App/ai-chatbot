@@ -107,3 +107,38 @@ pnpm dev
 ```
 
 Your app template should now be running on [localhost:3000](http://localhost:3000).
+
+## LinkedIn Hooks Library
+
+The app includes a library of LinkedIn hooks and templates that users can browse and use to generate content.
+
+### Uploading Hooks from CSV
+
+To upload hooks from a CSV file:
+
+1. Prepare your CSV file with the following columns:
+
+   - `Title`: The name/title of the hook
+   - `Tag(s)`: Comma-separated tags for categorization
+   - `Template`: The actual hook template text
+   - `Image`: Optional image URL
+   - `Post URL`: Optional URL to original LinkedIn post
+
+2. Run the upload script:
+
+   ```bash
+   pnpm upload:hooks path/to/your/hooks.csv
+   ```
+
+3. The script will clear existing hooks and upload the new ones from your CSV file.
+
+### Using the Hooks Library
+
+Users can:
+
+- Browse all available hooks in the Library section
+- Copy hook templates to clipboard
+- Click "Write a Post Like This" to start a guided writing session
+- View original posts for inspiration (if URL provided)
+
+The "Write a Post Like This" feature creates a new chat session with the selected hook template and user's specified topic, then uses AI to help write a compelling LinkedIn post.

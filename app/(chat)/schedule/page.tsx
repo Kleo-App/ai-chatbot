@@ -10,7 +10,7 @@ export default async function SchedulePage() {
   }
 
   return (
-    <div className="h-full w-full">
+    <div className="size-full">
       <ScheduleCalendar />
     </div>
   );

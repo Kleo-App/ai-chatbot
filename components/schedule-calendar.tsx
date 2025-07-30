@@ -1,10 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { DndProvider } from 'react-dnd';
+import { DndProvider, useDrop, useDrag } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { useDrop } from 'react-dnd';
-import { useDrag } from 'react-dnd';
 import { useSidebar } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -172,7 +170,7 @@ interface ScheduledPost {
 const StatusIcon = ({ status }: { status: ScheduledPost['status'] }) => {
   if (status === 'published') {
     return (
-      <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-primary">
+      <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg" className="size-4 text-primary">
         <g>
           <circle cx="9" cy="9" fill="none" r="7.25" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></circle>
           <path d="M5.5,9c.863,.867,1.537,1.868,2.1,2.962,1.307-2.491,2.94-4.466,4.9-5.923" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5"></path>
@@ -182,7 +180,7 @@ const StatusIcon = ({ status }: { status: ScheduledPost['status'] }) => {
   }
   
   return (
-    <Clock className="w-4 h-4 text-foreground" />
+    <Clock className="size-4 text-foreground" />
   );
 };
 
@@ -248,7 +246,7 @@ const PostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpdated?
         <div className="bg-white border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border transition-all duration-200 hover:border-foreground/30 p-2 relative z-50">
           <div className="w-full">
             <div className="flex w-full flex-row items-start justify-between gap-2">
-              <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+              <div className="flex size-4 shrink-0 items-center justify-start">
                 <StatusIcon status={post.status} />
               </div>
               <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-2">
@@ -262,7 +260,7 @@ const PostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpdated?
           <div className="bg-white border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border transition-all duration-200 hover:border-foreground/30 p-2 relative z-50">
             <div className="w-full">
               <div className="flex w-full flex-row items-start justify-between gap-2">
-                <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+                <div className="flex size-4 shrink-0 items-center justify-start">
                   <StatusIcon status={post.status} />
                 </div>
                 <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-2">
@@ -317,7 +315,7 @@ const TimeSlot = ({
       }`}
     >
       <div 
-        className={`subpixel-antialiased relative h-full w-full p-1 transition-all duration-200 ${
+        className={`subpixel-antialiased relative size-full p-1 transition-all duration-200 ${
           isEmpty 
             ? `z-10 cursor-pointer group-hover:bg-primary/10 group-hover:border-primary/70 ${
                 isOver ? 'bg-primary/20 border-primary' : ''
@@ -330,7 +328,7 @@ const TimeSlot = ({
           <div className={`flex items-center justify-center h-full transition-opacity duration-200 ${
             isOver ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
           }`}>
-            <Plus className="w-4 h-4 text-primary" />
+            <Plus className="size-4 text-primary" />
           </div>
         ) : (
           <div className={`space-y-1 ${isOver ? 'bg-primary/5 rounded' : ''}`}>
@@ -339,7 +337,7 @@ const TimeSlot = ({
             ))}
             {isOver && (
               <div className="flex items-center justify-center h-6 opacity-70">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <div className="size-2 bg-primary rounded-full animate-pulse" />
               </div>
             )}
           </div>
@@ -404,14 +402,14 @@ const DayColumn = ({
   
   return (
     <div className="border-divider min-w-[100px] flex-1 border-r last:border-r-0">
-      <div className="relative flex h-full w-full flex-col">
+      <div className="relative flex size-full flex-col">
         {/* Current time indicator - only render on client side when we have current time */}
         {currentTime && (
           <>
             {isToday ? (
               <>
                 <div 
-                  className="pointer-events-none absolute right-0 left-0 z-[15] bg-red-500 opacity-100" 
+                  className="pointer-events-none absolute inset-x-0 z-[15] bg-red-500 opacity-100" 
                   style={{ top: `${currentTimePosition}px`, height: '2px' }}
                 ></div>
                 <div 
@@ -421,7 +419,7 @@ const DayColumn = ({
               </>
             ) : (
               <div 
-                className="pointer-events-none absolute right-0 left-0 z-[15] bg-red-500 opacity-30" 
+                className="pointer-events-none absolute inset-x-0 z-[15] bg-red-500 opacity-30" 
                 style={{ top: `${currentTimePosition}px`, height: '2px' }}
               ></div>
             )}
@@ -564,10 +562,10 @@ const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpd
     >
       {isDragging ? (
         <div className="bg-content3 border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border shadow-xs transition-all duration-200 hover:border-foreground/30 hover:bg-content4">
-          <div className="pt-2 flex w-full flex-col items-start justify-between gap-2.5 px-2 pb-2">
+          <div className="p-2 flex w-full flex-col items-start justify-between gap-2.5">
             <div className="flex w-full flex-col gap-1.5">
               <div className="flex w-full flex-row items-start justify-between gap-2">
-                <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+                <div className="flex size-4 shrink-0 items-center justify-start">
                   <StatusIcon status={post.status} />
                 </div>
                 <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-1">
@@ -576,8 +574,8 @@ const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpd
               </div>
               {post.scheduledAt && (
                 <div className="flex flex-row items-center gap-2">
-                  <div className="border-divider flex w-fit items-center gap-1.5 overflow-hidden rounded-md border-[0.5px] px-1.5 py-0.5 text-ellipsis whitespace-nowrap">
-                    <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
+                  <div className="border-divider flex w-fit items-center gap-1.5 rounded-md border-[0.5px] px-1.5 py-0.5 truncate">
+                    <div className="size-2 shrink-0 rounded-full bg-blue-500"></div>
                     <p className="text-muted-foreground whitespace overflow-hidden text-[11px] font-medium text-ellipsis">
                       {format(post.scheduledAt, 'h:mm a')}
                     </p>
@@ -590,7 +588,7 @@ const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpd
       ) : (
         <PostPreviewPopover post={post} onPostUpdated={onPostUpdated}>
           <div className="bg-content3 border-divider ease flex flex-col items-center justify-between gap-1.5 rounded-lg border shadow-xs transition-all duration-200 hover:border-foreground/30 hover:bg-content4 cursor-pointer">
-            <div className="pt-2 flex w-full flex-col items-start justify-between gap-2.5 px-2 pb-2">
+            <div className="p-2 flex w-full flex-col items-start justify-between gap-2.5">
               <div className="flex w-full flex-col gap-1.5">
                 <div className="flex w-full flex-row items-start justify-between gap-2">
                   <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
@@ -602,8 +600,8 @@ const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpd
                 </div>
                 {post.scheduledAt && (
                   <div className="flex flex-row items-center gap-2">
-                    <div className="border-divider flex w-fit items-center gap-1.5 overflow-hidden rounded-md border-[0.5px] px-1.5 py-0.5 text-ellipsis whitespace-nowrap">
-                      <div className="h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"></div>
+                    <div className="border-divider flex w-fit items-center gap-1.5 rounded-md border-[0.5px] px-1.5 py-0.5 truncate">
+                      <div className="size-2 shrink-0 rounded-full bg-blue-500"></div>
                       <p className="text-muted-foreground whitespace overflow-hidden text-[11px] font-medium text-ellipsis">
                         {format(post.scheduledAt, 'h:mm a')}
                       </p>
@@ -676,7 +674,7 @@ const MonthDay = ({
       } ${!isCurrentMonth ? 'opacity-50' : ''}`}
     >
       <div
-        className={`h-full w-full p-2 transition-all duration-200 ${
+        className={`size-full p-2 transition-all duration-200 ${
           isToday ? 'bg-primary/5' : 'hover:bg-gray-50'
         }`}
       >
@@ -696,10 +694,10 @@ const MonthDay = ({
             size="sm"
             variant="ghost"
             onClick={() => onDayClick(date)}
-            className="invisible group-hover:visible opacity-70 hover:opacity-100 rounded-full min-w-8 w-8 h-8 p-0 bg-transparent hover:bg-default/40 transition-all duration-200"
+            className="invisible group-hover:visible opacity-70 hover:opacity-100 rounded-full min-w-8 size-8 p-0 bg-transparent hover:bg-default/40 transition-all duration-200"
             aria-label="Add to day"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <Plus className="size-3.5" />
           </Button>
         </div>
         
@@ -1237,7 +1235,7 @@ function ScheduleCalendarContent() {
                   onClick={handlePrevious}
                   className="rounded-r-none bg-transparent text-default-foreground hover:bg-default/40"
                 >
-                  <ChevronLeft className="w-5 h-5" />
+                  <ChevronLeft className="size-5" />
                 </Button>
                 <Button 
                   variant="ghost" 
@@ -1245,7 +1243,7 @@ function ScheduleCalendarContent() {
                   onClick={handleNext}
                   className="rounded-l-none bg-transparent text-default-foreground hover:bg-default/40"
                 >
-                  <ChevronRight className="w-5 h-5" />
+                  <ChevronRight className="size-5" />
                 </Button>
               </div>
             </div>
@@ -1271,7 +1269,7 @@ function ScheduleCalendarContent() {
                   : 'bg-default/40 text-default-700 hover:bg-default/60'
               }`}
             >
-              <CalendarDays className="w-3.5 h-3.5 mr-1.5" />
+              <CalendarDays className="size-3.5 mr-1.5" />
               {showUnscheduledPosts ? 'Hide' : 'Show'} Drafts
             </Button>
             <Button 
@@ -1280,7 +1278,7 @@ function ScheduleCalendarContent() {
               onClick={() => setIsSettingsModalOpen(true)}
               className="bg-default/40 text-default-700 border-divider"
             >
-              <Settings className="w-3.5 h-3.5 mr-1.5" />
+              <Settings className="size-3.5 mr-1.5" />
               Settings
             </Button>
           </div>
@@ -1288,7 +1286,7 @@ function ScheduleCalendarContent() {
 
         {/* Calendar container */}
         <div className="border-divider bg-white flex flex-1 h-full min-h-0 flex-col items-center justify-between gap-3 overflow-hidden border-[0.5px]">
-          <div className="relative flex h-full w-full flex-1 flex-col overflow-hidden">
+          <div className="relative flex size-full flex-1 flex-col overflow-hidden">
             {viewType === 'week' ? (
               <>
                 {/* Sticky CalendarHeader */}
@@ -1434,7 +1432,7 @@ function ScheduleCalendarContent() {
                       toast.success(`Detected timezone: ${timezone}`);
                     }}
                   >
-                    <MapPin className="w-4 h-4 mr-2" />
+                    <MapPin className="size-4 mr-2" />
                     Detect
                   </Button>
                 </div>

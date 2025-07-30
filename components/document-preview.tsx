@@ -95,6 +95,7 @@ export function DocumentPreview({
           userId: 'noop',
           status: 'draft' as const,
           scheduledAt: null,
+          scheduledTimezone: null,
           publishedAt: null,
         }
       : null;

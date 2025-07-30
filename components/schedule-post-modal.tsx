@@ -203,6 +203,27 @@ export function SchedulePostModal({
       
       const success = await updateDocumentStatus('scheduled', finalScheduledDate);
       if (success) {
+        // Schedule the post for automatic publishing via Inngest
+        try {
+          const response = await fetch('/api/posts/schedule', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              documentId,
+              scheduledAt: finalScheduledDate.toISOString(),
+              timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Failed to schedule post for automatic publishing');
+          }
+        } catch (scheduleError) {
+          console.error('Failed to schedule automatic publishing:', scheduleError);
+          // Still show success for the database update, but warn about auto-publishing
+          toast.error('Post scheduled but automatic publishing may not work. Please check your LinkedIn connection.');
+        }
+
         // Check if time was adjusted due to conflict
         const actionWord = isRescheduleMode ? 'rescheduled' : 'scheduled';
         if (bestAvailableHour !== requestedHour) {
@@ -288,7 +309,7 @@ export function SchedulePostModal({
                       onChange={handleDateTimeChange}
                       className="w-full pr-10"
                     />
-                    <CalendarIcon className="absolute right-3 w-5 h-5 text-muted-foreground pointer-events-none" />
+                    <CalendarIcon className="absolute right-3 size-5 text-muted-foreground pointer-events-none" />
                   </div>
                 </div>
               </div>
@@ -297,7 +318,7 @@ export function SchedulePostModal({
               {conflictInfo.hasConflict && conflictInfo.suggestedTime && (
                 <div className="mt-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
                   <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <AlertTriangle className="size-4 text-amber-600 mt-0.5 shrink-0" />
                     <div className="text-sm">
                       <p className="text-amber-800 font-medium">Time slot conflict detected</p>
                       <p className="text-amber-700 mt-1">
@@ -321,27 +342,27 @@ export function SchedulePostModal({
               >
                 {isScheduling ? (
                   <>
-                    <Clock className="w-5 h-5 animate-spin" />
+                    <Clock className="size-5 animate-spin" />
                     {isLinkedInConnected ? (isRescheduleMode ? 'Rescheduling post...' : 'Scheduling post...') : 'Connecting...'}
                   </>
                 ) : isCheckingLinkedIn ? (
                   <>
-                    <Clock className="w-5 h-5 animate-spin" />
+                    <Clock className="size-5 animate-spin" />
                     Checking connection...
                   </>
                 ) : isLinkedInConnected ? (
                   <>
                     {isRescheduleMode ? 'Reschedule' : 'Schedule'} post for {format(selectedDate, 'MMM d')} at {format(selectedDate, 'h:mm a')}
-                    <Clock className="w-5 h-5" />
+                    <Clock className="size-5" />
                   </>
                 ) : (
                   <>
                     Connect to LinkedIn
-                    <Clock className="w-5 h-5" />
+                    <Clock className="size-5" />
                   </>
                 )}
               </Button>
-                  <Info className="text-foreground absolute -right-8 w-4 h-4" />
+                  <Info className="text-foreground absolute -right-8 size-4" />
                 </div>
               </div>
             </div>

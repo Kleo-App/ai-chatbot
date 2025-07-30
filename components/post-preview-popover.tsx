@@ -168,12 +168,12 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
       >
         <div className="flex flex-col">
           {/* Header with time and category */}
-          <div className="flex flex-row justify-between border-b border-divider px-3 pt-2 pb-2">
+          <div className="flex flex-row justify-between border-b border-divider px-3 py-2">
             <time className="text-muted-foreground text-sm">
               {format(displayTime, 'MMM d, h:mm a (O)')}
             </time>
-            <div className="flex w-fit items-center gap-1.5 rounded-md border border-divider border-[0.5px] px-1.5 py-0.5">
-              <div className="h-2 w-2 rounded-full bg-purple-500"></div>
+            <div className="flex w-fit items-center gap-1.5 rounded-md border-divider border-[0.5px] px-1.5 py-0.5">
+              <div className="size-2 rounded-full bg-purple-500"></div>
               <p className="text-muted-foreground text-[11px] font-medium">
                 {post.status === 'published' ? 'Published' : 'Scheduled'}
               </p>
@@ -182,17 +182,17 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
 
           {/* User profile section */}
           <div className="flex flex-row gap-2 px-3 pt-3">
-            <div className="relative flex shrink-0 overflow-hidden rounded-full h-[32px] w-[32px]">
+            <div className="relative flex shrink-0 overflow-hidden rounded-full size-[32px]">
               {userProfile.profileImage ? (
                 <Image 
-                  className="aspect-square h-full w-full" 
+                  className="aspect-square size-full" 
                   src={userProfile.profileImage}
                   alt={userProfile.fullName}
                   width={32}
                   height={32}
                 />
               ) : (
-                <div className="h-full w-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
+                <div className="size-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold text-sm">
                   {userProfile.fullName[0]}
                 </div>
               )}
@@ -226,7 +226,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
               className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
               onClick={() => setIsRescheduleModalOpen(true)}
             >
-              <Calendar className="h-4 w-4" />
+              <Calendar className="size-4" />
               <span className="hidden sm:block">Schedule</span>
             </Button>
             
@@ -236,7 +236,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
               className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
               onClick={handleEditPost}
             >
-              <Edit className="h-4 w-4" />
+              <Edit className="size-4" />
               <span className="hidden sm:block">Edit Post</span>
             </Button>
             
@@ -245,10 +245,10 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
                 <Button 
                   variant="outline" 
                   size="sm"
-                  className="bg-default/40 text-default-700 border-divider h-8 w-8 p-0"
+                  className="bg-default/40 text-default-700 border-divider size-8 p-0"
                   disabled={isRemoving}
                 >
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -258,7 +258,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
                     disabled={isRemoving}
                     className="text-sm cursor-pointer focus:bg-accent focus:text-accent-foreground"
                   >
-                    <CalendarX className="mr-2 h-4 w-4" />
+                    <CalendarX className="mr-2 size-4" />
                     {isRemoving ? 'Removing...' : 'Remove from calendar'}
                   </DropdownMenuItem>
                 )}

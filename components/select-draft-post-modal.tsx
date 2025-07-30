@@ -97,7 +97,7 @@ export function SelectDraftPostModal({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader className="border-b border-divider px-6 py-4">
           <DialogTitle className="text-lg font-medium flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
+            <Calendar className="size-5" />
             Pick a draft to schedule for {format(selectedDateTime, 'MMM d')} at {format(selectedDateTime, 'h:mm a')}
           </DialogTitle>
         </DialogHeader>
@@ -105,12 +105,12 @@ export function SelectDraftPostModal({
         <div className="flex flex-1 flex-col overflow-y-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin w-6 h-6 border-2 border-primary border-t-transparent rounded-full" />
+              <div className="animate-spin size-6 border-2 border-primary border-t-transparent rounded-full" />
             </div>
           ) : draftPosts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center px-6">
-              <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-4">
-                <Plus className="w-6 h-6 text-muted-foreground" />
+              <div className="size-12 bg-muted rounded-full flex items-center justify-center mb-4">
+                <Plus className="size-6 text-muted-foreground" />
               </div>
               <h3 className="text-lg font-medium mb-2">No draft posts found</h3>
               <p className="text-muted-foreground mb-4">

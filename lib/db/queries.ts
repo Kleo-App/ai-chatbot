@@ -10,6 +10,7 @@ import {
   gte,
   inArray,
   lt,
+  lte,
   type SQL,
 } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -117,13 +118,14 @@ export async function saveChat({
   visibility: VisibilityType;
 }) {
   try {
-    return await db.insert(chat).values({
+    const [newChat] = await db.insert(chat).values({
       id,
       createdAt: new Date(),
       userId,
       title,
       visibility,
-    });
+    }).returning();
+    return newChat;
   } catch (error) {
     throw new ChatSDKError('bad_request:database', 'Failed to save chat');
   }
@@ -771,5 +773,71 @@ export async function deleteMessageById({ messageId }: { messageId: string }) {
       'bad_request:database',
       'Failed to delete message by id',
     );
+  }
+}
+
+export async function getScheduledPosts({
+  userId,
+  limit = 50,
+}: {
+  userId: string;
+  limit?: number;
+}) {
+  try {
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.userId, userId),
+        eq(document.status, 'scheduled')
+      ))
+      .orderBy(document.scheduledAt)
+      .limit(limit);
+  } catch (error) {
+    console.error('Database error in getScheduledPosts:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch scheduled posts');
+  }
+}
+
+export async function getPostsScheduledBetween({
+  userId,
+  startDate,
+  endDate,
+}: {
+  userId: string;
+  startDate: Date;
+  endDate: Date;
+}) {
+  try {
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.userId, userId),
+        eq(document.status, 'scheduled'),
+        gte(document.scheduledAt, startDate),
+        lte(document.scheduledAt, endDate)
+      ))
+      .orderBy(document.scheduledAt);
+  } catch (error) {
+    console.error('Database error in getPostsScheduledBetween:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch scheduled posts in date range');
+  }
+}
+
+export async function getOverdueScheduledPosts() {
+  try {
+    const now = new Date();
+    return await db
+      .select()
+      .from(document)
+      .where(and(
+        eq(document.status, 'scheduled'),
+        lt(document.scheduledAt, now)
+      ))
+      .orderBy(document.scheduledAt);
+  } catch (error) {
+    console.error('Database error in getOverdueScheduledPosts:', error);
+    throw new ChatSDKError('bad_request:database', 'Failed to fetch overdue scheduled posts');
   }
 }

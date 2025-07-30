@@ -43,7 +43,7 @@ export function PostStatusBadge({ status, scheduledAt, className }: PostStatusBa
       variant="outline" 
       className={`${config.className} ${className} gap-1 text-xs font-medium`}
     >
-      <Icon className="w-3 h-3" />
+      <Icon className="size-3" />
       {config.label}
     </Badge>
   );

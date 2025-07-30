@@ -1,125 +1,201 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Copy, BookOpen, Lightbulb, Target, TrendingUp, Users, MessageCircle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Copy, BookOpen, Lightbulb, Target, MessageCircle, ExternalLink, Loader2, Search, X, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { WritePostModal } from '@/components/write-post-modal';
+import { ImageModal } from '@/components/image-modal';
+import type { Hook } from '@/lib/db/schema-hooks';
+import type { Post } from '@/lib/db/schema-posts';
 
-interface Template {
+interface ContentItem {
   id: string;
   title: string;
-  content: string;
-  category: string;
-  tags: string[];
-  description: string;
+  template: string;
+  image?: string | null;
+  postUrl?: string | null;
 }
 
-const templates: Template[] = [
-  // Attention-Grabbing Hooks
-  {
-    id: 'hook-1',
-    title: 'Controversial Question Hook',
-    content: 'Unpopular opinion: [Your controversial but thought-provoking statement]\n\nHere\'s why I believe this...',
-    category: 'hooks',
-    tags: ['engagement', 'debate'],
-    description: 'Start conversations with a bold statement that challenges conventional thinking'
-  },
-  {
-    id: 'hook-2',
-    title: 'Problem/Solution Hook',
-    content: 'I spent 3 years struggling with [problem].\n\nThen I discovered this simple solution that changed everything:\n\n👇',
-    category: 'hooks',
-    tags: ['storytelling', 'value'],
-    description: 'Share your journey from problem to solution to inspire others'
-  },
-  {
-    id: 'hook-3',
-    title: 'Behind-the-Scenes Hook',
-    content: 'What really happens behind closed doors at [your company/industry]:\n\n📈 The truth most people don\'t see...',
-    category: 'hooks',
-    tags: ['transparency', 'insider'],
-    description: 'Give your audience exclusive insights into your world'
-  },
-  {
-    id: 'hook-4',
-    title: 'Mistake Admission Hook',
-    content: 'I made a $[X] mistake last week.\n\nHere\'s what I learned (so you don\'t have to):',
-    category: 'hooks',
-    tags: ['vulnerability', 'lessons'],
-    description: 'Build trust by sharing your failures and lessons learned'
-  },
+interface ContentCardProps {
+  item: ContentItem;
+  onWritePost: (item: ContentItem, type: 'hook' | 'post') => void;
+  onImageClick: (imageUrl: string, title: string) => void;
+  type: 'hook' | 'post';
+}
 
-  // Complete Post Templates
-  {
-    id: 'template-1',
-    title: 'Personal Story Framework',
-    content: '🔸 The Challenge:\n[Describe the problem you faced]\n\n🔸 The Journey:\n[Share your process and struggles]\n\n🔸 The Breakthrough:\n[What changed everything]\n\n🔸 The Results:\n[Specific outcomes and impact]\n\n💡 Key Takeaway:\n[Main lesson for your audience]\n\nWhat\'s one challenge you\'re working through right now?',
-    category: 'templates',
-    tags: ['storytelling', 'engagement'],
-    description: 'A proven structure for sharing personal experiences that resonate'
-  },
-  {
-    id: 'template-2',
-    title: 'Tips & Insights List',
-    content: '[Number] [Topic] insights I wish I knew earlier:\n\n1️⃣ [First insight]\n→ [Brief explanation]\n\n2️⃣ [Second insight]\n→ [Brief explanation]\n\n3️⃣ [Third insight]\n→ [Brief explanation]\n\n4️⃣ [Fourth insight]\n→ [Brief explanation]\n\n5️⃣ [Fifth insight]\n→ [Brief explanation]\n\nWhich one resonates most with you?',
-    category: 'templates',
-    tags: ['education', 'value'],
-    description: 'Share valuable insights in an easy-to-digest numbered format'
-  },
-  {
-    id: 'template-3',
-    title: 'Company/Project Announcement',
-    content: '🚀 Excited to share: [Your announcement]\n\n💡 Why this matters:\n[Explain the significance and impact]\n\n🎯 What\'s next:\n[Future plans or call to action]\n\n👥 Special thanks:\n[Acknowledge team members or supporters]\n\nWhat would you like to know more about?',
-    category: 'templates',
-    tags: ['announcement', 'professional'],
-    description: 'Professional template for sharing company news and achievements'
-  },
-  {
-    id: 'template-4',
-    title: 'Industry Analysis',
-    content: 'The [Industry] landscape is changing rapidly.\n\nHere\'s what I\'m seeing:\n\n📈 [Trend 1]: [Brief explanation]\n📊 [Trend 2]: [Brief explanation]\n🔮 [Trend 3]: [Brief explanation]\n\nMy prediction for 2024:\n[Your forecast and reasoning]\n\nWhat trends are you noticing in your field?',
-    category: 'templates',
-    tags: ['analysis', 'trends'],
-    description: 'Share your industry insights and predictions to establish thought leadership'
-  },
-
-  // Engagement Strategies
-  {
-    id: 'strategy-1',
-    title: 'Question-Driven Engagement',
-    content: 'End every post with a question that encourages responses:\n\n• "What\'s your experience with...?"\n• "How do you handle...?"\n• "What would you add to this list?"\n• "Which point resonates most?"\n• "What\'s your biggest challenge with...?"',
-    category: 'strategies',
-    tags: ['engagement', 'questions'],
-    description: 'Proven question formats to boost comments and discussions'
-  },
-  {
-    id: 'strategy-2',
-    title: 'Call-to-Action Templates',
-    content: 'Strong CTAs that drive action:\n\n🔔 "Follow for more [topic] insights"\n💬 "Share your thoughts in the comments"\n🔄 "Repost if you found this helpful"\n📢 "Tag someone who needs to see this"\n💌 "DM me for [specific offer/resource]"',
-    category: 'strategies',
-    tags: ['cta', 'growth'],
-    description: 'Effective call-to-action phrases to increase engagement and followers'
-  }
-];
-
-const categories = [
-  { id: 'hooks', label: 'Hooks', icon: Target, description: 'Attention-grabbing opening lines' },
-  { id: 'templates', label: 'Templates', icon: BookOpen, description: 'Complete post structures' },
-  { id: 'strategies', label: 'Strategies', icon: TrendingUp, description: 'Engagement techniques' }
-];
-
-export default function LibraryPage() {
-  const [activeCategory, setActiveCategory] = useState('hooks');
-
+function ContentCard({ item, onWritePost, onImageClick, type }: ContentCardProps) {
   const copyToClipboard = (content: string) => {
     navigator.clipboard.writeText(content);
     toast.success('Copied to clipboard!');
   };
 
-  const filteredTemplates = templates.filter(template => template.category === activeCategory);
+  return (
+    <Card className="overflow-hidden">
+      {/* Image Header */}
+      {item.image && (
+        <div 
+          className="relative h-48 w-full overflow-hidden bg-muted/20 cursor-pointer group"
+          onClick={() => onImageClick(item.image!, item.title)}
+        >
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            className="size-full object-contain transition-transform group-hover:scale-105"
+            onError={(e) => {
+              // Hide image if it fails to load
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 rounded-full p-2">
+              <svg className="size-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <CardHeader className={item.image ? "pb-3" : ""}>
+        <div className="flex items-start justify-between">
+          <CardTitle className="text-lg flex-1 leading-tight">{item.title}</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => copyToClipboard(item.template)}
+            className="size-8 p-0 shrink-0"
+          >
+            <Copy className="size-4" />
+          </Button>
+        </div>
+      </CardHeader>
+      
+      <CardContent className={item.image ? "pt-0" : ""}>
+        <div className="bg-muted/50 rounded-lg p-3 mb-4">
+          <pre className="text-sm whitespace-pre-wrap leading-relaxed">
+            {item.template}
+          </pre>
+        </div>
+        
+        {item.postUrl && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.open(item.postUrl!, '_blank')}
+            className="w-full mb-3"
+          >
+            <ExternalLink className="size-4 mr-2" />
+            View on LinkedIn
+          </Button>
+        )}
+        
+        <Button
+          onClick={() => onWritePost(item, type)}
+          className="w-full"
+          size="sm"
+        >
+          <MessageCircle className="size-4 mr-2" />
+          Write a Post Like This
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function LibraryPage() {
+  const [hooks, setHooks] = useState<Hook[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+  const [selectedType, setSelectedType] = useState<'hook' | 'post'>('hook');
+  const [isWriteModalOpen, setIsWriteModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeTab, setActiveTab] = useState('hooks');
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [hooksResponse, postsResponse] = await Promise.all([
+          fetch('/api/hooks'),
+          fetch('/api/posts')
+        ]);
+
+        if (!hooksResponse.ok) {
+          throw new Error('Failed to fetch hooks');
+        }
+        if (!postsResponse.ok) {
+          throw new Error('Failed to fetch posts');
+        }
+
+        const [hooksData, postsData] = await Promise.all([
+          hooksResponse.json(),
+          postsResponse.json()
+        ]);
+
+        setHooks(hooksData);
+        setPosts(postsData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast.error('Failed to load content');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  const handleWritePost = (item: ContentItem, type: 'hook' | 'post') => {
+    setSelectedItem(item);
+    setSelectedType(type);
+    setIsWriteModalOpen(true);
+  };
+
+  const handleImageClick = (imageUrl: string, title: string) => {
+    setSelectedImage({ src: imageUrl, alt: title });
+    setIsImageModalOpen(true);
+  };
+
+  // Filter content based on search query and active tab
+  const filteredContent = useMemo(() => {
+    const items = activeTab === 'hooks' ? hooks : posts;
+    return items.filter(item => {
+      return !searchQuery || 
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.template.toLowerCase().includes(searchQuery.toLowerCase());
+    });
+  }, [hooks, posts, searchQuery, activeTab]);
+
+  const clearSearch = () => {
+    setSearchQuery('');
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1 overflow-auto p-4 md:p-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="flex items-center gap-2">
+                <Loader2 className="size-6 animate-spin" />
+                <span>Loading templates...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -127,100 +203,228 @@ export default function LibraryPage() {
         <div className="max-w-6xl mx-auto">
           {/* Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <BookOpen className="h-6 w-6 text-primary" />
+            <div className="text-center mb-8">
+              <div className="inline-flex items-center gap-3 mb-4">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-sm">
+                  <Target className="size-7 text-primary" />
+                </div>
+                                 <div>
+                   <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">
+                     Template Library
+                   </h1>
+                 </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold">Content Library</h1>
-                <p className="text-muted-foreground">
-                  Professional LinkedIn hooks, templates, and strategies to elevate your content
-                </p>
-              </div>
+              <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
+                Professional LinkedIn hooks and templates to elevate your content. Click &quot;Write a Post Like This&quot; to create content using any template.
+              </p>
+            </div>
+
+            {/* Enhanced Tabs and Search Section */}
+            <div className="bg-card border rounded-xl shadow-sm p-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                {/* Custom Tab Buttons */}
+                <div className="flex justify-center mb-6">
+                  <div className="inline-flex items-center p-1 bg-muted rounded-lg">
+                    <button
+                      onClick={() => setActiveTab('hooks')}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'hooks'
+                          ? 'bg-background text-foreground shadow-sm border'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <Target className="size-4" />
+                      <span>Hooks</span>
+                      <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                        activeTab === 'hooks' 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {hooks.length}
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('posts')}
+                      className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                        activeTab === 'posts'
+                          ? 'bg-background text-foreground shadow-sm border'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      <FileText className="size-4" />
+                      <span>Posts</span>
+                      <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                        activeTab === 'posts' 
+                          ? 'bg-primary/10 text-primary' 
+                          : 'bg-muted text-muted-foreground'
+                      }`}>
+                        {posts.length}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Enhanced Search */}
+                <div className="space-y-4">
+                  {/* Search Bar */}
+                  <div className="relative max-w-xl mx-auto">
+                    <div className="relative">
+                      <Search className="absolute left-4 top-1/2 -translate-y-1/2 size-5 text-muted-foreground" />
+                      <Input
+                        placeholder={`Search ${activeTab}...`}
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="px-12 h-12 text-base border-border/50 focus:border-primary/50 shadow-sm"
+                      />
+                      {searchQuery && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearSearch}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 size-8 p-0 hover:bg-muted"
+                        >
+                          <X className="size-4" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Results Count with better styling */}
+                  <div className="text-center">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-muted/50 rounded-full text-sm text-muted-foreground">
+                      <div className="size-2 rounded-full bg-primary/60"></div>
+                      <span>
+                        Showing <span className="font-medium text-foreground">{filteredContent.length}</span> of{' '}
+                        <span className="font-medium text-foreground">
+                          {activeTab === 'hooks' ? hooks.length : posts.length}
+                        </span>{' '}
+                        {activeTab}
+                        {searchQuery && <span className="text-primary"> (filtered)</span>}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Area */}
+                <div className="mt-8">
+                  <TabsContent value="hooks">
+                {hooks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Target className="size-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No hooks available</h3>
+                    <p className="text-muted-foreground">
+                      Upload your hooks CSV file using the upload script to get started.
+                    </p>
+                  </div>
+                ) : filteredContent.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search className="size-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No hooks found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      No hooks match your search criteria.
+                    </p>
+                    <Button onClick={clearSearch} variant="outline">
+                      Clear search
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+                    {filteredContent.map((item) => (
+                      <div key={item.id} className="mb-6 break-inside-avoid">
+                        <ContentCard 
+                          item={item} 
+                          onWritePost={handleWritePost}
+                          onImageClick={handleImageClick}
+                          type="hook"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="posts">
+                {posts.length === 0 ? (
+                  <div className="text-center py-12">
+                    <FileText className="size-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No posts available</h3>
+                    <p className="text-muted-foreground">
+                      Upload your posts CSV file using the upload script to get started.
+                    </p>
+                  </div>
+                ) : filteredContent.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search className="size-12 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold mb-2">No posts found</h3>
+                    <p className="text-muted-foreground mb-4">
+                      No posts match your search criteria.
+                    </p>
+                    <Button onClick={clearSearch} variant="outline">
+                      Clear search
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="columns-1 md:columns-2 lg:columns-3 gap-6">
+                    {filteredContent.map((item) => (
+                      <div key={item.id} className="mb-6 break-inside-avoid">
+                        <ContentCard 
+                          item={item} 
+                          onWritePost={handleWritePost}
+                          onImageClick={handleImageClick}
+                          type="post"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+                </div>
+              </Tabs>
             </div>
           </div>
-
-          {/* Categories */}
-          <Tabs value={activeCategory} onValueChange={setActiveCategory} className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              {categories.map((category) => {
-                const Icon = category.icon;
-                return (
-                  <TabsTrigger 
-                    key={category.id} 
-                    value={category.id}
-                    className="flex items-center gap-2"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {category.label}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-
-            {categories.map((category) => (
-              <TabsContent key={category.id} value={category.id}>
-                <div className="mb-6">
-                  <h2 className="text-xl font-semibold mb-2">{category.label}</h2>
-                  <p className="text-muted-foreground">{category.description}</p>
-                </div>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                  {filteredTemplates.map((template) => (
-                    <Card key={template.id} className="h-full">
-                      <CardHeader>
-                        <div className="flex items-start justify-between">
-                          <CardTitle className="text-lg">{template.title}</CardTitle>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => copyToClipboard(template.content)}
-                            className="shrink-0"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{template.description}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {template.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="bg-muted/50 rounded-lg p-3">
-                          <pre className="text-sm whitespace-pre-wrap font-mono">
-                            {template.content}
-                          </pre>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </TabsContent>
-            ))}
-          </Tabs>
 
           {/* Tips Section */}
           <div className="mt-12 p-6 bg-primary/5 rounded-lg border border-primary/20">
             <div className="flex items-start gap-3">
-              <Lightbulb className="h-6 w-6 text-primary mt-1" />
+              <Lightbulb className="size-6 text-primary mt-1" />
               <div>
                 <h3 className="font-semibold text-lg mb-2">Pro Tips for Using Templates</h3>
                 <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• Use the search bar to find templates by title or content</li>
+                  <li>• Click &quot;Write a Post Like This&quot; to start a guided writing session</li>
                   <li>• Personalize templates with your unique voice and experiences</li>
-                  <li>• Replace placeholder text with specific, relevant examples</li>
-                  <li>• Test different hooks to see what resonates with your audience</li>
-                  <li>• Combine elements from different templates to create something new</li>
-                  <li>• Always end with a question or call-to-action to drive engagement</li>
+                  <li>• Use the copy button to quickly grab templates for manual editing</li>
+                  <li>• Click images to view them larger for better inspiration</li>
                 </ul>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Write Post Modal */}
+      <WritePostModal
+        item={selectedItem}
+        type={selectedType}
+        isOpen={isWriteModalOpen}
+        onClose={() => {
+          setIsWriteModalOpen(false);
+          setSelectedItem(null);
+        }}
+      />
+
+      {/* Image Modal */}
+      {selectedImage && (
+        <ImageModal
+          src={selectedImage.src}
+          alt={selectedImage.alt}
+          isOpen={isImageModalOpen}
+          onClose={() => {
+            setIsImageModalOpen(false);
+            setSelectedImage(null);
+          }}
+        />
+      )}
     </div>
   );
-}
+} 

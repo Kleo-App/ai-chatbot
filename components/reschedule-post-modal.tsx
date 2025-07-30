@@ -118,6 +118,20 @@ export function ReschedulePostModal({
         return;
       }
 
+      // First, cancel the existing scheduled job
+      try {
+        await fetch('/api/posts/schedule', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId: post.id,
+          }),
+        });
+      } catch (cancelError) {
+        console.warn('Failed to cancel existing scheduled job:', cancelError);
+        // Continue with rescheduling even if cancellation fails
+      }
+
       // If LinkedIn is connected, proceed normally
       const response = await fetch(`/api/posts/${post.id}/status`, {
         method: 'PATCH',
@@ -132,6 +146,22 @@ export function ReschedulePostModal({
 
       if (!response.ok) {
         throw new Error('Failed to reschedule post');
+      }
+
+      // Schedule the new job
+      try {
+        await fetch('/api/posts/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId: post.id,
+            scheduledAt: scheduledDateTime.toISOString(),
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          }),
+        });
+      } catch (scheduleError) {
+        console.error('Failed to schedule new job:', scheduleError);
+        toast.error('Post rescheduled in database but automatic publishing may not work. Please check your LinkedIn connection.');
       }
 
       toast.success(`Post rescheduled for ${format(scheduledDateTime, 'PPP p')}`);
@@ -167,6 +197,20 @@ export function ReschedulePostModal({
   const handleUnschedule = async () => {
     setIsUnscheduling(true);
     try {
+      // First, cancel the scheduled job
+      try {
+        await fetch('/api/posts/schedule', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId: post.id,
+          }),
+        });
+      } catch (cancelError) {
+        console.warn('Failed to cancel scheduled job:', cancelError);
+        // Continue with unscheduling even if cancellation fails
+      }
+
       const response = await fetch(`/api/posts/${post.id}/status`, {
         method: 'PATCH',
         headers: {
@@ -247,7 +291,7 @@ export function ReschedulePostModal({
             disabled={isUnscheduling || isRescheduling}
             className="border-red-200 text-red-600 hover:bg-red-50 w-full sm:w-auto"
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="mr-2 size-4" />
             {isUnscheduling ? 'Unscheduling...' : 'Unschedule'}
           </Button>
           
@@ -267,12 +311,12 @@ export function ReschedulePostModal({
             >
               {isRescheduling ? (
                 <>
-                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                  <Clock className="size-4 mr-2 animate-spin" />
                   {isLinkedInConnected ? 'Rescheduling...' : 'Connecting...'}
                 </>
               ) : isCheckingLinkedIn ? (
                 <>
-                  <Clock className="w-4 h-4 mr-2 animate-spin" />
+                  <Clock className="size-4 mr-2 animate-spin" />
                   Checking connection...
                 </>
               ) : isLinkedInConnected ? (

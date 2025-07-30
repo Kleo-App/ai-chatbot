@@ -123,7 +123,7 @@ export default function AboutPage() {
       <div className="flex w-full flex-col items-center gap-8 text-center">
         <div className="flex w-full flex-col items-center space-y-6">
           <div className="flex flex-col items-center gap-4 text-center">
-            <p className="text-muted-foreground text-xs font-medium tracking-[0.1em] uppercase">
+            <p className="text-muted-foreground text-xs font-medium tracking-widest uppercase">
               Let&apos;s get to know you better
             </p>
             <h1 className="w-full text-center text-2xl leading-tight font-bold tracking-tight sm:text-3xl">
@@ -172,7 +172,7 @@ export default function AboutPage() {
           >
             {isLoading ? 'Saving...' : 'Continue'}
             {!isLoading && (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2 size-4 transition-transform group-hover:translate-x-1">
                 <path d="M5 12h14" />
                 <path d="m12 5 7 7-7 7" />
               </svg>

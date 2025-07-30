@@ -10,6 +10,7 @@ import { Calendar, Edit, MoreHorizontal, CalendarX } from 'lucide-react';
 import { useUser } from '@clerk/nextjs';
 import { toast } from 'sonner';
 import type { Document } from '@/lib/db/schema';
+import { ReschedulePostModal } from './reschedule-post-modal';
 
 interface PostPreviewPopoverProps {
   post: {
@@ -30,6 +31,7 @@ interface PostPreviewPopoverProps {
 export function PostPreviewPopover({ post, children, onPostUpdated }: PostPreviewPopoverProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const [isRescheduleModalOpen, setIsRescheduleModalOpen] = useState(false);
   const { user } = useUser();
 
   // Extract content text
@@ -222,6 +224,7 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
               variant="outline" 
               size="sm"
               className="bg-default/40 text-default-700 border-divider h-8 text-xs gap-2"
+              onClick={() => setIsRescheduleModalOpen(true)}
             >
               <Calendar className="h-4 w-4" />
               <span className="hidden sm:block">Schedule</span>
@@ -264,6 +267,13 @@ export function PostPreviewPopover({ post, children, onPostUpdated }: PostPrevie
           </div>
         </div>
       </PopoverContent>
+      
+      <ReschedulePostModal
+        isOpen={isRescheduleModalOpen}
+        onClose={() => setIsRescheduleModalOpen(false)}
+        post={post}
+        onPostUpdated={onPostUpdated}
+      />
     </Popover>
   );
 } 

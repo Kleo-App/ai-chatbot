@@ -170,6 +170,8 @@ function TextArtifactContent({
         documentId={document?.id}
         userProfile={userProfile}
         uploadedImages={uploadedImages}
+        scheduledAt={document?.scheduledAt}
+        status={document?.status}
       />
       </>
   );

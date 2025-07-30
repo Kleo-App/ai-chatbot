@@ -244,7 +244,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                   onClick={onScheduleClick}
                   className="gap-1 bg-black text-white hover:bg-gray-800 h-8 text-xs"
                 >
-                  Schedule
+                  {document?.status === 'scheduled' ? 'Reschedule' : 'Schedule'}
                   <CalendarIcon size={14} />
                 </Button>
               )}

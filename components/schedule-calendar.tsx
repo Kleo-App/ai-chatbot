@@ -864,6 +864,8 @@ function ScheduleCalendarContent() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedTimezone, setSelectedTimezone] = useState('America/New_York');
   const [weekStartsOn, setWeekStartsOn] = useState<'monday' | 'sunday'>('monday');
+  const [isLinkedInConnected, setIsLinkedInConnected] = useState(false);
+  const [isCheckingLinkedIn, setIsCheckingLinkedIn] = useState(false);
 
   // Load saved preferences on mount
   useEffect(() => {
@@ -954,11 +956,28 @@ function ScheduleCalendarContent() {
     }
   };
 
+  const checkLinkedInStatus = async () => {
+    setIsCheckingLinkedIn(true);
+    try {
+      const response = await fetch('/api/linkedin/status');
+      if (response.ok) {
+        const data = await response.json();
+        setIsLinkedInConnected(data.isConnected);
+        console.log('LinkedIn connection status:', data.isConnected); // Debug log
+      }
+    } catch (error) {
+      console.error('Failed to check LinkedIn status:', error);
+    } finally {
+      setIsCheckingLinkedIn(false);
+    }
+  };
+
   useEffect(() => {
     fetchScheduledPosts();
   }, [currentWeek, selectedTimezone]); // Refresh when week changes or timezone changes
 
   useEffect(() => {
+    checkLinkedInStatus(); // Check LinkedIn status on mount
     const interval = setInterval(fetchScheduledPosts, 60000); // Poll every minute
     return () => clearInterval(interval);
   }, []);
@@ -1070,6 +1089,22 @@ function ScheduleCalendarContent() {
         }
       }
 
+      // Always check LinkedIn status before rescheduling
+      await checkLinkedInStatus();
+
+      if (!isLinkedInConnected) {
+        // If not connected to LinkedIn, just redirect to connect (don't reschedule yet)
+        const currentUrl = window.location.href;
+        
+        // Show a toast that we're connecting
+        toast.success(`Redirecting to LinkedIn to connect. You can reschedule after connecting.`);
+        
+        // Redirect to LinkedIn auth
+        window.location.href = `/api/linkedin/auth?returnUrl=${encodeURIComponent(currentUrl)}`;
+        return;
+      }
+
+      // If LinkedIn is connected, proceed normally
       const response = await fetch(`/api/posts/${postId}/status`, {
         method: 'PATCH',
         headers: {
@@ -1116,6 +1151,23 @@ function ScheduleCalendarContent() {
 
   const handlePostSelected = async (post: Document) => {
     try {
+      // Always check LinkedIn status before scheduling
+      await checkLinkedInStatus();
+      
+      if (!isLinkedInConnected) {
+        // If not connected to LinkedIn, just redirect to connect (don't schedule yet)
+        const currentUrl = window.location.href;
+        
+        // Show a toast that we're connecting
+        toast.success(`Redirecting to LinkedIn to connect. You can schedule after connecting.`);
+        setIsDraftModalOpen(false);
+        
+        // Redirect to LinkedIn auth
+        window.location.href = `/api/linkedin/auth?returnUrl=${encodeURIComponent(currentUrl)}`;
+        return;
+      }
+
+      // If LinkedIn is connected, proceed with scheduling
       const response = await fetch(`/api/posts/${post.id}/status`, {
         method: 'PATCH',
         headers: {

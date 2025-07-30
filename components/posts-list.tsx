@@ -1,9 +1,11 @@
 'use client';
 import { useState } from 'react';
 import useSWR, { mutate } from 'swr';
+import { useQueryState, parseAsStringLiteral } from 'nuqs';
 import Link from 'next/link';
 import { formatDistance } from 'date-fns';
 import { Button } from './ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { FileIcon, PlusIcon, LoaderIcon, TrashIcon } from './icons';
 import { PostStatusBadge } from './post-status-badge';
@@ -11,7 +13,13 @@ import { fetcher, generateUUID } from '@/lib/utils';
 import { deletePost } from '@/app/actions/post-actions';
 import type { Document } from '@/lib/db/schema';
 
+type PostStatus = 'all' | 'draft' | 'scheduled' | 'published';
+
 export function PostsList() {
+  const [activeFilter, setActiveFilter] = useQueryState(
+    'filter',
+    parseAsStringLiteral(['all', 'draft', 'scheduled', 'published']).withDefault('all')
+  );
   const { data: documents, isLoading, error } = useSWR<Document[]>(
     '/api/posts',
     fetcher
@@ -57,11 +65,85 @@ export function PostsList() {
     );
   }
 
+  // Filter documents based on active filter
+  const filteredDocuments = documents.filter(doc => {
+    if (activeFilter === 'all') return true;
+    return doc.status === activeFilter;
+  });
+
+  // Count posts by status
+  const counts = {
+    all: documents.length,
+    draft: documents.filter(doc => doc.status === 'draft').length,
+    scheduled: documents.filter(doc => doc.status === 'scheduled').length,
+    published: documents.filter(doc => doc.status === 'published').length,
+  };
+
   return (
-    <div className="space-y-2">
-      {documents.map((document) => (
-        <PostRow key={`${document.id}-${document.createdAt}`} document={document} />
-      ))}
+    <div className="space-y-6">
+      <Tabs value={activeFilter} onValueChange={(value) => setActiveFilter(value as PostStatus)}>
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="all" className="flex items-center gap-2">
+            All
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.all}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="draft" className="flex items-center gap-2">
+            Drafts
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.draft}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="scheduled" className="flex items-center gap-2">
+            Scheduled
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.scheduled}
+            </span>
+          </TabsTrigger>
+          <TabsTrigger value="published" className="flex items-center gap-2">
+            Published
+            <span className="bg-muted-foreground/20 text-xs px-1.5 py-0.5 rounded-full">
+              {counts.published}
+            </span>
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeFilter} className="mt-6">
+          {filteredDocuments.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="mx-auto size-12 text-muted-foreground/50 mb-4">
+                <FileIcon size={48} />
+              </div>
+              <h3 className="text-lg font-medium mb-2">
+                No {activeFilter === 'all' ? '' : activeFilter} posts found
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                {activeFilter === 'draft' && 'All your draft posts will appear here'}
+                {activeFilter === 'scheduled' && 'Posts scheduled for future publishing will appear here'}
+                {activeFilter === 'published' && 'Your published posts will appear here'}
+                {activeFilter === 'all' && 'Create your first post to get started'}
+              </p>
+              {activeFilter === 'all' && (
+                <Link href="/">
+                  <Button>
+                    <span className="mr-2">
+                      <PlusIcon size={16} />
+                    </span>
+                    Create New Post
+                  </Button>
+                </Link>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredDocuments.map((document) => (
+                <PostRow key={`${document.id}-${document.createdAt}`} document={document} />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

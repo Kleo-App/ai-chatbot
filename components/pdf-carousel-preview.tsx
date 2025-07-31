@@ -39,6 +39,7 @@ interface PDFCarouselPreviewProps {
   onTitleChange: (title: string) => void;
   onRemove: () => void;
   isModal?: boolean;
+  deviceType?: 'mobile' | 'desktop';
 }
 
 export default function PDFCarouselPreview({
@@ -52,16 +53,23 @@ export default function PDFCarouselPreview({
   onTitleChange,
   onRemove,
   isModal = false,
+  deviceType = 'desktop',
 }: PDFCarouselPreviewProps) {
   const [numPages, setNumPages] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [isHovered, setIsHovered] = useState(false);
-  const [scale, setScale] = useState<number>(0.6);
+  // Adjust scale based on device type - smaller for mobile, slightly larger for desktop
+  const [scale, setScale] = useState<number>(deviceType === 'mobile' ? 0.45 : 0.6);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Update scale when device type changes
+  useEffect(() => {
+    setScale(deviceType === 'mobile' ? 0.45 : 0.6);
+  }, [deviceType]);
 
   const onDocumentLoadSuccess = useCallback(({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -149,7 +157,11 @@ export default function PDFCarouselPreview({
 
       {/* Carousel Player Area */}
       <div 
-        className="relative bg-gray-100 aspect-[4/5] min-h-[400px] flex items-center justify-center overflow-hidden"
+        className={`relative bg-gray-100 flex items-center justify-center overflow-hidden ${
+          deviceType === 'mobile' 
+            ? 'aspect-[4/7] min-h-[480px]' 
+            : 'aspect-[4/5] min-h-[400px]'
+        }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
@@ -200,18 +212,20 @@ export default function PDFCarouselPreview({
           </div>
         )}
 
-        {/* Navigation Controls - Appear on Hover */}
-        {isHovered && numPages > 1 && (
+        {/* Navigation Controls - Always visible on mobile, hover on desktop */}
+        {(deviceType === 'mobile' ? numPages > 1 : isHovered && numPages > 1) && (
           <>
             {/* Left Navigation Arrow */}
             <button 
               onClick={prevPage}
               disabled={currentPage <= 1}
-              className={`absolute left-3 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-all duration-200 ${
+              className={`absolute left-2 z-10 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all duration-200 ${
+                deviceType === 'mobile' ? 'p-3' : 'p-2'
+              } ${
                 currentPage <= 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
               }`}
             >
-              <svg className="size-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`text-gray-700 ${deviceType === 'mobile' ? 'size-5' : 'size-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
@@ -220,11 +234,13 @@ export default function PDFCarouselPreview({
             <button 
               onClick={nextPage}
               disabled={currentPage >= numPages}
-              className={`absolute right-3 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition-all duration-200 ${
+              className={`absolute right-2 z-10 bg-white rounded-full shadow-md hover:bg-gray-50 transition-all duration-200 ${
+                deviceType === 'mobile' ? 'p-3' : 'p-2'
+              } ${
                 currentPage >= numPages ? 'opacity-30 cursor-not-allowed' : 'opacity-90 hover:opacity-100'
               }`}
             >
-              <svg className="size-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`text-gray-700 ${deviceType === 'mobile' ? 'size-5' : 'size-4'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>

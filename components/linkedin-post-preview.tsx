@@ -476,6 +476,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                         onTitleChange={setEditedTitle}
                         onRemove={handleRemove}
                         isModal={isModal}
+                        deviceType={deviceType}
                       />
                     );
                   })}

@@ -14,6 +14,7 @@
     "db:seed": "npx tsx scripts/seed-db.ts",
     "upload:hooks": "npx tsx scripts/upload-hooks.ts",
     "upload:posts": "npx tsx scripts/upload-posts.ts",
+    "invite:users": "npx tsx scripts/bulk-invite-users.ts",
     "db:studio": "drizzle-kit studio",
     "db:push": "drizzle-kit push",
     "db:pull": "drizzle-kit pull",

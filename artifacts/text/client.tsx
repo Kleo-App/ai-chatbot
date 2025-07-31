@@ -40,7 +40,7 @@ function TextArtifactContent({
   handleVersionChange,
   setMetadata,
 }: any) {
-  const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('desktop');
+  const [deviceType, setDeviceType] = useState<'mobile' | 'desktop'>('mobile');
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);

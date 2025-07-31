@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { BarChart3, MessageSquare, TrendingUp, RefreshCw, Calendar, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoaderIcon } from '@/components/icons';
 import { toast } from '@/components/toast';
-import { getAllUserMemories, deleteMemory } from '@/lib/mem0Utils';
+// Remove direct imports since we'll use API routes
 
 interface MemoryData {
   id: string;
@@ -34,15 +34,22 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
   const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState<'all' | 'posts'>('all');
 
-  const fetchMemories = async () => {
+  const fetchMemories = useCallback(async () => {
     if (!userId) return;
     
     setIsLoading(true);
     try {
-      const userMemories = await getAllUserMemories(userId);
+      const response = await fetch('/api/memories?limit=100');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      const userMemories = data.memories || [];
       
       // Filter for analytics data (post_analytics and conversation_analytics)
-      const memoryData = userMemories.filter(memory => 
+      const memoryData = userMemories.filter((memory: any) => 
         memory.metadata?.category === 'post_analytics' || 
         memory.metadata?.category === 'conversation_analytics'
       );
@@ -57,7 +64,7 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   const handleDeleteMemory = async (memoryId: string) => {
     if (!memoryId) return;
@@ -65,7 +72,18 @@ export function UserAnalytics({ userId }: UserAnalyticsProps) {
     setDeletingIds(prev => new Set(prev).add(memoryId));
     
     try {
-      await deleteMemory(memoryId);
+      const response = await fetch('/api/memories', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ memoryId }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       setMemories(prev => prev.filter(m => m.id !== memoryId));
       toast({
         type: 'success',

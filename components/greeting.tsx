@@ -450,7 +450,7 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
                       />
                       LinkedIn
                     </span>{' '}
-                    AI ghostwriter trained by top creators for creators.
+                    AI content partner, from first draft to final post.
                   </p>
                 </div>
 

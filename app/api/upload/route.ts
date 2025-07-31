@@ -29,9 +29,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size based on type
-    const maxImageSize = 36 * 1024 * 1024; // 36MB for images (LinkedIn limit based on pixel count)
-    const maxVideoSize = 5 * 1024 * 1024 * 1024; // 5GB for videos (LinkedIn recommendation)
-    const maxDocumentSize = 100 * 1024 * 1024; // 100MB for documents (LinkedIn limit)
+    const maxImageSize = 4 * 1024 * 1024; // 4MB for images (server upload limit)
+    const maxVideoSize = 4 * 1024 * 1024; // 4MB for videos (server upload limit)
+    const maxDocumentSize = 4 * 1024 * 1024; // 4MB for documents (server upload limit - larger documents use client-side upload)
 
     let maxSize: number;
     let mediaType: string;

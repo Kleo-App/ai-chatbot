@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { upload } from '@vercel/blob/client';
 import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { ImageCropper } from './image-cropper';
@@ -107,6 +108,17 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
   };
 
   const uploadFile = async (file: File) => {
+    const maxServerUploadSize = 4 * 1024 * 1024; // 4MB - Vercel server upload limit
+    
+    // Use client-side upload for larger files
+    if (file.size > maxServerUploadSize) {
+      await uploadFileClientSide(file);
+    } else {
+      await uploadFileServerSide(file);
+    }
+  };
+
+  const uploadFileServerSide = async (file: File) => {
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -137,38 +149,48 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
     }
   };
 
-  const uploadCroppedImage = async (croppedBlob: Blob) => {
+  const uploadFileClientSide = async (file: File) => {
     setIsUploading(true);
     try {
-      const formData = new FormData();
-      const croppedFile = new File([croppedBlob], 'cropped-image.jpg', { 
-        type: 'image/jpeg' 
-      });
-      formData.append('file', croppedFile);
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Upload failed');
+      const mediaType = determineMediaType(file);
+      if (!mediaType) {
+        throw new Error('Unsupported file type');
       }
 
-      const data: UploadedMedia = await response.json();
-      
+      // Generate filename for client-side upload
+      const fileExtension = file.name.split('.').pop();
+      const filename = `linkedin-${mediaType}-${Date.now()}.${fileExtension}`;
+
+      const blob = await upload(filename, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload/client',
+        clientPayload: JSON.stringify({
+          type: file.type,
+          size: file.size,
+          originalName: file.name,
+        }),
+      });
+
       if (onMediaUploaded) {
-        onMediaUploaded(data.url, data.mediaType, data.originalName);
+        onMediaUploaded(blob.url, mediaType, file.name);
       }
 
       handleCancel();
     } catch (error) {
-      console.error('Upload error:', error);
+      console.error('Client upload error:', error);
       alert(error instanceof Error ? error.message : 'Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }
+  };
+
+  const uploadCroppedImage = async (croppedBlob: Blob) => {
+    const croppedFile = new File([croppedBlob], 'cropped-image.jpg', { 
+      type: 'image/jpeg' 
+    });
+    
+    // Use the same upload logic as regular files
+    await uploadFile(croppedFile);
   };
 
   const handleCropComplete = (croppedBlob: Blob) => {
@@ -406,6 +428,8 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
           </div>
           <p className="text-muted-foreground text-sm">
             Upload images, videos, or documents to enhance your post.
+            <br />
+            <span className="text-xs">Large files may take longer to upload.</span>
           </p>
         </div>
       </div>

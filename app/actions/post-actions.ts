@@ -176,4 +176,90 @@ export async function deletePost(documentId: string): Promise<{ success: boolean
   }
 }
 
+/**
+ * Store post analytics in the background (server-side)
+ */
+export async function storePostAnalytics(content: string, metadata?: { topic?: string; selectionReason?: string }) {
+  try {
+    const { userId } = await auth();
+    
+    if (!userId) {
+      throw new Error('User not authenticated');
+    }
+
+    // Analyze post and store analytics in background
+    const analysis = await analyzePostStructure(content);
+    
+    // Extract the hook (first line/sentence)
+    const lines = content.split('\n').filter(line => line.trim().length > 0);
+    const selectedHook = lines[0] || content.substring(0, 100);
+    
+    await storePostAnalyticsBackground(
+      userId,
+      {
+        selectedHook,
+        tone: analysis.tone,
+        structure: analysis.structure,
+        endingSentence: analysis.endingSentence,
+        fullContent: content,
+        wordCount: content.split(/\s+/).length,
+        publishedToLinkedIn: true,
+        keywordDensity: analysis.keywordDensity,
+        topIndustry: analysis.topIndustry,
+        industryFitScore: analysis.industryFitScore,
+        detectedKeywords: analysis.detectedKeywords,
+        ctaCount: analysis.ctaCount,
+        ctaStrength: analysis.ctaStrength,
+        ctaPlacement: analysis.ctaPlacement,
+        detectedCTAs: analysis.detectedCTAs,
+      },
+      metadata || {
+        topic: 'linkedin_publish',
+        selectionReason: 'user_published_post',
+      }
+    );
+
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to store post analytics:', error);
+    
+    // Even if analysis fails, try to store basic analytics
+    try {
+      const { userId } = await auth();
+      if (userId) {
+        const lines = content.split('\n').filter(line => line.trim().length > 0);
+        const selectedHook = lines[0] || content.substring(0, 100);
+        
+        await storePostAnalyticsBackground(
+          userId,
+          {
+            selectedHook,
+            tone: 'unknown',
+            structure: 'unknown',
+            endingSentence: '',
+            fullContent: content,
+            wordCount: content.split(/\s+/).length,
+            publishedToLinkedIn: true,
+            keywordDensity: {},
+            topIndustry: 'general',
+            industryFitScore: 0,
+            detectedKeywords: [],
+            ctaCount: 0,
+            ctaStrength: 0,
+            ctaPlacement: 'none',
+            detectedCTAs: [],
+          },
+          metadata || {
+            topic: 'linkedin_publish',
+            selectionReason: 'user_published_post',
+          }
+        );
+      }
+    } catch (fallbackError) {
+      console.error('Failed to store even basic analytics:', fallbackError);
+    }
+    
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  }
+}
 

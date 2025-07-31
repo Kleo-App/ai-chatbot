@@ -21,6 +21,8 @@ interface SchedulePostModalProps {
     headline?: string;
   };
   uploadedImages?: string[];
+  uploadedVideos?: string[];
+  uploadedDocuments?: Array<{ url: string; name: string }>;
   scheduledAt?: Date | null; // Add scheduled date for reschedule mode
   status?: string; // Add status to know if post is already scheduled
 }
@@ -32,6 +34,8 @@ export function SchedulePostModal({
   documentId,
   userProfile,
   uploadedImages = [],
+  uploadedVideos = [],
+  uploadedDocuments = [],
   scheduledAt = null,
   status = 'draft'
 }: SchedulePostModalProps) {
@@ -282,6 +286,8 @@ export function SchedulePostModal({
                 content={content}
                 userProfile={userProfile}
                 uploadedImages={uploadedImages}
+                uploadedVideos={uploadedVideos}
+                uploadedDocuments={uploadedDocuments}
                 showHeader={false}
                 showDeviceToggle={false}
                 showShareButton={false}

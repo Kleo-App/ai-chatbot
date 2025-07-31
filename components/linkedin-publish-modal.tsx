@@ -8,7 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useArtifact } from '@/hooks/use-artifact';
 import { useAuth } from '@clerk/nextjs';
-import { storePostAnalyticsBackground, analyzePostStructure } from '@/lib/mem0Utils';
+import { storePostAnalytics } from '@/app/actions/post-actions';
 
 interface LinkedInPublishModalProps {
   isOpen: boolean;
@@ -20,6 +20,8 @@ interface LinkedInPublishModalProps {
     profileImage?: string;
   };
   uploadedImages?: string[];
+  uploadedVideos?: string[];
+  uploadedDocuments?: Array<{ url: string; name: string }>;
 }
 
 export function LinkedInPublishModal({
@@ -29,6 +31,8 @@ export function LinkedInPublishModal({
   documentId,
   userProfile,
   uploadedImages = [],
+  uploadedVideos = [],
+  uploadedDocuments = [],
 }: LinkedInPublishModalProps) {
   const { artifact } = useArtifact();
   const { userId } = useAuth();
@@ -82,7 +86,12 @@ export function LinkedInPublishModal({
       const response = await fetch('/api/linkedin/publish', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ 
+          content,
+          images: uploadedImages,
+          videos: uploadedVideos,
+          documents: uploadedDocuments
+        }),
       });
 
       if (!response.ok) {
@@ -108,66 +117,12 @@ export function LinkedInPublishModal({
 
       // Store post analytics in background (non-blocking)
       if (userId) {
-        // Analyze post and store analytics in background
-        analyzePostStructure(content).then(analysis => {
-          // Extract the hook (first line/sentence)
-          const lines = content.split('\n').filter(line => line.trim().length > 0);
-          const selectedHook = lines[0] || content.substring(0, 100);
-          
-          storePostAnalyticsBackground(
-            userId,
-            {
-              selectedHook,
-              tone: analysis.tone,
-              structure: analysis.structure,
-              endingSentence: analysis.endingSentence,
-              fullContent: content,
-              wordCount: content.split(/\s+/).length,
-              publishedToLinkedIn: true,
-              keywordDensity: analysis.keywordDensity,
-              topIndustry: analysis.topIndustry,
-              industryFitScore: analysis.industryFitScore,
-              detectedKeywords: analysis.detectedKeywords,
-              ctaCount: analysis.ctaCount,
-              ctaStrength: analysis.ctaStrength,
-              ctaPlacement: analysis.ctaPlacement,
-              detectedCTAs: analysis.detectedCTAs,
-            },
-            {
-              topic: 'linkedin_publish',
-              selectionReason: 'user_published_post',
-            }
-          );
+        // Call server action to store analytics
+        storePostAnalytics(content, {
+          topic: 'linkedin_publish',
+          selectionReason: 'user_published_post',
         }).catch(error => {
-          console.error('Failed to analyze post for analytics:', error);
-          // Even if analysis fails, store basic analytics
-          const lines = content.split('\n').filter(line => line.trim().length > 0);
-          const selectedHook = lines[0] || content.substring(0, 100);
-          
-          storePostAnalyticsBackground(
-            userId,
-            {
-              selectedHook,
-              tone: 'unknown',
-              structure: 'unknown',
-              endingSentence: '',
-              fullContent: content,
-              wordCount: content.split(/\s+/).length,
-              publishedToLinkedIn: true,
-              keywordDensity: {},
-              topIndustry: 'general',
-              industryFitScore: 0,
-              detectedKeywords: [],
-              ctaCount: 0,
-              ctaStrength: 0,
-              ctaPlacement: 'none',
-              detectedCTAs: [],
-            },
-            {
-              topic: 'linkedin_publish',
-              selectionReason: 'user_published_post',
-            }
-          );
+          console.error('Failed to store post analytics:', error);
         });
       }
 
@@ -200,6 +155,8 @@ export function LinkedInPublishModal({
                 showDeviceToggle={false}
                 isModal={true}
                 uploadedImages={uploadedImages}
+                uploadedVideos={uploadedVideos}
+                uploadedDocuments={uploadedDocuments}
               />
             </div>
           </div>

@@ -307,6 +307,9 @@ const DocumentContent = ({ document }: { document: Document }) => {
             showShareButton={false}
             showHeader={false}
             showDeviceToggle={false}
+            uploadedImages={[]}
+            uploadedVideos={[]}
+            uploadedDocuments={[]}
           />
         </div>
       ) : document.kind === 'image' ? (

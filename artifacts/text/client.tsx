@@ -45,24 +45,32 @@ function TextArtifactContent({
   const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
+  const [uploadedDocuments, setUploadedDocuments] = useState<Array<{ url: string; name: string }>>([]);
   const [parsedTextContent, setParsedTextContent] = useState<string>(content);
 
-  // Parse content to extract text and images when content changes
+  // Parse content to extract text and all media when content changes
   React.useEffect(() => {
     try {
       const parsed = JSON.parse(content);
-      if (parsed && typeof parsed === 'object' && 'text' in parsed && 'images' in parsed) {
-        setParsedTextContent(parsed.text);
+      if (parsed && typeof parsed === 'object') {
+        setParsedTextContent(parsed.text || content);
         setUploadedImages(parsed.images || []);
+        setUploadedVideos(parsed.videos || []);
+        setUploadedDocuments(parsed.documents || []);
       } else {
         // Fallback for old format or plain text
         setParsedTextContent(content);
         setUploadedImages([]);
+        setUploadedVideos([]);
+        setUploadedDocuments([]);
       }
     } catch {
       // Content is not JSON, treat as plain text
       setParsedTextContent(content);
       setUploadedImages([]);
+      setUploadedVideos([]);
+      setUploadedDocuments([]);
     }
   }, [content]);
 
@@ -82,12 +90,14 @@ function TextArtifactContent({
     setIsScheduleModalOpen(false);
   };
 
-  // Helper to save content with images
-  const saveContentWithImages = (textContent: string, images: string[]) => {
+  // Helper to save content with all media
+  const saveContentWithAllMedia = (textContent: string, images: string[], videos: string[], documents: Array<{ url: string; name: string }>) => {
     if (typeof onSaveContent === 'function') {
       const contentData = {
         text: textContent,
-        images: images
+        images: images,
+        videos: videos,
+        documents: documents
       };
       onSaveContent(JSON.stringify(contentData), false); // Don't debounce for immediate save
     }
@@ -96,13 +106,25 @@ function TextArtifactContent({
   // Save images whenever they change
   const handleImagesChange = (newImages: string[]) => {
     setUploadedImages(newImages);
-    saveContentWithImages(parsedTextContent, newImages);
+    saveContentWithAllMedia(parsedTextContent, newImages, uploadedVideos, uploadedDocuments);
+  };
+
+  // Save videos whenever they change
+  const handleVideosChange = (newVideos: string[]) => {
+    setUploadedVideos(newVideos);
+    saveContentWithAllMedia(parsedTextContent, uploadedImages, newVideos, uploadedDocuments);
+  };
+
+  // Save documents whenever they change
+  const handleDocumentsChange = (newDocuments: Array<{ url: string; name: string }>) => {
+    setUploadedDocuments(newDocuments);
+    saveContentWithAllMedia(parsedTextContent, uploadedImages, uploadedVideos, newDocuments);
   };
 
   // Save text content when it changes (from editing in preview)
   const handleTextContentChange = (newTextContent: string) => {
     setParsedTextContent(newTextContent);
-    saveContentWithImages(newTextContent, uploadedImages);
+    saveContentWithAllMedia(newTextContent, uploadedImages, uploadedVideos, uploadedDocuments);
   };
 
   if (isLoading) {
@@ -148,6 +170,10 @@ function TextArtifactContent({
         setMetadata={setMetadata}
         uploadedImages={uploadedImages}
         onImagesChange={handleImagesChange}
+        uploadedVideos={uploadedVideos}
+        onVideosChange={handleVideosChange}
+        uploadedDocuments={uploadedDocuments}
+        onDocumentsChange={handleDocumentsChange}
         onTextChange={handleTextContentChange}
         showScheduleButton={true}
         onScheduleClick={() => setIsScheduleModalOpen(true)}
@@ -161,6 +187,8 @@ function TextArtifactContent({
         documentId={document?.id}
         userProfile={userProfile}
         uploadedImages={uploadedImages}
+        uploadedVideos={uploadedVideos}
+        uploadedDocuments={uploadedDocuments}
       />
       
       <SchedulePostModal
@@ -170,6 +198,8 @@ function TextArtifactContent({
         documentId={document?.id}
         userProfile={userProfile}
         uploadedImages={uploadedImages}
+        uploadedVideos={uploadedVideos}
+        uploadedDocuments={uploadedDocuments}
         scheduledAt={document?.scheduledAt}
         status={document?.status}
       />

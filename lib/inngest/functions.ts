@@ -15,6 +15,43 @@ import {
 const client = postgres(process.env.POSTGRES_URL!);
 const db = drizzle(client);
 
+// Helper function to convert HTML to plain text for LinkedIn
+function htmlToPlainText(html: string): string {
+  // Handle TipTap editor format which uses <p><br class="ProseMirror-trailingBreak"></p> for intentional breaks
+  let text = html
+    // First, identify paragraphs with trailing breaks (intentional double line breaks)
+    .replace(/<p[^>]*>\s*<br[^>]*>\s*<\/p>/gi, '___DOUBLE_BREAK___')
+    // Convert regular paragraph boundaries to single line breaks
+    .replace(/<\/p>\s*<p[^>]*>/gi, '\n')
+    // Remove all remaining paragraph and br tags
+    .replace(/<\/?p[^>]*>/gi, '')
+    .replace(/<br[^>]*>/gi, '\n')
+    // Convert div tags to line breaks
+    .replace(/<\/div>\s*<div[^>]*>/gi, '\n')
+    .replace(/<\/?div[^>]*>/gi, '')
+    // Remove all other HTML tags
+    .replace(/<[^>]*>/g, '')
+    // Convert double break markers to actual double line breaks
+    .replace(/___DOUBLE_BREAK___/g, '\n\n')
+    // Decode common HTML entities
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    // Clean up: remove leading/trailing whitespace from each line
+    .split('\n')
+    .map(line => line.trim())
+    .join('\n')
+    // Remove any leading/trailing empty lines
+    .replace(/^\n+|\n+$/g, '')
+    // Clean up excessive line breaks (more than 2 consecutive)
+    .replace(/\n{3,}/g, '\n\n');
+
+  return text;
+}
+
 interface SchedulePostEventData {
   documentId: string;
   userId: string;
@@ -159,7 +196,7 @@ export const publishLinkedInPost = inngest.createFunction(
           specificContent: {
             'com.linkedin.ugc.ShareContent': {
               shareCommentary: {
-                text: postDocument.content || '',
+                text: htmlToPlainText(postDocument.content || ''),
               },
               shareMediaCategory: 'NONE',
             },

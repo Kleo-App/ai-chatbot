@@ -1,39 +1,37 @@
 'use client';
 
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { ImageCropper } from './image-cropper';
+import { ImageIcon, VideoIcon, FileTextIcon, RotateCcw, X } from 'lucide-react';
 
 interface MediaUploadModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onImageUploaded?: (imageUrl: string) => void;
+  onMediaUploaded?: (mediaUrl: string, mediaType: 'image' | 'video' | 'document', originalName?: string) => void;
 }
 
-export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaUploadModalProps) {
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+interface UploadedMedia {
+  url: string;
+  filename: string;
+  mediaType: 'image' | 'video' | 'document';
+  fileSize: number;
+  originalName: string;
+}
+
+export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaUploadModalProps) {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [currentImageSrc, setCurrentImageSrc] = useState<string | null>(null);
+  const [currentVideoSrc, setCurrentVideoSrc] = useState<string | null>(null);
+  const [currentMediaType, setCurrentMediaType] = useState<'image' | 'video' | 'document' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [showCropper, setShowCropper] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files?.[0]) {
       const file = event.target.files[0];
-      
-      // Only handle images for cropping
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setCurrentImageSrc(e.target.result as string);
-            // Don't automatically show cropper - let user choose
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-      
-      setSelectedFiles([file]);
+      processFile(file);
     }
   };
 
@@ -45,93 +43,74 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
     event.preventDefault();
     if (event.dataTransfer.files?.[0]) {
       const file = event.dataTransfer.files[0];
-      
-      // Only handle images for cropping
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setCurrentImageSrc(e.target.result as string);
-            // Don't automatically show cropper - let user choose
-          }
-        };
-        reader.readAsDataURL(file);
-      }
-      
-      setSelectedFiles([file]);
+      processFile(file);
     }
   };
 
-  // Function to optimize image for LinkedIn without cropping
-  const optimizeImageForLinkedIn = async (file: File): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const img = new Image();
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
+  const processFile = (file: File) => {
+    const mediaType = determineMediaType(file);
+    if (!mediaType) {
+      alert('Unsupported file type. Please upload images (JPEG, PNG, GIF), videos (MP4), or documents (PDF).');
+      return;
+    }
 
-      img.onload = () => {
-        const { width, height } = img;
-        const aspectRatio = width / height;
-
-        let targetWidth: number;
-        let targetHeight: number;
-
-        // Determine optimal LinkedIn dimensions based on aspect ratio
-        if (aspectRatio > 1.5) {
-          // Wide landscape - use LinkedIn landscape format
-          targetWidth = 1200;
-          targetHeight = 627;
-        } else if (aspectRatio < 0.7) {
-          // Tall portrait - use LinkedIn portrait format
-          targetWidth = 627;
-          targetHeight = 1200;
-        } else {
-          // Square-ish - use LinkedIn square format
-          targetWidth = 1080;
-          targetHeight = 1080;
-        }
-
-        // Calculate scaling to fit within target dimensions while maintaining aspect ratio
-        const scaleWidth = targetWidth / width;
-        const scaleHeight = targetHeight / height;
-        const scale = Math.min(scaleWidth, scaleHeight);
-
-        const finalWidth = Math.round(width * scale);
-        const finalHeight = Math.round(height * scale);
-
-        canvas.width = finalWidth;
-        canvas.height = finalHeight;
-
-        // Enable high-quality scaling
-        if (ctx) {
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = 'high';
-
-          // Draw the scaled image
-          ctx.drawImage(img, 0, 0, finalWidth, finalHeight);
-
-          canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(blob);
-            }
-          }, 'image/jpeg', 0.95);
+    setSelectedFile(file);
+    setCurrentMediaType(mediaType);
+    
+    if (mediaType === 'image') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setCurrentImageSrc(e.target.result as string);
         }
       };
-
-      img.src = URL.createObjectURL(file);
-    });
+      reader.readAsDataURL(file);
+    } else if (mediaType === 'video') {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          setCurrentVideoSrc(e.target.result as string);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else if (mediaType === 'document') {
+      // Auto-upload PDFs immediately after showing preview
+      setTimeout(() => {
+        uploadFile(file);
+      }, 100); // Small delay to show the upload UI
+    }
   };
 
-  const uploadOptimizedImage = async (file: File) => {
+  const determineMediaType = (file: File): 'image' | 'video' | 'document' | null => {
+    const imageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+    const videoTypes = ['video/mp4', 'video/quicktime', 'video/x-msvideo', 'video/avi', 'video/webm'];
+    const documentTypes = [
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation', 
+      'application/vnd.ms-powerpoint', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ];
+
+    if (imageTypes.includes(file.type)) return 'image';
+    if (videoTypes.includes(file.type)) return 'video';
+    if (documentTypes.includes(file.type)) return 'document';
+    return null;
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const uploadFile = async (file: File) => {
     setIsUploading(true);
     try {
-      const optimizedBlob = await optimizeImageForLinkedIn(file);
-      const optimizedFile = new File([optimizedBlob], 'optimized-image.jpg', { 
-        type: 'image/jpeg' 
-      });
-
       const formData = new FormData();
-      formData.append('file', optimizedFile);
+      formData.append('file', file);
 
       const response = await fetch('/api/upload', {
         method: 'POST',
@@ -139,21 +118,20 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
-      const data = await response.json();
+      const data: UploadedMedia = await response.json();
       
-      // Call the callback with the uploaded image URL
-      if (onImageUploaded) {
-        onImageUploaded(data.url);
+      if (onMediaUploaded) {
+        onMediaUploaded(data.url, data.mediaType, data.originalName);
       }
 
-      // Close modal and reset state
       handleCancel();
     } catch (error) {
       console.error('Upload error:', error);
-      // Handle error (could show toast notification)
+      alert(error instanceof Error ? error.message : 'Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -174,21 +152,20 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
-      const data = await response.json();
+      const data: UploadedMedia = await response.json();
       
-      // Call the callback with the uploaded image URL
-      if (onImageUploaded) {
-        onImageUploaded(data.url);
+      if (onMediaUploaded) {
+        onMediaUploaded(data.url, data.mediaType, data.originalName);
       }
 
-      // Close modal and reset state
       handleCancel();
     } catch (error) {
       console.error('Upload error:', error);
-      // Handle error (could show toast notification)
+      alert(error instanceof Error ? error.message : 'Upload failed. Please try again.');
     } finally {
       setIsUploading(false);
     }
@@ -200,57 +177,256 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
 
   const handleCropCancel = () => {
     setShowCropper(false);
-    // Don't reset other state so user can still choose "Use Full Image"
   };
 
   const handleCancel = () => {
-    setSelectedFiles([]);
+    setSelectedFile(null);
     setCurrentImageSrc(null);
+    setCurrentVideoSrc(null);
+    setCurrentMediaType(null);
     setShowCropper(false);
     onOpenChange(false);
   };
 
-  const handleUseFullImage = () => {
-    if (selectedFiles.length > 0) {
-      uploadOptimizedImage(selectedFiles[0]);
+  const handleStartOver = () => {
+    setSelectedFile(null);
+    setCurrentImageSrc(null);
+    setCurrentVideoSrc(null);
+    setCurrentMediaType(null);
+  };
+
+  const handleUploadFile = () => {
+    if (selectedFile) {
+      uploadFile(selectedFile);
     }
   };
 
   const handleCropImage = () => {
-    setShowCropper(true);
-  };
-
-  const handleContinue = () => {
-    // This is now handled by the cropper
-    if (selectedFiles.length > 0 && !showCropper) {
-      // Show cropper for first file
-      const file = selectedFiles[0];
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          if (e.target?.result) {
-            setCurrentImageSrc(e.target.result as string);
-            setShowCropper(true);
-          }
-        };
-        reader.readAsDataURL(file);
-      }
+    if (currentImageSrc) {
+      setShowCropper(true);
     }
   };
 
+  const renderFilePreview = () => {
+    if (!selectedFile || !currentMediaType) return null;
+
+    switch (currentMediaType) {
+      case 'document':
+        return (
+          <div className="h-full flex flex-col">
+            {/* Document Upload Progress */}
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-amber-50/50 to-orange-50/30">
+              <div className="max-w-md w-full text-center">
+                <div className="bg-gradient-to-br from-amber-100/80 to-orange-100/60 backdrop-blur-sm rounded-2xl p-12 mb-6 border border-amber-200/50 shadow-xl">
+                  <div className="bg-gradient-to-br from-amber-200 to-orange-200 rounded-full p-6 w-fit mx-auto mb-4 shadow-lg">
+                    <FileTextIcon size={48} className="text-amber-700" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-foreground mb-2">
+                    {isUploading ? 'Uploading Document...' : 'Document Ready'}
+                  </h3>
+                  <p className="text-muted-foreground">
+                    {isUploading 
+                      ? 'Your PDF is being uploaded and will create a carousel post on LinkedIn.'
+                      : 'This will create a carousel post on LinkedIn with swipeable pages'
+                    }
+                  </p>
+                  {isUploading && (
+                    <div className="mt-4">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            {/* File Info */}
+            <div className="bg-card/80 backdrop-blur-sm border-t border-border p-6">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center justify-center">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-amber-100 to-orange-50 rounded-lg p-2 shadow-sm">
+                      <FileTextIcon size={20} className="text-amber-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{selectedFile.name}</h3>
+                      <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'image':
+        return (
+          <div className="h-full flex flex-col">
+            {/* Image Preview */}
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-emerald-50/30 to-green-50/20">
+              <div className="relative max-w-2xl w-full">
+                <img
+                  src={currentImageSrc!}
+                  alt="Preview"
+                  className="w-full h-auto max-h-96 object-contain rounded-xl shadow-2xl border border-gray-200"
+                />
+              </div>
+            </div>
+            
+            {/* File Info & Actions */}
+            <div className="bg-card/80 backdrop-blur-sm border-t border-border p-6">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-emerald-100 to-green-50 rounded-lg p-2 shadow-sm">
+                      <ImageIcon size={20} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{selectedFile.name}</h3>
+                      <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleStartOver}
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    <RotateCcw size={16} className="mr-2" />
+                    Choose Different
+                  </Button>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button 
+                    onClick={handleUploadFile}
+                    disabled={isUploading}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+                  >
+                    {isUploading ? 'Uploading...' : 'Use Full Image'}
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={handleCropImage}
+                    disabled={isUploading}
+                    className="flex-1 border-border text-foreground hover:bg-accent"
+                  >
+                    Crop Image
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'video':
+        return (
+          <div className="h-full flex flex-col">
+            {/* Video Preview */}
+            <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-violet-50/30 to-purple-50/20">
+              <div className="relative max-w-2xl w-full">
+                <video
+                  src={currentVideoSrc!}
+                  controls
+                  className="w-full h-auto max-h-96 rounded-xl shadow-2xl border border-gray-200"
+                />
+              </div>
+            </div>
+            
+            {/* File Info & Actions */}
+            <div className="bg-card/80 backdrop-blur-sm border-t border-border p-6">
+              <div className="max-w-2xl mx-auto">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-gradient-to-br from-violet-100 to-purple-50 rounded-lg p-2 shadow-sm">
+                      <VideoIcon size={20} className="text-violet-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-foreground">{selectedFile.name}</h3>
+                      <p className="text-sm text-muted-foreground">{formatFileSize(selectedFile.size)}</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleStartOver}
+                    className="text-muted-foreground hover:text-foreground hover:bg-accent"
+                  >
+                    <RotateCcw size={16} className="mr-2" />
+                    Choose Different
+                  </Button>
+                </div>
+                
+                <Button 
+                  onClick={handleUploadFile}
+                  disabled={isUploading}
+                  className="w-full bg-violet-600 hover:bg-violet-700 text-white shadow-sm"
+                >
+                  {isUploading ? 'Uploading...' : 'Upload Video'}
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  const renderUploadForm = () => (
+    <form className="flex h-full w-full max-w-full flex-col overflow-hidden px-3 sm:px-6">
+      <div 
+        className="flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-dashed hover:bg-gray-100 dark:hover:bg-content2"
+        role="presentation"
+        tabIndex={0}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        onClick={() => document.getElementById('file-input')?.click()}
+      >
+        <input
+          id="file-input"
+          accept="image/*,.png,.jpg,.jpeg,.gif,application/pdf,.pdf,video/mp4,.mp4"
+          tabIndex={-1}
+          type="file"
+          onChange={handleFileSelect}
+          className="absolute w-px h-px overflow-hidden border-0 -m-px p-0"
+          style={{ 
+            border: 0, 
+            clip: 'rect(0,0,0,0)', 
+            clipPath: 'inset(50%)', 
+            margin: '-1px', 
+            overflow: 'hidden', 
+            whiteSpace: 'nowrap' 
+          }}
+        />
+        <div className="space-y-2 text-center">
+          <div className="flex cursor-pointer flex-col items-center">
+            <ImageIcon className="h-12 w-12" />
+            <span className="text-lg font-medium">Choose your media</span>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Upload images, videos, or documents to enhance your post.
+          </p>
+        </div>
+      </div>
+    </form>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl h-[90vh] flex flex-col">
-        <DialogHeader className="shrink-0 border-b pb-4">
-          <DialogTitle className="text-lg font-medium">
-            Upload Image
+      <DialogContent className="max-w-5xl h-[90vh] max-h-[90vh] w-full flex flex-col overflow-hidden p-0">
+        {/* Header */}
+        <header className="flex py-4 px-6 flex-initial text-large font-semibold border-b border-divider">
+          <DialogTitle className="text-foreground text-lg font-medium tracking-tight">
+            Add images, videos or documents to your post
           </DialogTitle>
-        </DialogHeader>
+        </header>
 
-        <div className="flex flex-col flex-1 overflow-hidden">
+        {/* Content */}
+        <div className="flex-1 min-h-0 overflow-hidden">
           {showCropper && currentImageSrc ? (
             // Show image cropper
-            <div className="flex-1 overflow-hidden">
+            <div className="h-full p-6 bg-background">
               <ImageCropper
                 src={currentImageSrc}
                 onCropComplete={handleCropComplete}
@@ -258,124 +434,13 @@ export function MediaUploadModal({ open, onOpenChange, onImageUploaded }: MediaU
               />
             </div>
           ) : (
-            // Show file upload area or image preview with options
-            <>
-              <div className="flex-1 p-6">
-                {currentImageSrc && selectedFiles.length > 0 ? (
-                  // Show image preview with options
-                  <div className="flex flex-col h-full">
-                    <div className="flex-1 flex items-center justify-center mb-6">
-                      <div className="max-w-2xl max-h-96 flex items-center justify-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={currentImageSrc}
-                          alt="Preview"
-                          className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="text-center">
-                        <h3 className="text-lg font-medium mb-2">Choose how to use your image</h3>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          You can use the full image optimized for LinkedIn, or crop it for a specific composition
-                        </p>
-                      </div>
-                      <div className="flex gap-3 justify-center">
-                        <Button 
-                          onClick={handleUseFullImage}
-                          disabled={isUploading}
-                          className="flex-1 max-w-48"
-                        >
-                          {isUploading ? 'Uploading...' : 'Use Full Image'}
-                        </Button>
-                        <Button 
-                          variant="outline"
-                          onClick={handleCropImage}
-                          disabled={isUploading}
-                          className="flex-1 max-w-48"
-                        >
-                          Crop Image
-                        </Button>
-                      </div>
-                      <div className="text-xs text-muted-foreground text-center">
-                        <p><strong>Use Full Image:</strong> Automatically optimizes for LinkedIn&apos;s recommended sizes</p>
-                        <p><strong>Crop Image:</strong> Manually adjust composition with 1.91:1 aspect ratio</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  // Show file upload area
-                  <div 
-                    className="flex flex-1 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors h-full min-h-[400px]"
-                    onDragOver={handleDragOver}
-                    onDrop={handleDrop}
-                    onClick={() => document.getElementById('file-input')?.click()}
-                  >
-                    <input
-                      id="file-input"
-                      type="file"
-                      accept="image/*,.png,.jpg,.jpeg,.gif"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                    />
-                    <div className="space-y-4 text-center">
-                      <div className="flex flex-col items-center">
-                        <svg 
-                          xmlns="http://www.w3.org/2000/svg" 
-                          width="48" 
-                          height="48" 
-                          viewBox="0 0 24 24" 
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          className="text-muted-foreground mb-4"
-                        >
-                          <path d="M12 13v8" />
-                          <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-                          <path d="m8 17 4-4 4 4" />
-                        </svg>
-                        <span className="text-lg font-medium">
-                          {isUploading ? 'Uploading...' : 'Select your image'}
-                        </span>
-                      </div>
-                      <p className="text-muted-foreground text-sm">
-                        Upload an image for your LinkedIn post. Choose to use the full image or crop it for optimal composition.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {!currentImageSrc && (
-                <div className="flex items-center justify-end gap-2 border-t px-6 py-4">
-                  <Button variant="outline" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                </div>
-              )}
-
-              {currentImageSrc && (
-                <div className="flex items-center justify-between gap-2 border-t px-6 py-4">
-                  <Button variant="outline" onClick={handleCancel}>
-                    Cancel
-                  </Button>
-                  <div className="flex gap-2">
-                    <Button variant="outline" onClick={() => {
-                      setCurrentImageSrc(null);
-                      setSelectedFiles([]);
-                    }}>
-                      Choose Different Image
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </>
+            // Show file upload area or preview
+            <div className="h-full">
+              {selectedFile && currentMediaType ? renderFilePreview() : renderUploadForm()}
+            </div>
           )}
         </div>
       </DialogContent>
     </Dialog>
   );
-} 
+}

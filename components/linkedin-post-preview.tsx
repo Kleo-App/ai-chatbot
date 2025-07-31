@@ -14,6 +14,7 @@ import {
 import { SendHorizontal } from 'lucide-react';
 import { ArtifactActions } from './artifact-actions';
 import { MediaUploadModal } from './media-upload-modal';
+import PDFCarouselPreview from './pdf-carousel-preview';
 import { formatDistance } from 'date-fns';
 import type { UIArtifact } from './artifact';
 import type { Document } from '@/lib/db/schema';
@@ -42,6 +43,10 @@ interface LinkedInPostPreviewProps {
   // Media props
   uploadedImages?: string[];
   onImagesChange?: (images: string[]) => void;
+  uploadedVideos?: string[];
+  onVideosChange?: (videos: string[]) => void;
+  uploadedDocuments?: Array<{ url: string; name: string }>;
+  onDocumentsChange?: (documents: Array<{ url: string; name: string }>) => void;
   onTextChange?: (text: string) => void;
   // UI control props
   showShareButton?: boolean;
@@ -75,6 +80,10 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   // Media props
   uploadedImages = [],
   onImagesChange,
+  uploadedVideos = [],
+  onVideosChange,
+  uploadedDocuments = [],
+  onDocumentsChange,
   onTextChange,
   // UI control props
   showShareButton = true,
@@ -88,10 +97,27 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
   isModal = false,
 }: LinkedInPostPreviewProps) {
   const [isMediaModalOpen, setIsMediaModalOpen] = useState(false);
+  const [editingDocumentIndex, setEditingDocumentIndex] = useState<number | null>(null);
+  const [editedTitle, setEditedTitle] = useState('');
 
-  const handleImageUploaded = (imageUrl: string) => {
-    const newImages = [...uploadedImages, imageUrl];
-    onImagesChange?.(newImages);
+  const handleMediaUploaded = (mediaUrl: string, mediaType: 'image' | 'video' | 'document', originalName?: string) => {
+    switch (mediaType) {
+      case 'image':
+        const newImages = [...uploadedImages, mediaUrl];
+        onImagesChange?.(newImages);
+        break;
+      case 'video':
+        const newVideos = [...uploadedVideos, mediaUrl];
+        onVideosChange?.(newVideos);
+        break;
+      case 'document':
+        const newDocuments = [...uploadedDocuments, { 
+          url: mediaUrl, 
+          name: originalName || 'Document' 
+        }];
+        onDocumentsChange?.(newDocuments);
+        break;
+    }
   };
 
   // Format the content to support LinkedIn-style formatting
@@ -338,23 +364,67 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
             </div>
 
             {/* Media Upload Area */}
-            {(uploadedImages.length > 0 || !isModal) && (
+            {(uploadedImages.length > 0 || uploadedVideos.length > 0 || uploadedDocuments.length > 0 || !isModal) && (
               <div className="px-4 pb-4">
                 <div className="space-y-2">
-                  {uploadedImages.map((imageUrl, index) => (
-                    <div key={index} className="relative rounded-lg overflow-hidden">
-                      <Image 
-                        src={imageUrl} 
-                        alt={`Uploaded image ${index + 1}`}
-                        className="w-full h-auto max-h-80 object-cover rounded-lg"
-                        width={552}
-                        height={320}
+                  {/* Images Grid */}
+                  {uploadedImages.length > 0 && (
+                    <div className={`grid gap-1 rounded-lg ${
+                      uploadedImages.length === 1 ? 'grid-cols-1' :
+                      uploadedImages.length === 2 ? 'grid-cols-2' :
+                      uploadedImages.length === 3 ? 'grid-cols-2' :
+                      'grid-cols-2'
+                    }`}>
+                      {uploadedImages.slice(0, 4).map((imageUrl, index) => (
+                        <div 
+                          key={`image-${index}`} 
+                          className="relative bg-gray-50 rounded-lg overflow-hidden"
+                        >
+                          <Image 
+                            src={imageUrl} 
+                            alt={`Uploaded image ${index + 1}`}
+                            className="w-full h-auto object-contain"
+                            width={uploadedImages.length === 1 ? 552 : 276}
+                            height={uploadedImages.length === 1 ? 320 : 276}
+                          />
+                          {!isModal && (
+                            <button
+                              onClick={() => {
+                                const newImages = uploadedImages.filter((_, i) => i !== index);
+                                onImagesChange?.(newImages);
+                              }}
+                              className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors z-10"
+                            >
+                              <svg className="size-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
+                          )}
+                          {uploadedImages.length > 4 && index === 3 && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-lg">
+                              <span className="text-white text-lg font-semibold">
+                                +{uploadedImages.length - 4}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Videos */}
+                  {uploadedVideos.map((videoUrl, index) => (
+                    <div key={`video-${index}`} className="relative rounded-lg">
+                      <video 
+                        src={videoUrl} 
+                        controls
+                        className="w-full h-auto rounded-lg"
                       />
                       {!isModal && (
                         <button
                           onClick={() => {
-                            const newImages = uploadedImages.filter((_, i) => i !== index);
-                            onImagesChange?.(newImages);
+                            const newVideos = uploadedVideos.filter((_, i) => i !== index);
+                            onVideosChange?.(newVideos);
                           }}
                           className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
                         >
@@ -365,6 +435,51 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                       )}
                     </div>
                   ))}
+                  
+                  {/* Documents (show as LinkedIn-style carousel preview) */}
+                  {uploadedDocuments.map((document, index) => {
+                    const isEditingTitle = editingDocumentIndex === index;
+
+                    const handleTitleSave = () => {
+                      const newDocuments = [...uploadedDocuments];
+                      newDocuments[index] = { ...document, name: editedTitle };
+                      onDocumentsChange?.(newDocuments);
+                      setEditingDocumentIndex(null);
+                      setEditedTitle('');
+                    };
+
+                    const handleTitleCancel = () => {
+                      setEditingDocumentIndex(null);
+                      setEditedTitle('');
+                    };
+
+                    const handleEditStart = () => {
+                      setEditingDocumentIndex(index);
+                      setEditedTitle(document.name);
+                    };
+
+                    const handleRemove = () => {
+                      const newDocuments = uploadedDocuments.filter((_, i) => i !== index);
+                      onDocumentsChange?.(newDocuments);
+                    };
+
+                    return (
+                      <PDFCarouselPreview
+                        key={`document-${index}`}
+                        documentUrl={document.url}
+                        documentName={document.name}
+                        isEditingTitle={isEditingTitle}
+                        editedTitle={editedTitle}
+                        onTitleSave={handleTitleSave}
+                        onTitleCancel={handleTitleCancel}
+                        onEditStart={handleEditStart}
+                        onTitleChange={setEditedTitle}
+                        onRemove={handleRemove}
+                        isModal={isModal}
+                      />
+                    );
+                  })}
+                  
                   {!isModal && (
                     <div 
                       className="w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition-colors cursor-pointer bg-gray-50/50"
@@ -372,7 +487,12 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
                     >
                       <div className="flex items-center justify-center gap-2 text-gray-500">
                         <ImageIcon size={20} />
-                        <span className="text-sm">{uploadedImages.length > 0 ? 'Add another image' : 'Add image'}</span>
+                        <span className="text-sm">
+                          {uploadedImages.length > 0 || uploadedVideos.length > 0 || uploadedDocuments.length > 0 
+                            ? 'Add media' 
+                            : 'Upload media to post'
+                          }
+                        </span>
                       </div>
                     </div>
                   )}
@@ -444,7 +564,7 @@ export const LinkedInPostPreview = memo(function LinkedInPostPreview({
         <MediaUploadModal 
           open={isMediaModalOpen} 
           onOpenChange={setIsMediaModalOpen}
-          onImageUploaded={handleImageUploaded}
+          onMediaUploaded={handleMediaUploaded}
         />
       )}
     </div>

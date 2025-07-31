@@ -200,13 +200,15 @@ function PureArtifact({
   );
 
   const handleEditorContentChange = useCallback((newTextContent: string) => {
-    // Get existing images from current artifact content
-    const existingImages = getImagesFromArtifact(artifact.content);
+    // Get existing media from current artifact content
+    const existingMedia = getAllMediaFromArtifact(artifact.content);
     
-    // Create new content structure with updated text and existing images
+    // Create new content structure with updated text and existing media
     const newContentData = {
       text: newTextContent,
-      images: existingImages
+      images: existingMedia.images,
+      videos: existingMedia.videos,
+      documents: existingMedia.documents
     };
     const newContent = JSON.stringify(newContentData);
 
@@ -260,7 +262,7 @@ function PureArtifact({
     return content;
   };
 
-  // Helper function to get images from content
+  // Helper functions to get media from content
   const getImagesFromArtifact = (content: string) => {
     try {
       const parsed = JSON.parse(content);
@@ -271,6 +273,52 @@ function PureArtifact({
       // Content is not JSON
     }
     return [];
+  };
+
+  const getVideosFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'videos' in parsed) {
+        return parsed.videos || [];
+      }
+    } catch {
+      // Content is not JSON
+    }
+    return [];
+  };
+
+  const getDocumentsFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object' && 'documents' in parsed) {
+        return parsed.documents || [];
+      }
+    } catch {
+      // Content is not JSON
+    }
+    return [];
+  };
+
+  const getAllMediaFromArtifact = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed && typeof parsed === 'object') {
+        return {
+          text: parsed.text || '',
+          images: parsed.images || [],
+          videos: parsed.videos || [],
+          documents: parsed.documents || []
+        };
+      }
+    } catch {
+      // Content is not JSON
+    }
+    return {
+      text: content,
+      images: [],
+      videos: [],
+      documents: []
+    };
   };
 
   const handleVersionChange = (type: 'next' | 'prev' | 'toggle' | 'latest') => {

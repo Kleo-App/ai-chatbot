@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { ImageCropper } from './image-cropper';
 import { ImageIcon, VideoIcon, FileTextIcon, RotateCcw, X } from 'lucide-react';
+import Image from 'next/image';
 
 interface MediaUploadModalProps {
   open: boolean;
@@ -254,7 +255,7 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
                   </p>
                   {isUploading && (
                     <div className="mt-4">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600 mx-auto"></div>
+                      <div className="animate-spin rounded-full size-8 border-b-2 border-amber-600 mx-auto"></div>
                     </div>
                   )}
                 </div>
@@ -286,10 +287,13 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
             {/* Image Preview */}
             <div className="flex-1 flex flex-col items-center justify-center p-8 bg-gradient-to-br from-emerald-50/30 to-green-50/20">
               <div className="relative max-w-2xl w-full">
-                <img
+                <Image
                   src={currentImageSrc!}
                   alt="Preview"
+                  width={800}
+                  height={600}
                   className="w-full h-auto max-h-96 object-contain rounded-xl shadow-2xl border border-gray-200"
+                  unoptimized
                 />
               </div>
             </div>
@@ -396,7 +400,7 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
   };
 
   const renderUploadForm = () => (
-    <form className="flex h-full w-full max-w-full flex-col overflow-hidden px-3 sm:px-6">
+    <form className="flex size-full max-w-full flex-col overflow-hidden px-3 sm:px-6">
       <div 
         className="flex flex-1 cursor-pointer items-center justify-center rounded-lg border border-dashed hover:bg-gray-100 dark:hover:bg-content2"
         role="presentation"
@@ -411,7 +415,7 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
           tabIndex={-1}
           type="file"
           onChange={handleFileSelect}
-          className="absolute w-px h-px overflow-hidden border-0 -m-px p-0"
+          className="absolute size-px overflow-hidden border-0 -m-px p-0"
           style={{ 
             border: 0, 
             clip: 'rect(0,0,0,0)', 
@@ -423,7 +427,7 @@ export function MediaUploadModal({ open, onOpenChange, onMediaUploaded }: MediaU
         />
         <div className="space-y-2 text-center">
           <div className="flex cursor-pointer flex-col items-center">
-            <ImageIcon className="h-12 w-12" />
+            <ImageIcon className="size-12" />
             <span className="text-lg font-medium">Choose your media</span>
           </div>
           <p className="text-muted-foreground text-sm">

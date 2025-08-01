@@ -2,7 +2,7 @@ import { clerkMiddleware, createRouteMatcher, clerkClient } from '@clerk/nextjs/
 import { NextResponse } from 'next/server';
 
 // Define public routes that don't require authentication
-const isPublicRoute = createRouteMatcher(['/', '/login', '/register', '/privacy', '/terms', '/api/auth(.*)', '/api/admin/delete-users', '/api/waitlist', '/api/inngest']);
+const isPublicRoute = createRouteMatcher(['/', '/blog', '/blog/(.*)', '/studio', '/studio/(.*)', '/login', '/register', '/privacy', '/terms', '/api/auth(.*)', '/api/admin/delete-users', '/api/waitlist', '/api/inngest']);
 
 // Define paths that don't require onboarding check
 const isOnboardingExemptPath = createRouteMatcher([

@@ -591,7 +591,7 @@ const MonthPostCard = ({ post, onPostUpdated }: { post: ScheduledPost; onPostUpd
             <div className="p-2 flex w-full flex-col items-start justify-between gap-2.5">
               <div className="flex w-full flex-col gap-1.5">
                 <div className="flex w-full flex-row items-start justify-between gap-2">
-                  <div className="flex h-4 w-4 flex-shrink-0 items-center justify-start">
+                  <div className="flex size-4 shrink-0 items-center justify-start">
                     <StatusIcon status={post.status} />
                   </div>
                   <p className="text-foreground w-full text-[13px] leading-snug font-medium tracking-tight line-clamp-1">

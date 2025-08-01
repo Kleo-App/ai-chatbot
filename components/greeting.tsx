@@ -379,6 +379,11 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
               </Link>
               <nav className="flex items-center space-x-2">
                 <Button asChild variant="ghost" className="text-gray-700 hover:bg-gray-100">
+                  <Link href="/blog">
+                    Blog
+                  </Link>
+                </Button>
+                <Button asChild variant="ghost" className="text-gray-700 hover:bg-gray-100">
                   <Link href="/login">
                     Sign In
                   </Link>

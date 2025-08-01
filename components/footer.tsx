@@ -32,6 +32,9 @@ export function Footer() {
                 © {new Date().getFullYear()} Kleo. All rights reserved.
               </p>
               <div className="flex items-center gap-4">
+                <Link href="/blog" className="text-gray-400 text-sm hover:text-white transition-colors">
+                  Blog
+                </Link>
                 <Link href="/privacy" className="text-gray-400 text-sm hover:text-white transition-colors">
                   Privacy
                 </Link>

@@ -10,6 +10,7 @@ import { formatDistanceToNow, format } from 'date-fns';
 import { Clock, User, ArrowLeft, Calendar } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { WaitlistSection } from '@/components/waitlist-section';
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -103,7 +104,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   return (
     <div className="min-h-screen flex flex-col">
       <Background />
-      <LoggedOutHeader showJoinWaitlist={false} />
+      <LoggedOutHeader showJoinWaitlist={true} />
       
       {/* Back to Blog Button */}
       <div className="pt-24 px-8">
@@ -159,10 +160,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     className="rounded-full"
                   />
                 )}
-                <div className="flex items-center gap-2">
-                  <User className="size-4" />
-                  <span className="font-medium">{post.author.name}</span>
-                </div>
+                <span className="font-medium">{post.author.name}</span>
               </div>
             )}
             
@@ -224,7 +222,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                           alt={relatedPost.title}
                           width={400}
                           height={250}
-                          className="size-full object-cover hover:scale-105 transition-transform duration-300"
+                          className="size-full object-cover object-top hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}
@@ -245,6 +243,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           </section>
         )}
       </article>
+
+      {/* Waitlist Section */}
+      <WaitlistSection />
 
       <Footer />
     </div>

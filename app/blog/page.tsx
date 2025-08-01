@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { urlFor } from '@/lib/sanity/config';
 import { formatDistanceToNow } from 'date-fns';
 import { Clock, User } from 'lucide-react';
+import { WaitlistSection } from '@/components/waitlist-section';
 
 export default async function BlogPage() {
   const [posts, categories] = await Promise.all([
@@ -17,7 +18,7 @@ export default async function BlogPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <Background />
-      <LoggedOutHeader showJoinWaitlist={false} />
+      <LoggedOutHeader showJoinWaitlist={true} />
       
       {/* Hero Section */}
       <section className="relative pt-24 pb-16 px-8">
@@ -55,7 +56,7 @@ export default async function BlogPage() {
                           alt={post.mainImage.alt || post.title}
                           width={600}
                           height={400}
-                          className="size-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="size-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     )}
@@ -92,7 +93,17 @@ export default async function BlogPage() {
                         <div className="flex items-center gap-4">
                           {post.author && (
                             <div className="flex items-center gap-2">
-                              <User className="size-4" />
+                              {post.author.image ? (
+                                <Image
+                                  src={urlFor(post.author.image).width(20).height(20).url()}
+                                  alt={post.author.name}
+                                  width={20}
+                                  height={20}
+                                  className="rounded-full"
+                                />
+                              ) : (
+                                <User className="size-4" />
+                              )}
                               <span>{post.author.name}</span>
                             </div>
                           )}
@@ -115,6 +126,9 @@ export default async function BlogPage() {
           )}
         </div>
       </section>
+
+      {/* Waitlist Section */}
+      <WaitlistSection />
 
       <Footer />
     </div>

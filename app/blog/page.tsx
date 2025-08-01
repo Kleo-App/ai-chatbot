@@ -23,12 +23,8 @@ export default async function BlogPage() {
       <section className="relative pt-24 pb-16 px-8">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            The Kleo Blog
+            Kleo Blog
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Insights, tips, and stories about AI-powered content creation, 
-            productivity, and building better workflows.
-          </p>
         </div>
       </section>
 

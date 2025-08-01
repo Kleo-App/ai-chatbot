@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { PostHogProvider } from './posthog-provider';
 
 interface ProvidersProps {
   children: ReactNode;
@@ -11,8 +12,10 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <NuqsAdapter>
-      <Toaster position="top-right" richColors />
-      {children}
+      <PostHogProvider>
+        <Toaster position="top-right" richColors />
+        {children}
+      </PostHogProvider>
     </NuqsAdapter>
   );
 }

@@ -103,6 +103,8 @@
     "pdfjs-dist": "^5.3.31",
     "pg": "^8.16.3",
     "postgres": "^3.4.4",
+    "posthog-js": "^1.258.5",
+    "posthog-node": "^5.6.0",
     "prosemirror-example-setup": "^1.2.3",
     "prosemirror-inputrules": "^1.4.0",
     "prosemirror-markdown": "^1.13.1",

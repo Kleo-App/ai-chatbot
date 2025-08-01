@@ -23,6 +23,9 @@ const nextConfig: NextConfig = {
         hostname: 'framerusercontent.com',
       },
       {
+        hostname: 'cdn.sanity.io',
+      },
+      {
         protocol: 'https',
         hostname: '*.public.blob.vercel-storage.com',
       },

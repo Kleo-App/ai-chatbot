@@ -4,7 +4,7 @@ import type { BlogPost } from './config';
 // Query to get all published blog posts
 export async function getBlogPosts(): Promise<BlogPost[]> {
   const query = `
-    *[_type == "blogPost" && publishedAt <= now()] | order(publishedAt desc) {
+    *[_type == "post"] | order(_createdAt desc) {
       _id,
       _createdAt,
       title,
@@ -30,7 +30,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
 // Query to get a single blog post by slug
 export async function getBlogPost(slug: string): Promise<BlogPost | null> {
   const query = `
-    *[_type == "blogPost" && slug.current == $slug && publishedAt <= now()][0] {
+    *[_type == "post" && slug.current == $slug][0] {
       _id,
       _createdAt,
       title,
@@ -58,7 +58,7 @@ export async function getBlogPost(slug: string): Promise<BlogPost | null> {
 // Query to get related posts
 export async function getRelatedPosts(currentPostId: string, categories: string[] = []): Promise<BlogPost[]> {
   const query = `
-    *[_type == "blogPost" && _id != $currentPostId && publishedAt <= now() && count(categories[]._ref in $categories) > 0] | order(publishedAt desc)[0...3] {
+    *[_type == "post" && _id != $currentPostId] | order(_createdAt desc)[0...3] {
       _id,
       title,
       slug,

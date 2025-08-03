@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,15 +33,70 @@ interface WritePostModalProps {
 }
 
 export function WritePostModal({ item, type, isOpen, onClose }: WritePostModalProps) {
-  const [topic, setTopic] = useState('');
+  const [variables, setVariables] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Convert variable names to sentence case for display
+  const toSentenceCase = (str: string) => {
+    return str
+      .split(/[\s_-]+/) // Split on spaces, underscores, or hyphens
+      .map((word, index) => 
+        index === 0 
+          ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+          : word.toLowerCase()
+      )
+      .join(' ');
+  };
+
+  // Extract variables from template
+  const templateVariables = useMemo(() => {
+    if (!item?.template) return [];
+    
+    const matches = item.template.match(/\[([^\]]+)\]/g);
+    if (!matches) return [];
+    
+    // Remove duplicates and clean up the variable names
+    const uniqueVariables = Array.from(new Set(matches.map(match => match.slice(1, -1))));
+    return uniqueVariables;
+  }, [item?.template]);
+
+  // Create template preview with filled variables
+  const templatePreview = useMemo(() => {
+    if (!item?.template) return '';
+    
+    let preview = item.template;
+    templateVariables.forEach(variable => {
+      const value = variables[variable] || `[${variable}]`;
+      preview = preview.replace(new RegExp(`\\[${variable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g'), value);
+    });
+    return preview;
+  }, [item?.template, templateVariables, variables]);
+
+  // Reset variables when item changes
+  useEffect(() => {
+    setVariables({});
+  }, [item]);
+
+  const handleVariableChange = (variable: string, value: string) => {
+    setVariables(prev => ({
+      ...prev,
+      [variable]: value
+    }));
+  };
+
+  const areAllVariablesFilled = templateVariables.every(variable => variables[variable]?.trim());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!item || !topic.trim()) {
-      toast.error('Please enter a topic');
+    if (!item) {
+      toast.error('No template selected');
+      return;
+    }
+
+    if (!areAllVariablesFilled) {
+      toast.error('Please fill in all template variables');
       return;
     }
 
@@ -58,7 +113,7 @@ export function WritePostModal({ item, type, isOpen, onClose }: WritePostModalPr
         },
         body: JSON.stringify({
           [idKey]: item.id,
-          topic: topic.trim(),
+          variables: variables,
         }),
       });
 
@@ -68,21 +123,33 @@ export function WritePostModal({ item, type, isOpen, onClose }: WritePostModalPr
 
       const { chatId } = await response.json();
 
+      // Create filled template for the initial message
+      let filledTemplate = item.template;
+      templateVariables.forEach(variable => {
+        const value = variables[variable];
+        filledTemplate = filledTemplate.replace(new RegExp(`\\[${variable.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\]`, 'g'), value);
+      });
+
       // Navigate to the chat with the initial message as query parameter
       const templateType = type === 'hook' ? 'hook template' : 'post template';
+      const variablesList = templateVariables.map(variable => `${variable}: ${variables[variable]}`).join('\n');
+      
       const initialMessage = `I want to write a LinkedIn post using this ${templateType}: "${item.title}"
 
 Template: ${item.template}
 
-Topic: ${topic.trim()}
+Variables filled in:
+${variablesList}
 
-Please help me create a compelling LinkedIn post using this template and topic. Follow the template.`;
+Filled template: ${filledTemplate}
+
+Please help me create a compelling LinkedIn post using this template with the provided variables. Follow the template structure.`;
 
       router.push(`/chat/${chatId}?query=${encodeURIComponent(initialMessage)}`);
       
       // Close modal and reset form
       onClose();
-      setTopic('');
+      setVariables({});
       
       toast.success('Chat created successfully!');
     } catch (error) {
@@ -96,75 +163,99 @@ Please help me create a compelling LinkedIn post using this template and topic. 
   const handleClose = () => {
     if (!isLoading) {
       onClose();
-      setTopic('');
+      setVariables({});
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[95vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="size-5" />
             Write a Post Like This
           </DialogTitle>
           <DialogDescription>
-            Tell us what topic you&apos;d like to write about using the &quot;{item?.title}&quot; {type} template
+            Fill in the template variables for the &quot;{item?.title}&quot; {type} template
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="hook-template">Template</Label>
+        <div className="flex-1 overflow-hidden flex flex-col space-y-4">
+          <div className="space-y-2 shrink-0">
+            <Label htmlFor="template-preview">Template Preview</Label>
             <div className="bg-muted/50 rounded-lg p-3">
               <p className="text-sm font-medium mb-2">{item?.title}</p>
               <div className="max-h-32 overflow-y-auto border border-border/50 rounded p-2 bg-background/50">
-                <pre className="text-sm whitespace-pre-wrap text-muted-foreground leading-relaxed">
-                  {item?.template}
+                <pre className="text-sm whitespace-pre-wrap leading-relaxed">
+                  {templatePreview}
                 </pre>
               </div>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="topic">Topic *</Label>
-            <Textarea
-              id="topic"
-              placeholder="e.g., My experience transitioning to remote work, How I built my first SaaS product, Tips for effective team communication..."
-              value={topic}
-              onChange={(e) => setTopic(e.target.value)}
-              className="min-h-[100px]"
-              disabled={isLoading}
-            />
-            <p className="text-xs text-muted-foreground">
-              Be specific about what you want to write about. This will help create a more targeted and engaging post.
-            </p>
-          </div>
+          {templateVariables.length > 0 && (
+            <div className="flex-1 flex flex-col space-y-2 min-h-0">
+              <Label className="shrink-0">Template Variables *</Label>
+              <div className="flex-1 overflow-y-auto space-y-3 pr-2 pb-8">
+                {templateVariables.map((variable, index) => (
+                  <div key={variable} className="space-y-1 mx-3">
+                    <Label htmlFor={`variable-${index}`} className="text-sm">
+                      {toSentenceCase(variable)} *
+                    </Label>
+                    <Input
+                      id={`variable-${index}`}
+                      placeholder={`Enter ${variable.toLowerCase()}...`}
+                      value={variables[variable] || ''}
+                      onChange={(e) => handleVariableChange(variable, e.target.value)}
+                      disabled={isLoading}
+                      className="w-full"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mx-3 shrink-0">
+                Fill in all variables to see how they appear in the template preview above.
+              </p>
+            </div>
+          )}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading || !topic.trim()}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Creating Chat...
-                </>
-              ) : (
-                <>
-                  <MessageCircle className="size-4 mr-2" />
-                  Start Writing
-                </>
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
+          {templateVariables.length === 0 && (
+            <div className="space-y-2">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                <p className="text-sm text-amber-800 dark:text-amber-200">
+                  This template doesn&apos;t contain any variables to fill in. You can start writing directly with this template.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleSubmit}
+            disabled={isLoading || (templateVariables.length > 0 && !areAllVariablesFilled)}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                Creating Chat...
+              </>
+            ) : (
+              <>
+                <MessageCircle className="size-4 mr-2" />
+                Start Writing
+              </>
+            )}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

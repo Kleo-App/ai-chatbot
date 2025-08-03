@@ -7,7 +7,7 @@ import { generateUUID } from '@/lib/utils';
 
 const createChatSchema = z.object({
   postId: z.string(),
-  topic: z.string().min(1, 'Topic is required'),
+  variables: z.record(z.string()).optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { postId, topic } = createChatSchema.parse(body);
+    const { postId, variables } = createChatSchema.parse(body);
 
     // Get the post template
     const postData = await getPostById(postId);

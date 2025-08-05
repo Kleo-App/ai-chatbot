@@ -205,6 +205,9 @@ export function SchedulePostModal({
       const finalScheduledDate = new Date(requestedDate);
       finalScheduledDate.setHours(bestAvailableHour, selectedDate.getMinutes(), 0, 0);
       
+      // Note: When rescheduling, the API will automatically cancel the existing job
+      // and create a new one using the stored workflow run ID
+      
       const success = await updateDocumentStatus('scheduled', finalScheduledDate);
       if (success) {
         // Schedule the post for automatic publishing via Inngest

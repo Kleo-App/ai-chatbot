@@ -118,21 +118,7 @@ export function ReschedulePostModal({
         return;
       }
 
-      // First, cancel the existing scheduled job
-      try {
-        await fetch('/api/posts/schedule', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            documentId: post.id,
-          }),
-        });
-      } catch (cancelError) {
-        console.warn('Failed to cancel existing scheduled job:', cancelError);
-        // Continue with rescheduling even if cancellation fails
-      }
-
-      // If LinkedIn is connected, proceed normally
+      // Update the database status first
       const response = await fetch(`/api/posts/${post.id}/status`, {
         method: 'PATCH',
         headers: {
@@ -148,7 +134,7 @@ export function ReschedulePostModal({
         throw new Error('Failed to reschedule post');
       }
 
-      // Schedule the new job
+      // Schedule the new job (API will automatically cancel existing job)
       try {
         await fetch('/api/posts/schedule', {
           method: 'POST',

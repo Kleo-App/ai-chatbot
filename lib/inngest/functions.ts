@@ -74,10 +74,36 @@ export const scheduleLinkedInPost = inngest.createFunction(
   async ({ event, step }) => {
     const { documentId, userId, scheduledAt, timezone }: SchedulePostEventData = event.data;
 
-    // Schedule the publish event for the specified time in the user's timezone
+    // Sleep until the scheduled time
     await step.sleepUntil('wait-for-publish-time', new Date(scheduledAt));
 
-    // Publish the post
+    // Before publishing, verify the post is still scheduled for this time
+    // This prevents old workflows from publishing after rescheduling
+    const currentDocument = await step.run('verify-schedule', async () => {
+      const [doc] = await db
+        .select()
+        .from(document)
+        .where(and(
+          eq(document.id, documentId),
+          eq(document.userId, userId)
+        ))
+        .limit(1);
+      
+      return doc;
+    });
+
+    // Check if the post is still scheduled for the original time
+    if (!currentDocument || 
+        currentDocument.status !== 'scheduled' || 
+        !currentDocument.scheduledAt ||
+        new Date(currentDocument.scheduledAt).getTime() !== new Date(scheduledAt).getTime()) {
+      return { 
+        success: true, 
+        message: `Post ${documentId} was rescheduled or cancelled, skipping publication` 
+      };
+    }
+
+    // Post is still scheduled for this time, proceed with publishing
     await step.sendEvent('trigger-publish', {
       name: 'linkedin/post.publish',
       data: {
@@ -246,25 +272,30 @@ export const cancelScheduledLinkedInPost = inngest.createFunction(
   },
   { event: 'linkedin/post.cancel' },
   async ({ event, step }) => {
-    const { documentId, userId } = event.data;
+    const { documentId, userId, isReschedule } = event.data;
 
-    // Update document status back to draft
-    await step.run('update-document-status', async () => {
-      await db
-        .update(document)
-        .set({
-          status: 'draft',
-          scheduledAt: null,
-          scheduledTimezone: null,
-        })
-        .where(and(
-          eq(document.id, documentId),
-          eq(document.userId, userId)
-        ));
+    // Only update database status if this is a true cancellation (not a reschedule)
+    // For reschedules, the API already updated the database with the new schedule
+    if (!isReschedule) {
+      await step.run('update-document-status', async () => {
+        await db
+          .update(document)
+          .set({
+            status: 'draft',
+            scheduledAt: null,
+            scheduledTimezone: null,
+            workflowRunId: null,
+          })
+          .where(and(
+            eq(document.id, documentId),
+            eq(document.userId, userId)
+          ));
 
-      return { success: true };
-    });
+        return { success: true };
+      });
+    }
 
-    return { success: true, message: `Scheduled post ${documentId} cancelled` };
+    const action = isReschedule ? 'rescheduled' : 'cancelled';
+    return { success: true, message: `Scheduled post ${documentId} ${action}` };
   }
 ); 

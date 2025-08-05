@@ -352,12 +352,14 @@ export async function updateDocumentStatus({
   scheduledAt,
   scheduledTimezone,
   publishedAt,
+  workflowRunId,
 }: {
   id: string;
   status: 'draft' | 'scheduled' | 'published';
   scheduledAt?: Date;
   scheduledTimezone?: string;
   publishedAt?: Date;
+  workflowRunId?: string | null;
 }) {
   try {
     return await db
@@ -367,6 +369,7 @@ export async function updateDocumentStatus({
         scheduledAt,
         scheduledTimezone,
         publishedAt,
+        workflowRunId,
       })
       .where(eq(document.id, id))
       .returning();

@@ -97,6 +97,7 @@ export function DocumentPreview({
           scheduledAt: null,
           scheduledTimezone: null,
           publishedAt: null,
+          workflowRunId: null,
         }
       : null;
 

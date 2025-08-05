@@ -121,6 +121,7 @@ export const document = pgTable(
     scheduledAt: timestamp('scheduledAt'),
     scheduledTimezone: text('scheduledTimezone'),
     publishedAt: timestamp('publishedAt'),
+    workflowRunId: text('workflowRunId'), // Store Inngest workflow run ID for cancellation
     userId: text('userId')
       .notNull()
       .references(() => user.id),

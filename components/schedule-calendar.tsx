@@ -1102,7 +1102,7 @@ function ScheduleCalendarContent() {
         return;
       }
 
-      // If LinkedIn is connected, proceed normally
+      // Update the database status first
       const response = await fetch(`/api/posts/${postId}/status`, {
         method: 'PATCH',
         headers: {
@@ -1117,6 +1117,26 @@ function ScheduleCalendarContent() {
 
       if (!response.ok) {
         throw new Error('Failed to update post schedule');
+      }
+
+      // Schedule/reschedule the job (API will automatically cancel existing job if any)
+      try {
+        const scheduleResponse = await fetch('/api/posts/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            documentId: postId,
+            scheduledAt: dateTime.toISOString(),
+            timezone: selectedTimezone,
+          }),
+        });
+
+        if (!scheduleResponse.ok) {
+          throw new Error('Failed to schedule post for automatic publishing');
+        }
+      } catch (scheduleError) {
+        console.error('Failed to schedule automatic publishing:', scheduleError);
+        toast.error('Post updated in database but automatic publishing may not work. Please check your LinkedIn connection.');
       }
 
       const action = existingPost?.scheduledAt ? 'rescheduled' : 'scheduled';

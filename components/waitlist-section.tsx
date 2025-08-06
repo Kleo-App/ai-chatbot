@@ -1,55 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
-const CountdownTimer = () => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
 
-  useEffect(() => {
-    const targetDate = new Date('2025-08-14T00:00:00').getTime();
-
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        setTimeLeft({ days, hours, minutes, seconds });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatNumber = (num: number) => num.toString().padStart(2, '0');
-
-  return (
-    <div className="flex items-center justify-center gap-2 text-blue-400 text-4xl md:text-5xl font-mono font-bold">
-      <span>{formatNumber(timeLeft.days)}D</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.hours)}H</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.minutes)}M</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.seconds)}S</span>
-    </div>
-  );
-};
 
 export const WaitlistSection = () => {
   const [email, setEmail] = useState('');
@@ -104,13 +58,8 @@ export const WaitlistSection = () => {
         </h2>
         
         <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-          The first 500 creators are using Kleo 2.0 early.<br />
-          Next cohort opens in:
+          The first 500 creators are using Kleo 2.0 early.
         </p>
-
-        <div className="mb-8">
-          <CountdownTimer />
-        </div>
 
         <form
           onSubmit={handleWaitlistSubmit}

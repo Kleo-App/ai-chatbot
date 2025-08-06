@@ -19,7 +19,7 @@ export function Footer() {
               />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Create engaging LinkedIn content in minutes with AI. Join thousands of creators who trust Kleo to amplify their professional voice.
+              Create engaging content in minutes with AI. Join thousands of creators who trust Kleo to amplify their professional voice.
             </p>
           </div>
         </div>

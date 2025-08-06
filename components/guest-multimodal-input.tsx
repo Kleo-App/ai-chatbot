@@ -47,7 +47,7 @@ export function GuestMultimodalInput({ onTriggerAuth, className }: GuestMultimod
       <div className="relative bg-white border border-gray-200 rounded-2xl shadow-lg transition-all duration-150 ease-in-out ring-2 ring-black focus-within:ring-2 focus-within:ring-black">
         <Textarea
           ref={textareaRef}
-          placeholder="Ask Kleo to create amazing LinkedIn content..."
+          placeholder="Ask Kleo to create amazing content..."
           value={input}
           onChange={handleInput}
           className="min-h-[56px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-transparent border-none p-4 pb-12 focus:ring-0 focus:ring-offset-0"

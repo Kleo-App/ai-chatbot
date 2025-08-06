@@ -212,53 +212,7 @@ const testimonials = [
   }
 ];
 
-const CountdownTimer = () => {
-  const [timeLeft, setTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-    seconds: 0
-  });
 
-  useEffect(() => {
-    const targetDate = new Date('2025-08-14T00:00:00').getTime();
-
-    const updateCountdown = () => {
-      const now = new Date().getTime();
-      const difference = targetDate - now;
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        setTimeLeft({ days, hours, minutes, seconds });
-      } else {
-        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-      }
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const formatNumber = (num: number) => num.toString().padStart(2, '0');
-
-  return (
-    <div className="flex items-center justify-center gap-2 text-blue-400 text-4xl md:text-5xl font-mono font-bold">
-      <span>{formatNumber(timeLeft.days)}D</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.hours)}H</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.minutes)}M</span>
-      <span className="text-gray-500">:</span>
-      <span>{formatNumber(timeLeft.seconds)}S</span>
-    </div>
-  );
-};
 
 export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -432,30 +386,14 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
                 {/* Main heading */}
                 <div className="flex flex-col items-center justify-center gap-5">
                   <h1 className="text-3xl md:text-4xl lg:text-4xl xl:text-5xl font-medium tracking-tighter text-balance text-center text-primary">
-                    Kleo 2.0 thinks like you,<br />
-                    <span className="inline-block">
-                      <span className="inline-flex items-center">
-                        <span style={{ marginRight: '0.2em' }}>but writes </span>
-                        <span style={{ color: 'rgb(21, 125, 253)' }}>better content</span>
-                      </span>
-                    </span>
+                    Kleo 2.0<br />
+                    Discovers with you.<br />
+                    Thinks with you.<br />
+                    <span style={{ color: 'rgb(21, 125, 253)' }}>Creates with you.</span>
                   </h1>
                   
                   <p className="text-base md:text-lg text-center text-muted-foreground font-medium text-balance leading-relaxed tracking-tight">
-                    Your{' '}
-                    <span className="inline-flex items-center gap-1 bg-blue-100 px-2 py-0.5 rounded-md font-semibold text-black">
-                      <Image
-                        src="/images/LI-In-Bug.png"
-                        alt="LinkedIn"
-                        width={20}
-                        height={20}
-                        className="inline-block shrink-0"
-                        priority
-                        sizes="20px"
-                      />
-                      LinkedIn
-                    </span>{' '}
-                    AI content partner, from first draft to final post.
+                    Your AI content partner that&apos;s trained on you and grows with you.
                   </p>
                 </div>
 
@@ -555,13 +493,8 @@ export const Greeting = ({ children, isLoggedOut }: GreetingProps) => {
                 </h2>
                 
                 <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-                  The first 500 creators are using Kleo 2.0 early.<br />
-                  Next cohort opens in:
+                  The first 500 creators are using Kleo 2.0 early.
                 </p>
-
-                <div className="mb-8">
-                  <CountdownTimer />
-                </div>
 
                 <form
                   onSubmit={handleWaitlistSubmit}
